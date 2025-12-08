@@ -27,7 +27,6 @@ app.use(
   })
 );
 
-// This is to check if the service is online or not
 app.use('/ping', function (req, res) {
   res.json({ reply: 'pong' });
   res.end();
@@ -37,6 +36,5 @@ app.use('/', router);
 
 app.use(expressErrorHandler as express.ErrorRequestHandler);
 
-// Export the express app instance
 export default app;
 

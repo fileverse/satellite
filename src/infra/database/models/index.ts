@@ -1,5 +1,15 @@
-// Export all models here
-// Example:
-// export { File } from './file.js';
-// export { Folder } from './folder.js';
+import { File, FilesModel, FileListResponse } from './files.model';
+import { Folder, FolderWithDDocs, FoldersModel, FolderListResponse } from './folders.model';
+import { Node, NodeType } from './node.model';
 
+export {
+  File,
+  FilesModel,
+  FileListResponse,
+  Folder,
+  FolderWithDDocs,
+  FoldersModel,
+  FolderListResponse,
+  Node,
+  NodeType,
+};

@@ -25,3 +25,9 @@ logs/
 *.pid.lock
 dev-journal.md
 
+# SQLite database files
+data/
+*.db
+*.db-shm
+*.db-wal
+

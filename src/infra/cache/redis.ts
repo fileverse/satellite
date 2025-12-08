@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from 'redis';
-import { config } from '../config';
+import { config } from '../../config';
 import { logger } from '../logger';
 
 let redisClient: RedisClientType | null = null;
@@ -17,3 +17,4 @@ if (config.REDIS_URI) {
 }
 
 export default redisClient;
+export type { RedisClientType };
