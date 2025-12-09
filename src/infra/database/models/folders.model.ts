@@ -1,22 +1,17 @@
 import { QueryBuilder } from '../query-builder';
 import { File } from './files.model';
 
-/**
- * Folder model interface
- * Based on API spec
- */
 export interface Folder {
-  _id: string; // Internal ID (can be auto-generated)
+  _id: string;
+  onchainFileId: number;
   folderId: string;
   folderRef: string;
-  folderName: string; // Name of the folder for search
+  folderName: string;
   portalAddress: string;
   metadataIPFSHash: string;
-  resolvedMetadata?: {
-    name: string;
-    description?: string;
-  }; // JSON field - stored as TEXT in SQLite
+  contentIPFSHash: string;
   isDeleted: boolean;
+  lastTransactionHash?: string;
   lastTransactionBlockNumber: number;
   lastTransactionBlockTimestamp: number;
   created_at: string;
@@ -58,11 +53,6 @@ export class FoldersModel {
     
     const folders = QueryBuilder.select<any>(sql).map(folderRaw => ({
       ...folderRaw,
-      resolvedMetadata: folderRaw.resolvedMetadata 
-        ? (typeof folderRaw.resolvedMetadata === 'string' 
-            ? JSON.parse(folderRaw.resolvedMetadata) 
-            : folderRaw.resolvedMetadata)
-        : undefined,
       isDeleted: Boolean(folderRaw.isDeleted)
     }));
 
@@ -83,14 +73,8 @@ export class FoldersModel {
       return undefined;
     }
 
-    // Parse resolvedMetadata JSON (SQLite stores JSON as TEXT)
     const parsedFolder: Folder = {
       ...folderRaw,
-      resolvedMetadata: folderRaw.resolvedMetadata 
-        ? (typeof folderRaw.resolvedMetadata === 'string' 
-            ? JSON.parse(folderRaw.resolvedMetadata) 
-            : folderRaw.resolvedMetadata)
-        : undefined,
       isDeleted: Boolean(folderRaw.isDeleted)
     };
 
@@ -118,11 +102,6 @@ export class FoldersModel {
 
     return {
       ...folderRaw,
-      resolvedMetadata: folderRaw.resolvedMetadata 
-        ? (typeof folderRaw.resolvedMetadata === 'string' 
-            ? JSON.parse(folderRaw.resolvedMetadata) 
-            : folderRaw.resolvedMetadata)
-        : undefined,
       isDeleted: Boolean(folderRaw.isDeleted)
     };
   }
@@ -145,11 +124,6 @@ export class FoldersModel {
     const foldersRaw = QueryBuilder.select<any>(sql, [`%${searchTerm}%`]);
     return foldersRaw.map(folderRaw => ({
       ...folderRaw,
-      resolvedMetadata: folderRaw.resolvedMetadata 
-        ? (typeof folderRaw.resolvedMetadata === 'string' 
-            ? JSON.parse(folderRaw.resolvedMetadata) 
-            : folderRaw.resolvedMetadata)
-        : undefined,
       isDeleted: Boolean(folderRaw.isDeleted)
     }));
   }
@@ -159,15 +133,14 @@ export class FoldersModel {
    */
   static create(input: {
     _id?: string;
+    onchainFileId: number;
     folderId: string;
     folderRef: string;
     folderName: string;
     portalAddress: string;
     metadataIPFSHash: string;
-    resolvedMetadata?: {
-      name: string;
-      description?: string;
-    };
+    contentIPFSHash: string;
+    lastTransactionHash?: string;
     lastTransactionBlockNumber: number;
     lastTransactionBlockTimestamp: number;
   }): Folder {
@@ -175,20 +148,22 @@ export class FoldersModel {
     const now = new Date().toISOString();
 
     const sql = `INSERT INTO ${this.TABLE} (
-      _id, folderId, folderRef, folderName, portalAddress, metadataIPFSHash,
-      resolvedMetadata, isDeleted, lastTransactionBlockNumber, 
+      _id, onchainFileId, folderId, folderRef, folderName, portalAddress, metadataIPFSHash,
+      contentIPFSHash, isDeleted, lastTransactionHash, lastTransactionBlockNumber, 
       lastTransactionBlockTimestamp, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     QueryBuilder.execute(sql, [
       _id,
+      input.onchainFileId,
       input.folderId,
       input.folderRef,
       input.folderName,
       input.portalAddress,
       input.metadataIPFSHash,
-      input.resolvedMetadata ? JSON.stringify(input.resolvedMetadata) : null,
+      input.contentIPFSHash,
       0, // isDeleted
+      input.lastTransactionHash || null,
       input.lastTransactionBlockNumber,
       input.lastTransactionBlockTimestamp,
       now,
@@ -205,11 +180,6 @@ export class FoldersModel {
 
     return {
       ...folderRaw,
-      resolvedMetadata: folderRaw.resolvedMetadata 
-        ? (typeof folderRaw.resolvedMetadata === 'string' 
-            ? JSON.parse(folderRaw.resolvedMetadata) 
-            : folderRaw.resolvedMetadata)
-        : undefined,
       isDeleted: Boolean(folderRaw.isDeleted)
     };
   }

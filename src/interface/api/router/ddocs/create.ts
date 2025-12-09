@@ -12,9 +12,9 @@ const createHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!input.fileId || !input.metadataIPFSHash || !input.contentIPFSHash || !input.gateIPFSHash) {
+    if (!input.onchainFileId || !input.metadataIPFSHash || !input.contentIPFSHash || !input.gateIPFSHash) {
       return res.status(400).json({ 
-        error: 'Missing required fields: fileId, metadataIPFSHash, contentIPFSHash, and gateIPFSHash are required' 
+        error: 'Missing required fields: onchainFileId, metadataIPFSHash, contentIPFSHash, and gateIPFSHash are required' 
       });
     }
 

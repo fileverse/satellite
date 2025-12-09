@@ -1,21 +1,17 @@
 import { QueryBuilder } from '../query-builder';
 
-/**
- * File model interface
- */
 export interface File {
   _id: string;
-  fileId: number;
+  onchainFileId: number;
   ddocId: string;
   title: string;
-  content?: string; // Only included in GET by id, not in list
   portalAddress: string;
   metadataIPFSHash: string;
   contentIPFSHash: string;
   gateIPFSHash: string;
-  fileType: string; // "ddoc"
   isDeleted: boolean;
   folderRef?: string; // Optional - for folder relationship
+  lastTransactionHash?: string;
   lastTransactionBlockNumber: number;
   lastTransactionBlockTimestamp: number;
   createdBlockTimestamp: number;
@@ -38,12 +34,12 @@ export class FilesModel {
     const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql);
     const total = totalResult?.count || 0;
 
-    // Get paginated results (excluding content field)
+    // Get paginated results
     const sql = QueryBuilder.paginate(
       `SELECT 
-        _id, fileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, fileType, isDeleted, folderRef,
-        lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
+        _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
+        contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+        lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
         createdBlockTimestamp, created_at, updated_at
       FROM ${this.TABLE} 
       WHERE isDeleted = 0`,
@@ -66,7 +62,12 @@ export class FilesModel {
   }
 
   static findByDDocId(ddocId: string): File | undefined {
-    const sql = `SELECT * FROM ${this.TABLE} WHERE ddocId = ? AND isDeleted = 0`;
+    const sql = `SELECT 
+      _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
+      contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+      lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
+      createdBlockTimestamp, created_at, updated_at
+    FROM ${this.TABLE} WHERE ddocId = ? AND isDeleted = 0`;
     const fileRaw = QueryBuilder.selectOne<any>(sql, [ddocId]);
     if (!fileRaw) return undefined;
     
@@ -79,9 +80,9 @@ export class FilesModel {
   static findByFolderRef(folderRef: string, limit?: number, skip?: number): File[] {
     const sql = QueryBuilder.paginate(
       `SELECT 
-        _id, fileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, fileType, isDeleted, folderRef,
-        lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
+        _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
+        contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+        lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
         createdBlockTimestamp, created_at, updated_at
       FROM ${this.TABLE} 
       WHERE folderRef = ? AND isDeleted = 0`,
@@ -105,9 +106,9 @@ export class FilesModel {
   static searchByTitle(searchTerm: string, limit?: number, skip?: number): File[] {
     const sql = QueryBuilder.paginate(
       `SELECT 
-        _id, fileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, fileType, isDeleted, folderRef,
-        lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
+        _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
+        contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+        lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
         createdBlockTimestamp, created_at, updated_at
       FROM ${this.TABLE} 
       WHERE isDeleted = 0 AND LOWER(title) LIKE LOWER(?)`,
@@ -131,44 +132,41 @@ export class FilesModel {
    */
   static create(input: {
     _id?: string;
-    fileId: number;
+    onchainFileId: number;
     ddocId: string;
     title: string;
-    content?: string;
     portalAddress: string;
     metadataIPFSHash: string;
     contentIPFSHash: string;
     gateIPFSHash: string;
-    fileType?: string;
     folderRef?: string;
+    lastTransactionHash?: string;
     lastTransactionBlockNumber: number;
     lastTransactionBlockTimestamp: number;
     createdBlockTimestamp: number;
   }): File {
     const _id = input._id || `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const fileType = input.fileType || 'ddoc';
     const now = new Date().toISOString();
 
     const sql = `INSERT INTO ${this.TABLE} (
-      _id, fileId, ddocId, title, content, portalAddress, metadataIPFSHash,
-      contentIPFSHash, gateIPFSHash, fileType, isDeleted, folderRef,
-      lastTransactionBlockNumber, lastTransactionBlockTimestamp, createdBlockTimestamp,
+      _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash,
+      contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+      lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, createdBlockTimestamp,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     QueryBuilder.execute(sql, [
       _id,
-      input.fileId,
+      input.onchainFileId,
       input.ddocId,
       input.title,
-      input.content || null,
       input.portalAddress,
       input.metadataIPFSHash,
       input.contentIPFSHash,
       input.gateIPFSHash,
-      fileType,
       0, // isDeleted
       input.folderRef || null,
+      input.lastTransactionHash || null,
       input.lastTransactionBlockNumber,
       input.lastTransactionBlockTimestamp,
       input.createdBlockTimestamp,

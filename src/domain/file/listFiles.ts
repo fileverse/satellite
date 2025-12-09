@@ -6,7 +6,7 @@ export interface ListFilesParams {
 }
 
 export interface ListFilesResult {
-  ddocs: Array<Omit<File, 'content'>>;
+  ddocs: File[];
   total: number;
   hasNext: boolean;
 }

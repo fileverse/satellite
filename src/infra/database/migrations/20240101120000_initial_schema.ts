@@ -11,7 +11,7 @@ export const up = `
   -- Files/DDocs table
   CREATE TABLE IF NOT EXISTS files (
     _id TEXT PRIMARY KEY,
-    fileId INTEGER NOT NULL UNIQUE,
+    onchainFileId INTEGER NOT NULL UNIQUE,
     ddocId TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     content TEXT,
@@ -22,6 +22,7 @@ export const up = `
     fileType TEXT NOT NULL DEFAULT 'ddoc',
     isDeleted INTEGER NOT NULL DEFAULT 0,
     folderRef TEXT,
+    lastTransactionHash TEXT,
     lastTransactionBlockNumber INTEGER NOT NULL,
     lastTransactionBlockTimestamp INTEGER NOT NULL,
     createdBlockTimestamp INTEGER NOT NULL,
@@ -32,13 +33,15 @@ export const up = `
   -- Folders table
   CREATE TABLE IF NOT EXISTS folders (
     _id TEXT PRIMARY KEY,
+    onchainFileId INTEGER NOT NULL UNIQUE,
     folderId TEXT NOT NULL UNIQUE,
     folderRef TEXT NOT NULL UNIQUE,
     folderName TEXT NOT NULL,
     portalAddress TEXT NOT NULL,
     metadataIPFSHash TEXT NOT NULL,
-    resolvedMetadata TEXT, -- JSON stored as TEXT
+    contentIPFSHash TEXT NOT NULL,
     isDeleted INTEGER NOT NULL DEFAULT 0,
+    lastTransactionHash TEXT,
     lastTransactionBlockNumber INTEGER NOT NULL,
     lastTransactionBlockTimestamp INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

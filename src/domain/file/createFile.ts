@@ -2,16 +2,15 @@ import { FilesModel, File } from '../../infra/database/models/files.model';
 
 export interface CreateFileInput {
   _id?: string;
-  fileId: number;
+  onchainFileId: number;
   ddocId: string;
   title: string;
-  content?: string;
   portalAddress: string;
   metadataIPFSHash: string;
   contentIPFSHash: string;
   gateIPFSHash: string;
-  fileType?: string;
   folderRef?: string;
+  lastTransactionHash?: string;
   lastTransactionBlockNumber: number;
   lastTransactionBlockTimestamp: number;
   createdBlockTimestamp: number;

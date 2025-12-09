@@ -6,9 +6,9 @@ const createHandler = async (req: Request, res: Response) => {
     const input: CreateFolderInput = req.body;
 
     // Validate required fields
-    if (!input.folderId || !input.folderRef || !input.folderName || !input.portalAddress) {
+    if (!input.onchainFileId || !input.folderId || !input.folderRef || !input.folderName || !input.portalAddress) {
       return res.status(400).json({ 
-        error: 'Missing required fields: folderId, folderRef, folderName, and portalAddress are required' 
+        error: 'Missing required fields: onchainFileId, folderId, folderRef, folderName, and portalAddress are required' 
       });
     }
 

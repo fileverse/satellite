@@ -40,18 +40,13 @@ export default function searchNodes(params: SearchNodesParams): SearchNodesResul
     isDeleted: file.isDeleted,
     created_at: file.created_at,
     updated_at: file.updated_at,
-    fileId: file.fileId,
-    ddocId: file.ddocId,
-    title: file.title,
-    content: file.content,
-    fileMetadataIPFSHash: file.metadataIPFSHash,
+    onchainFileId: file.onchainFileId,
     contentIPFSHash: file.contentIPFSHash,
+    metadataIPFSHash: file.metadataIPFSHash,
     gateIPFSHash: file.gateIPFSHash,
-    fileType: file.fileType,
-    fileFolderRef: file.folderRef,
-    fileLastTransactionBlockNumber: file.lastTransactionBlockNumber,
-    fileLastTransactionBlockTimestamp: file.lastTransactionBlockTimestamp,
-    createdBlockTimestamp: file.createdBlockTimestamp,
+    lastTransactionHash: file.lastTransactionHash,
+    lastTransactionBlockNumber: file.lastTransactionBlockNumber,
+    lastTransactionBlockTimestamp: file.lastTransactionBlockTimestamp,
   }));
 
   const folderNodes: Node[] = folders.map(folder => ({
@@ -62,13 +57,12 @@ export default function searchNodes(params: SearchNodesParams): SearchNodesResul
     isDeleted: folder.isDeleted,
     created_at: folder.created_at,
     updated_at: folder.updated_at,
-    folderId: folder.folderId,
-    folderRef: folder.folderRef,
-    folderName: folder.folderName,
-    folderMetadataIPFSHash: folder.metadataIPFSHash,
-    resolvedMetadata: folder.resolvedMetadata,
-    folderLastTransactionBlockNumber: folder.lastTransactionBlockNumber,
-    folderLastTransactionBlockTimestamp: folder.lastTransactionBlockTimestamp,
+    onchainFileId: folder.onchainFileId,
+    contentIPFSHash: folder.contentIPFSHash,
+    metadataIPFSHash: folder.metadataIPFSHash,
+    lastTransactionHash: folder.lastTransactionHash,
+    lastTransactionBlockNumber: folder.lastTransactionBlockNumber,
+    lastTransactionBlockTimestamp: folder.lastTransactionBlockTimestamp,
   }));
 
   // Combine and sort by created_at (most recent first)

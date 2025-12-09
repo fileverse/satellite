@@ -2,15 +2,14 @@ import { FoldersModel, Folder } from '../../infra/database/models/folders.model'
 
 export interface CreateFolderInput {
   _id?: string;
+  onchainFileId: number;
   folderId: string;
   folderRef: string;
   folderName: string;
   portalAddress: string;
   metadataIPFSHash: string;
-  resolvedMetadata?: {
-    name: string;
-    description?: string;
-  };
+  contentIPFSHash: string;
+  lastTransactionHash?: string;
   lastTransactionBlockNumber: number;
   lastTransactionBlockTimestamp: number;
 }
