@@ -9,6 +9,7 @@ export interface File {
   metadataIPFSHash: string;
   contentIPFSHash: string;
   gateIPFSHash: string;
+  contentDecrypted?: string;
   isDeleted: boolean;
   folderRef?: string; // Optional - for folder relationship
   lastTransactionHash?: string;
@@ -38,7 +39,7 @@ export class FilesModel {
     const sql = QueryBuilder.paginate(
       `SELECT 
         _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+        contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
         lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
         createdBlockTimestamp, created_at, updated_at
       FROM ${this.TABLE} 
@@ -64,7 +65,7 @@ export class FilesModel {
   static findByDDocId(ddocId: string): File | undefined {
     const sql = `SELECT 
       _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-      contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+      contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
       lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
       createdBlockTimestamp, created_at, updated_at
     FROM ${this.TABLE} WHERE ddocId = ? AND isDeleted = 0`;
@@ -81,7 +82,7 @@ export class FilesModel {
     const sql = QueryBuilder.paginate(
       `SELECT 
         _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+        contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
         lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
         createdBlockTimestamp, created_at, updated_at
       FROM ${this.TABLE} 
@@ -107,7 +108,7 @@ export class FilesModel {
     const sql = QueryBuilder.paginate(
       `SELECT 
         _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+        contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
         lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
         createdBlockTimestamp, created_at, updated_at
       FROM ${this.TABLE} 
@@ -139,6 +140,7 @@ export class FilesModel {
     metadataIPFSHash: string;
     contentIPFSHash: string;
     gateIPFSHash: string;
+    contentDecrypted?: string;
     folderRef?: string;
     lastTransactionHash?: string;
     lastTransactionBlockNumber: number;
@@ -150,10 +152,10 @@ export class FilesModel {
 
     const sql = `INSERT INTO ${this.TABLE} (
       _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash,
-      contentIPFSHash, gateIPFSHash, isDeleted, folderRef,
+      contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
       lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, createdBlockTimestamp,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     QueryBuilder.execute(sql, [
       _id,
@@ -164,6 +166,7 @@ export class FilesModel {
       input.metadataIPFSHash,
       input.contentIPFSHash,
       input.gateIPFSHash,
+      input.contentDecrypted || null,
       0, // isDeleted
       input.folderRef || null,
       input.lastTransactionHash || null,

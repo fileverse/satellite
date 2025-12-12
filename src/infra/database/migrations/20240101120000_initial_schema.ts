@@ -15,6 +15,7 @@ export const up = `
     ddocId TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     content TEXT,
+    contentDecrypted TEXT,
     portalAddress TEXT NOT NULL,
     metadataIPFSHash TEXT NOT NULL,
     contentIPFSHash TEXT NOT NULL,
