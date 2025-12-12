@@ -1,2 +1,3 @@
-export { validate, Joi, ValidationError } from './validator';
-export { expressErrorHandler } from './errorHandler';
+import { expressErrorHandler } from './errorHandler';
+
+export { expressErrorHandler };

@@ -1,23 +1,17 @@
-import { QueryBuilder } from '../query-builder';
+import { QueryBuilder } from '../index';
+import { uuidv7 } from 'uuidv7';
+import { UpdateFilePayload } from './files/types';
 
 export interface File {
   _id: string;
-  onchainFileId: number;
-  ddocId: string;
   title: string;
-  portalAddress: string;
-  metadataIPFSHash: string;
-  contentIPFSHash: string;
-  gateIPFSHash: string;
-  contentDecrypted?: string;
-  isDeleted: boolean;
-  folderRef?: string; // Optional - for folder relationship
-  lastTransactionHash?: string;
-  lastTransactionBlockNumber: number;
-  lastTransactionBlockTimestamp: number;
-  createdBlockTimestamp: number;
-  created_at: string;
-  updated_at: string;
+  content: string;
+  localVersion: number;
+  onchainVersion: number;
+  syncStatus: 'pending' | 'synced' | 'failed';
+  isDeleted: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FileListResponse {
@@ -30,157 +24,137 @@ export class FilesModel {
   private static readonly TABLE = 'files';
 
   static findAll(limit?: number, skip?: number): { files: File[]; total: number; hasNext: boolean } {
-    // Get total count
+    // Get total count (excluding deleted files)
     const countSql = `SELECT COUNT(*) as count FROM ${this.TABLE} WHERE isDeleted = 0`;
     const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql);
     const total = totalResult?.count || 0;
 
     // Get paginated results
     const sql = QueryBuilder.paginate(
-      `SELECT 
-        _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
-        lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
-        createdBlockTimestamp, created_at, updated_at
-      FROM ${this.TABLE} 
+      `SELECT _id, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
+      FROM ${this.TABLE}
       WHERE isDeleted = 0`,
-      { 
-        limit, 
-        offset: skip, 
-        orderBy: 'created_at', 
-        orderDirection: 'DESC' 
+      {
+        limit,
+        offset: skip,
+        orderBy: 'createdAt',
+        orderDirection: 'DESC'
       }
     );
-    
-    const filesRaw = QueryBuilder.select<any>(sql);
-    const files = filesRaw.map(file => ({
-      ...file,
-      isDeleted: Boolean(file.isDeleted)
-    }));
+
+    const files = QueryBuilder.select<File>(sql);
     const hasNext = skip !== undefined && limit !== undefined ? (skip + limit) < total : false;
 
     return { files, total, hasNext };
   }
 
+  static findById(_id: string): File | undefined {
+    const sql = `SELECT _id, ddocId, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
+    FROM ${this.TABLE} WHERE _id = ? AND isDeleted = 0`;
+    return QueryBuilder.selectOne<File>(sql, [_id]);
+  }
+
+  static findByIdIncludingDeleted(_id: string): File | undefined {
+    const sql = `SELECT _id, ddocId, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
+    FROM ${this.TABLE} WHERE _id = ?`;
+    return QueryBuilder.selectOne<File>(sql, [_id]);
+  }
+
   static findByDDocId(ddocId: string): File | undefined {
-    const sql = `SELECT 
-      _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-      contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
-      lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
-      createdBlockTimestamp, created_at, updated_at
+    const sql = `SELECT _id, ddocId, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
     FROM ${this.TABLE} WHERE ddocId = ? AND isDeleted = 0`;
-    const fileRaw = QueryBuilder.selectOne<any>(sql, [ddocId]);
-    if (!fileRaw) return undefined;
-    
-    return {
-      ...fileRaw,
-      isDeleted: Boolean(fileRaw.isDeleted)
-    };
+    return QueryBuilder.selectOne<File>(sql, [ddocId]);
   }
 
   static findByFolderRef(folderRef: string, limit?: number, skip?: number): File[] {
-    const sql = QueryBuilder.paginate(
-      `SELECT 
-        _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
-        lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
-        createdBlockTimestamp, created_at, updated_at
-      FROM ${this.TABLE} 
-      WHERE folderRef = ? AND isDeleted = 0`,
-      { 
-        limit, 
-        offset: skip, 
-        orderBy: 'created_at', 
-        orderDirection: 'DESC' 
-      }
-    );
-    const filesRaw = QueryBuilder.select<any>(sql, [folderRef]);
-    return filesRaw.map(file => ({
-      ...file,
-      isDeleted: Boolean(file.isDeleted)
-    }));
+    // FolderRef functionality removed in simplified schema
+    // Return empty array for now
+    return [];
   }
 
-  /**
-   * Search files by title (case-insensitive substring match)
-   */
   static searchByTitle(searchTerm: string, limit?: number, skip?: number): File[] {
     const sql = QueryBuilder.paginate(
-      `SELECT 
-        _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash, 
-        contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
-        lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, 
-        createdBlockTimestamp, created_at, updated_at
+      `SELECT _id, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
       FROM ${this.TABLE} 
-      WHERE isDeleted = 0 AND LOWER(title) LIKE LOWER(?)`,
-      { 
-        limit, 
-        offset: skip, 
-        orderBy: 'created_at', 
-        orderDirection: 'DESC' 
+      WHERE LOWER(title) LIKE LOWER(?) AND isDeleted = 0`,
+      {
+        limit,
+        offset: skip,
+        orderBy: 'createdAt',
+        orderDirection: 'DESC'
       }
     );
-    
-    const filesRaw = QueryBuilder.select<any>(sql, [`%${searchTerm}%`]);
-    return filesRaw.map(file => ({
-      ...file,
-      isDeleted: Boolean(file.isDeleted)
-    }));
+
+    return QueryBuilder.select<File>(sql, [`%${searchTerm}%`]);
   }
 
-  /**
-   * Create a new file
-   */
   static create(input: {
-    _id?: string;
-    onchainFileId: number;
-    ddocId: string;
     title: string;
-    portalAddress: string;
-    metadataIPFSHash: string;
-    contentIPFSHash: string;
-    gateIPFSHash: string;
-    contentDecrypted?: string;
-    folderRef?: string;
-    lastTransactionHash?: string;
-    lastTransactionBlockNumber: number;
-    lastTransactionBlockTimestamp: number;
-    createdBlockTimestamp: number;
+    content: string;
+    ddocId: string;
   }): File {
-    const _id = input._id || `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const now = new Date().toISOString();
-
-    const sql = `INSERT INTO ${this.TABLE} (
-      _id, onchainFileId, ddocId, title, portalAddress, metadataIPFSHash,
-      contentIPFSHash, gateIPFSHash, contentDecrypted, isDeleted, folderRef,
-      lastTransactionHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp, createdBlockTimestamp,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const _id = uuidv7();
+    const sql = `INSERT INTO ${this.TABLE} (_id, title, content, ddocId) VALUES (?, ?, ?, ?)`;
 
     QueryBuilder.execute(sql, [
       _id,
-      input.onchainFileId,
-      input.ddocId,
       input.title,
-      input.portalAddress,
-      input.metadataIPFSHash,
-      input.contentIPFSHash,
-      input.gateIPFSHash,
-      input.contentDecrypted || null,
-      0, // isDeleted
-      input.folderRef || null,
-      input.lastTransactionHash || null,
-      input.lastTransactionBlockNumber,
-      input.lastTransactionBlockTimestamp,
-      input.createdBlockTimestamp,
-      now,
-      now
+      input.content,
+      input.ddocId,
     ]);
+    // NOTE: default values while file creation: localVersion = 1, onchainVersion = 0, syncStatus = 'pending'
 
-    const created = this.findByDDocId(input.ddocId);
+    const created = this.findById(_id);
     if (!created) {
       throw new Error('Failed to create file');
     }
     return created;
+  }
+
+  static update(
+    _id: string,
+    payload: UpdateFilePayload,
+  ): File {
+    const now = new Date().toISOString();
+
+    const keys: string[] = [];
+    const values: any[] = [];
+    for (const [k, v] of Object.entries(payload)) {
+      if (v !== undefined) {
+        keys.push(`${k} = ?`);
+        values.push(v);
+      }
+    }
+
+    // Always add updatedAt
+    keys.push('updatedAt = ?');
+    values.push(now);
+
+    const updateChain = keys.join(', ');
+    const sql = `UPDATE ${this.TABLE} SET ${updateChain} WHERE _id = ?`;
+    values.push(_id);
+    QueryBuilder.execute(sql, values);
+
+    const updated = this.findById(_id);
+    if (!updated) {
+      throw new Error('Failed to update file');
+    }
+    return updated;
+  }
+
+  static softDelete(_id: string): File {
+    const now = new Date().toISOString();
+    const sql = `UPDATE ${this.TABLE} 
+      SET isDeleted = 1, syncStatus = 'pending', updatedAt = ?
+      WHERE _id = ?`;
+
+    QueryBuilder.execute(sql, [now, _id]);
+
+    // Use findByIdIncludingDeleted since the file is now marked as deleted
+    const deleted = this.findByIdIncludingDeleted(_id);
+    if (!deleted) {
+      throw new Error('Failed to delete file');
+    }
+    return deleted;
   }
 }

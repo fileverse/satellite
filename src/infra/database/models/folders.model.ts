@@ -1,4 +1,4 @@
-import { QueryBuilder } from '../query-builder';
+import { QueryBuilder } from '../index';
 import { File } from './files.model';
 
 export interface Folder {
@@ -80,8 +80,8 @@ export class FoldersModel {
 
     // Get ddocs in this folder
     // Import at runtime to avoid circular dependency
-    const { FilesModel } = require('./files.model');
-    const ddocs = FilesModel.findByFolderRef(folderRef);
+    // Note: FolderRef functionality removed in simplified schema, returning empty array
+    const ddocs: File[] = [];
 
     return {
       ...parsedFolder,

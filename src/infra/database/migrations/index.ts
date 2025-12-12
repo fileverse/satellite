@@ -1,5 +1,5 @@
 import db from '../index';
-import { logger } from '../../logger';
+import { logger } from '../../';
 import fs from 'fs';
 import path from 'path';
 
@@ -26,7 +26,7 @@ function loadMigrations(): MigrationFile[] {
     const filePath = path.join(migrationsDir, file);
     // Extract timestamp from filename (first 14 digits)
     const match = file.match(/^(\d{14})_(.+)\.ts$/);
-    
+
     if (!match) {
       logger.warn(`Skipping invalid migration file: ${file}`);
       continue;
@@ -34,7 +34,7 @@ function loadMigrations(): MigrationFile[] {
 
     const [, timestamp, name] = match;
     const migration = require(filePath);
-    
+
     if (!migration.up) {
       logger.warn(`Migration ${file} is missing 'up' function`);
       continue;
@@ -87,4 +87,62 @@ export function runMigrations(): void {
   })();
 
   logger.info(`Applied ${pendingMigrations.length} migration(s)`);
+}
+
+/**
+ * Rollback migrations (development only)
+ * @param count Number of migrations to rollback (default: 1)
+ */
+export function rollbackMigrations(count: number = 1): void {
+  // Safety check: only allow rollback in development
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  if (nodeEnv === 'production') {
+    throw new Error('Migration rollback is not allowed in production environment');
+  }
+
+  // Ensure migrations table exists
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      timestamp TEXT PRIMARY KEY,
+      applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const getAppliedMigrations = db.prepare('SELECT timestamp FROM schema_migrations ORDER BY timestamp DESC');
+  const deleteMigration = db.prepare('DELETE FROM schema_migrations WHERE timestamp = ?');
+
+  const appliedMigrations = getAppliedMigrations.all() as { timestamp: string }[];
+
+  if (appliedMigrations.length === 0) {
+    logger.info('No migrations to rollback');
+    return;
+  }
+
+  const migrationsToRollback = appliedMigrations.slice(0, count);
+  const allMigrations = loadMigrations();
+  const migrationMap = new Map(allMigrations.map(m => [m.timestamp, m]));
+
+  db.transaction(() => {
+    for (const appliedMigration of migrationsToRollback) {
+      const migration = migrationMap.get(appliedMigration.timestamp);
+
+      if (!migration) {
+        logger.warn(`Migration file not found for timestamp ${appliedMigration.timestamp}, removing from schema_migrations`);
+        deleteMigration.run(appliedMigration.timestamp);
+        continue;
+      }
+
+      if (!migration.down) {
+        logger.warn(`Migration ${migration.timestamp}_${migration.name} has no 'down' function, skipping rollback`);
+        deleteMigration.run(appliedMigration.timestamp);
+        continue;
+      }
+
+      logger.info(`Rolling back migration ${migration.timestamp}_${migration.name}...`);
+      db.exec(migration.down);
+      deleteMigration.run(appliedMigration.timestamp);
+    }
+  })();
+
+  logger.info(`Rolled back ${migrationsToRollback.length} migration(s)`);
 }

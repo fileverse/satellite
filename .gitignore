@@ -31,3 +31,6 @@ data/
 *.db-shm
 *.db-wal
 
+
+# development
+test-doc.md
