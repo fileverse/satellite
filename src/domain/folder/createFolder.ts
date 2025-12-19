@@ -1,4 +1,4 @@
-import { FoldersModel, Folder } from '../../infra/database/models/folders.model';
+import { FoldersModel, Folder } from '../../infra/database/models';
 
 export interface CreateFolderInput {
   _id?: string;

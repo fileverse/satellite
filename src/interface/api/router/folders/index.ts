@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { asyncHandlerArray } from '../../../../infra/asyncHandler';
+import { asyncHandlerArray } from '../../../../infra';
 import list from './list';
 import get from './get';
 import create from './create';

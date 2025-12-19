@@ -1,5 +1,7 @@
-import db from './index';
+import { databaseConnectionManager } from './connection';
 import { QueryOptions } from './types';
+
+const db = databaseConnectionManager.getConnection();
 
 /**
  * Type-safe query builder helpers

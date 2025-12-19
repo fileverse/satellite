@@ -1,6 +1,5 @@
-import { FilesModel, File } from '../../infra/database/models/files.model';
-import { Folder } from '../../infra/database/models/folders.model';
-import { QueryBuilder } from '../../infra/database/query-builder';
+import { FilesModel, File, Folder } from '../../infra/database/models';
+import { QueryBuilder } from '../../infra/database';
 
 export interface SearchNodesParams {
   query: string;
@@ -44,7 +43,7 @@ export default function searchNodes(params: SearchNodesParams): SearchNodesResul
   }));
 
   // Get total count for pagination
-  const countSql = `SELECT COUNT(*) as count FROM files WHERE isDeleted = 0 AND LOWER(title) LIKE LOWER(?)`;
+  const countSql = `SELECT COUNT(*) as count FROM files WHERE LOWER(title) LIKE LOWER(?)`;
   const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, [`%${query}%`]);
   const total = totalResult?.count || 0;
 

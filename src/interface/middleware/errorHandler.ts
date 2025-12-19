@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import reporter from '../../infra/reporter';
+import { reporter } from '../../infra';
 import { ValidationError } from './validator';
 import { Request } from 'express';
 
