@@ -31,7 +31,7 @@ export class FilesModel {
 
     // Get paginated results
     const sql = QueryBuilder.paginate(
-      `SELECT _id, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
+      `SELECT _id, ddocId, title, content, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt
       FROM ${this.TABLE}
       WHERE isDeleted = 0`,
       {

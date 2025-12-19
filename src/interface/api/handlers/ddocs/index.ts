@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { listFiles, getFile, createFile, updateFile, deleteFile, CreateFileInput } from '../../../../domain/file';
+import { listFiles, getFile, createFile, updateFile, deleteFile, CreateFileInput, UpdateFileInput } from '../../../../domain/file';
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
 import { ClientUpdateFileInput } from './types';
@@ -57,7 +57,7 @@ const createHandler = async (req: Request, res: Response) => {
       content: fileContent,
     };
 
-    const file = createFile(payload);
+    const file = await createFile(payload);
     res.status(201).json({
       message: 'File created successfully. Sync to on-chain is pending.',
       data: { ...file },
@@ -79,15 +79,21 @@ const updateHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const payload: ClientUpdateFileInput = {};
+    const clientPayload: ClientUpdateFileInput = {};
     if (title) {
-      payload.title = title;
+      clientPayload.title = title;
     }
     if (fileContent) {
-      payload.content = fileContent;
+      clientPayload.content = fileContent;
     }
 
-    const result = updateFile(ddocId, payload);
+    // Map client-facing type to domain type
+    const domainPayload: UpdateFileInput = {
+      title: clientPayload.title,
+      content: clientPayload.content,
+    };
+
+    const result = await updateFile(ddocId, domainPayload);
     res.status(200).json({
       message: 'File updated successfully',
       data: { ...result },
@@ -104,7 +110,7 @@ const deleteHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ddocId is required' });
     }
 
-    const result = deleteFile(ddocId);
+    const result = await deleteFile(ddocId);
     res.status(200).json({
       message: 'File deleted successfully',
       data: { ...result },

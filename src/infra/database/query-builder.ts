@@ -1,31 +1,21 @@
 import { databaseConnectionManager } from './connection';
 import { QueryOptions } from './types';
+import { DEFAULT_LIST_LIMIT } from '../../domain/file/constants';
 
 const db = databaseConnectionManager.getConnection();
 
-/**
- * Type-safe query builder helpers
- */
 export class QueryBuilder {
-  /**
-   * Execute a SELECT query and return all rows
-   */
+
   static select<T = any>(sql: string, params: any[] = []): T[] {
     const stmt = db.prepare(sql);
     return stmt.all(params) as T[];
   }
 
-  /**
-   * Execute a SELECT query and return first row
-   */
   static selectOne<T = any>(sql: string, params: any[] = []): T | undefined {
     const stmt = db.prepare(sql);
     return stmt.get(params) as T | undefined;
   }
 
-  /**
-   * Execute an INSERT/UPDATE/DELETE query
-   */
   static execute(sql: string, params: any[] = []): {
     changes: number;
     lastInsertRowid: number | bigint;
@@ -38,16 +28,10 @@ export class QueryBuilder {
     };
   }
 
-  /**
-   * Execute multiple queries in a transaction
-   */
   static transaction<T>(callback: () => T): T {
     return db.transaction(callback)();
   }
 
-  /**
-   * Build pagination SQL
-   */
   static paginate(sql: string, options: QueryOptions = {}): string {
     let query = sql;
     
@@ -55,11 +39,15 @@ export class QueryBuilder {
       query += ` ORDER BY ${options.orderBy} ${options.orderDirection || 'ASC'}`;
     }
     
-    if (options.limit) {
-      query += ` LIMIT ${options.limit}`;
-      if (options.offset) {
-        query += ` OFFSET ${options.offset}`;
-      }
+    const hasOffset = (options.offset ?? 0) > 0;
+    const limit = options.limit ?? (hasOffset ? DEFAULT_LIST_LIMIT : undefined);
+    
+    if (limit) {
+      query += ` LIMIT ${limit}`;
+    }
+    
+    if (hasOffset) {
+      query += ` OFFSET ${options.offset}`;
     }
     
     return query;

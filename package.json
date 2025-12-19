@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "Satellite",
   "main": "dist/index.js",
+  "bin": {
+    "ddctl": "./dist/commands/index.js"
+  },
   "scripts": {
     "build": "npx tsc",
     "clean": "rm -rf dist",
     "dev": "nodemon --exec ts-node src/index.ts",
     "dev:worker": "nodemon --exec ts-node src/worker.ts",
+    "dev:cli": "ts-node src/commands/index.ts",
     "start:api": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/worker.js",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -26,6 +30,8 @@
     "better-sqlite3": "^12.5.0",
     "bullmq": "^5.66.0",
     "bunyan": "^1.8.15",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.2",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
@@ -47,7 +53,7 @@
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.14.0",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
