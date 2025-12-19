@@ -15,3 +15,8 @@ export interface CreateFileInput {
   title: string;
   content: string;
 }
+
+export interface UpdateFileInput {
+  title?: string;
+  content?: string;
+}

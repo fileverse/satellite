@@ -2,15 +2,16 @@ import { generate } from 'short-uuid';
 
 import { FilesModel, File } from '../../infra/database/models';
 import { FileEvent, fileEventsQueue } from '../../infra/queue';
-import type { ListFilesParams, ListFilesResult, CreateFileInput } from './types';
-import type { ClientUpdateFileInput } from '../../interface/api/handlers/ddocs/types';
+import { DEFAULT_LIST_LIMIT } from './constants';
+
+import type { ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput } from './types';
 import type { UpdateFilePayload } from '../../infra/database/models/files/types';
-import { del } from '../../interface/api/handlers/ddocs';
 
 function listFiles(params: ListFilesParams): ListFilesResult {
   const { limit, skip } = params;
+  const effectiveLimit = limit || DEFAULT_LIST_LIMIT;
 
-  const result = FilesModel.findAll(limit, skip);
+  const result = FilesModel.findAll(effectiveLimit, skip);
 
   return {
     ddocs: result.files,
@@ -33,7 +34,7 @@ function getFile(ddocId: string): File | null {
   return file;
 }
 
-function createFile(input: CreateFileInput): File {
+async function createFile(input: CreateFileInput): Promise<File> {
   if (!input.title || !input.content) {
     throw new Error('title and content are required');
   }
@@ -53,14 +54,14 @@ function createFile(input: CreateFileInput): File {
     },
   }
 
-  fileEventsQueue.addJob(createFileEvent);
+  await fileEventsQueue.addJob(createFileEvent);
   return file;
 }
 
-function updateFile(
+async function updateFile(
   ddocId: string,
-  payload: ClientUpdateFileInput,
-): File {
+  payload: UpdateFileInput,
+): Promise<File> {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
@@ -89,11 +90,11 @@ function updateFile(
     }
   }
 
-  fileEventsQueue.addJob(editFileEvent);
+  await fileEventsQueue.addJob(editFileEvent);
   return updatedFile;
 }
 
-function deleteFile(ddocId: string): File {
+async function deleteFile(ddocId: string): Promise<File> {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
@@ -111,9 +112,9 @@ function deleteFile(ddocId: string): File {
     metadata: {}
   };
 
-  fileEventsQueue.addJob(deleteFileEvent);
+  await fileEventsQueue.addJob(deleteFileEvent);
   return deletedFile;
 }
 
 export { listFiles, getFile, createFile, updateFile, deleteFile };
-export type { CreateFileInput, ListFilesParams, ListFilesResult };
+export type { CreateFileInput, UpdateFileInput, ListFilesParams, ListFilesResult };
