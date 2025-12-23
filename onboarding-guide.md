@@ -76,10 +76,34 @@ REDIS_URI=redis://localhost:6379
 NODE_ENV=development
 SYNC_WORKER_CONCURRENCY=5
 SYNC_WORKER_MAX_JOBS=10
-DB_PATH=./data/satellite.db  # Optional: override database path
+DB_PATH=/absolute/path/to/sqlite_db_name.db  # REQUIRED: Must be absolute path
 ```
 
+**Important Notes:**
+- `DB_PATH` is **required** and must be an **absolute path**
+- The directory will be created automatically if it doesn't exist
+- Example: `DB_PATH=/absolute/path/to/your/sqlite_db_name.db`
+
 ## Building & Running
+
+### Building the Project
+
+**Always clean before building to avoid stale compiled code:**
+
+```bash
+# Clean old compiled code and rebuild
+npm run clean && npm run build
+```
+
+**Why clean before build?**
+- TypeScript compiler only updates changed files
+- Old compiled code can remain in `dist/` directory
+- Stale code causes errors that don't match your source
+- Always run `npm run clean && npm run build` after:
+  - Initial setup
+  - Pulling new changes
+  - Making code changes
+  - Seeing weird errors
 
 ### Development Mode
 
@@ -99,13 +123,14 @@ npm run dev:worker
 ```bash
 npm run dev:cli <command>
 # Example: npm run dev:cli list
+# Uses ts-node - no build needed
 ```
 
 ### Production Mode
 
-1. **Build:**
+1. **Build (always clean first):**
 ```bash
-npm run build
+npm run clean && npm run build
 # Compiles TypeScript to JavaScript in dist/
 ```
 
@@ -119,15 +144,42 @@ npm run start:api
 npm run start:worker
 ```
 
-4. **Use CLI (after build):**
+4. **Setup CLI (first time only):**
+```bash
+# Make sure you're in the project root directory
+cd /path/to/satellite
+
+# Set execute permissions
+chmod +x dist/commands/index.js
+
+# Link globally (must be run from project root)
+npm link
+
+# Verify
+ddctl --help
+```
+
+**Important:** `npm link` must be run from the project root directory (where `package.json` is located). It reads `package.json` to find the `bin` field, and the paths are relative to the project root.
+
+5. **Use CLI:**
 ```bash
 ddctl <command>
 # Example: ddctl list
+# Works from any directory
 ```
 
 ### Database Migrations
 
-Migrations run automatically on startup. To run manually:
+Migrations run automatically on startup for both API server and CLI tool. They are **idempotent** - meaning they check which migrations have already been applied and only run pending ones.
+
+**Important Notes:**
+- Both API (`src/index.ts`) and CLI (`src/commands/index.ts`) run migrations on startup
+- Since they use the same database (via `DB_PATH`), only the first one to run will actually apply migrations
+- If migrations are already applied, subsequent runs will skip them (safe to run multiple times)
+- **Why CLI might work without migrations:** If you've run the API server before, migrations were already applied to the database. The CLI can then work without running migrations again.
+- **However, keep migrations in CLI** for cases where CLI is used first on a fresh database
+
+To run migrations manually:
 
 ```bash
 npm run migrate
@@ -135,7 +187,7 @@ npm run migrate
 
 ## CLI Tool (`ddctl`)
 
-The CLI tool works from any directory. Database is stored at `~/.ddctl/satellite.db` (or `DB_PATH` if set).
+The CLI tool works from any directory because `DB_PATH` is resolved to an absolute path at startup. Both API and CLI use the same database location specified by `DB_PATH`.
 
 ### Commands
 
@@ -397,8 +449,19 @@ npm run migrate:create <migration-name>
 ## Troubleshooting
 
 ### CLI doesn't work from other directories
-- Ensure database path is set correctly (`~/.ddctl/satellite.db`)
-- Check that migrations have run
+- Ensure `DB_PATH` is set to an **absolute path** in `config/.env`
+- Check that migrations have run (they run automatically)
+- Verify the path is correct: check logs for "SQLite database connected: <path>"
+
+### CLI command not found or permission denied
+- Build the project: `npm run clean && npm run build`
+- Set execute permissions: `chmod +x dist/commands/index.js`
+- Link globally: `npm link`
+
+### Code works in dev but not production
+- **Most common issue:** Stale `dist/` folder
+- Solution: `npm run clean && npm run build`
+- This ensures compiled code matches source code
 
 ### Worker not processing jobs
 - Verify Redis is running: `redis-cli ping`
@@ -406,8 +469,9 @@ npm run migrate:create <migration-name>
 - Check worker logs for errors
 
 ### Database errors
-- Ensure database file exists and is writable
-- Run migrations: `npm run migrate`
+- Ensure `DB_PATH` is set and is an absolute path
+- Ensure database directory exists and is writable
+- Migrations run automatically on startup
 - Check database path in logs
 
 ## Next Steps
