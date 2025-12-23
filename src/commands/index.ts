@@ -7,6 +7,9 @@ import '../config';
 import { logger } from '../infra/logger';
 logger.level('error');
 
+import { runMigrations } from '../infra/database/migrations';
+runMigrations();
+
 import { listCommand } from './listCommand';
 import { getCommand } from './getCommand';
 import { createCommand } from './createCommand';
