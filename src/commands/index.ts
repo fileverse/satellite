@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 
+// Import config early to validate DB_PATH
+import '../config';
+
 import { logger } from '../infra/logger';
 logger.level('error');
 

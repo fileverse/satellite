@@ -1,3 +1,6 @@
+// Import config early to validate DB_PATH
+import './config';
+
 import { logger } from './infra';
 import { closeWorker, isWorkerActive, startWorker } from './infra/queue';
 
