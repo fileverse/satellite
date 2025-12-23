@@ -57,6 +57,8 @@ The CLI tool `ddctl` provides commands to manage your ddocs from the command lin
 
 ### Setup
 
+**Important:** All commands must be run from the project root directory (where `package.json` is located).
+
 1. **Build the project:**
    ```bash
    npm run clean && npm run build
@@ -67,6 +69,7 @@ The CLI tool `ddctl` provides commands to manage your ddocs from the command lin
    chmod +x dist/commands/index.js
    npm link
    ```
+   **Note:** `npm link` must be run from the project root directory because it reads `package.json` to find the binary path.
 
 3. **Verify installation:**
    ```bash
