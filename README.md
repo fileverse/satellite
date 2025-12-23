@@ -31,6 +31,22 @@ npm run dev
 npm run dev:worker
 ```
 
+## CLI Usage
+
+The CLI tool `ddctl` provides commands to manage your ddocs from the command line.
+
+### Installation
+
+After installing dependencies, the CLI is available via:
+
+```bash
+# Development mode
+npm run dev:cli
+
+# Production mode (after build)
+ddctl
+```
+
 ## Environment Variables
 
 Create a `.env` file in the `config/` directory with the following variables:
