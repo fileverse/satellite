@@ -12,20 +12,27 @@ interface MigrationFile {
 
 /**
  * Load all migration files from the migrations directory
- * Migration files should be named: YYYYMMDDHHMMSS_description.ts
+ * Migration files should be named: YYYYMMDDHHMMSS_description.ts (or .js in compiled mode)
  */
 function loadMigrations(): MigrationFile[] {
   const migrationsDir = __dirname;
+  // Support both .ts (development) and .js (compiled) files
   const files = fs.readdirSync(migrationsDir)
-    .filter(file => file.endsWith('.ts') && file !== 'index.ts')
+    .filter(file => {
+      const isMigrationFile = (file.endsWith('.ts') || file.endsWith('.js')) && 
+                              file !== 'index.ts' && 
+                              file !== 'index.js' &&
+                              !file.endsWith('.js.map'); // Exclude source maps
+      return isMigrationFile;
+    })
     .sort(); // Sort alphabetically (which works for timestamp format)
 
   const migrations: MigrationFile[] = [];
 
   for (const file of files) {
     const filePath = path.join(migrationsDir, file);
-    // Extract timestamp from filename (first 14 digits)
-    const match = file.match(/^(\d{14})_(.+)\.ts$/);
+    // Extract timestamp from filename (first 14 digits) - support both .ts and .js
+    const match = file.match(/^(\d{14})_(.+)\.(ts|js)$/);
 
     if (!match) {
       logger.warn(`Skipping invalid migration file: ${file}`);
