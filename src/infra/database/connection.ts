@@ -12,7 +12,7 @@ class DatabaseConnectionManager {
   private static instance: DatabaseConnectionManager;
   private db: Database.Database | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): DatabaseConnectionManager {
     if (!DatabaseConnectionManager.instance) {
@@ -23,13 +23,8 @@ class DatabaseConnectionManager {
 
   getConnection(): Database.Database {
     if (!this.db) {
-      // Ensure data directory exists
-      const dataDir = path.join(process.cwd(), 'data');
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
-      const dbPath = config.DB_PATH || path.join(dataDir, 'satellite.db');
+      // DB_PATH is required, validated, and normalized in config/index.ts
+      const dbPath = config.DB_PATH!;
 
       // Create database instance
       this.db = new Database(dbPath, {
