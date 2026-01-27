@@ -1,9 +1,14 @@
 import { getArgon2idHash } from "@fileverse/crypto/dist/argon";
+import { bytesToBase64, generateRandomBytes, toBytes } from "@fileverse/crypto/dist/utils"
+import { derivePBKDF2Key, encryptAesCBC } from "@fileverse/crypto/dist/kdf"
+import { secretBoxEncrypt } from "@fileverse/crypto/dist/nacl"
 import hkdf from "futoin-hkdf";
+
 import tweetnacl from "tweetnacl";
 import { fromUint8Array, toUint8Array } from "js-base64";
 import { encryptReadable } from "./file-encryption";
 import { type Readable } from "node:stream";
+import { toAESKey, aesEncrypt } from "@fileverse/crypto/dist/webcrypto";
 
 
 interface LinkKeyMaterialParams {
@@ -98,6 +103,24 @@ export const jsonToFile = (json: any, fileName: string) => {
     return file;
 }
 
+const appendAuthTagIvToBlob = async (blob: Blob, authTag: Uint8Array, iv: Uint8Array) => {
+    const encryptedFileBytes = await blob.arrayBuffer();
+    const encryptedBytes = new Uint8Array(encryptedFileBytes);
+    const combinedLength = encryptedBytes.length + authTag.length + iv.length;
+    const combinedArray = new Uint8Array(combinedLength);
+
+    let offset = 0;
+    combinedArray.set(encryptedBytes, offset);
+    offset += encryptedBytes.length;
+
+    combinedArray.set(authTag, offset);
+    offset += authTag.length;
+
+    combinedArray.set(iv, offset);
+
+    return new Blob([combinedArray], { type: blob.type });
+}
+
 
 export const encryptFile = async (file: File) => {
     const arrayBuffer = await file.arrayBuffer();
@@ -110,6 +133,51 @@ export const encryptFile = async (file: File) => {
     const encryptedBlob = await new Response(stream).blob();
 
 
+    const encryptedBlobWithAuthTagIv = await appendAuthTagIvToBlob(encryptedBlob, toUint8Array(authTag), toUint8Array(iv));
 
-    return { encryptedBlob, decryptionOptions };
+    return { encryptedFile: new File([encryptedBlobWithAuthTagIv], file.name), key };
 }
+
+
+
+export const buildLinklock = (key: Uint8Array, fileKey: string) => {
+    const ikm = generateRandomBytes();
+    const kdfSalt = generateRandomBytes();
+    const derivedEphermalKey = derivePBKDF2Key(ikm, kdfSalt);
+
+    const messageToEncrypt = toBytes(fileKey);
+
+    const { iv, cipherText } = encryptAesCBC(
+        {
+            key: derivedEphermalKey,
+            message: messageToEncrypt,
+        },
+        'base64'
+    );
+
+    const encryptedIkm = secretBoxEncrypt(ikm, key);
+
+    const lockedFileKey = iv + "__n__" + cipherText;
+    const keyMaterial = bytesToBase64(kdfSalt) + "__n__" + encryptedIkm;
+
+    return {
+        lockedFileKey,
+        keyMaterial,
+    }
+
+}
+
+
+export const encryptTitleWithFileKey = async (
+    title: string,
+    fileKey: string
+) => {
+    const key = await toAESKey(toUint8Array(fileKey));
+    if (!key) throw new Error('Key is undefined');
+
+    const titleBytes = new TextEncoder().encode(title);
+
+    const encryptedTitle = await aesEncrypt(key, titleBytes, "base64");
+
+    return encryptedTitle;
+};
