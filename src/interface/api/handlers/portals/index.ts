@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { savePortal } from '../../../../domain/portal/savePortal';
 import { addApiKey } from '../../../../domain/portal/saveApiKey';
+import { removeApiKey } from '../../../../domain/portal/removeApiKey';
 
 const addPortalHandler = async (req: Request, res: Response) => {
   try {
@@ -42,5 +43,26 @@ const addKeyHandler = async (req: Request, res: Response) => {
   }
 };
 
+const removeKeyHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        error: 'API key ID is required'
+      });
+    }
+
+    const deletedApiKey = removeApiKey(id);
+    res.status(200).json({
+      message: 'API key removed successfully',
+      data: deletedApiKey,
+    });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+};
+
 export const addPortal = [addPortalHandler];
 export const addKey = [addKeyHandler];
+export const removeKey = [removeKeyHandler];

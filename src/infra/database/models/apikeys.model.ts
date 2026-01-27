@@ -7,7 +7,8 @@ export interface ApiKey {
   name: string;
   collaboratorAddress: string;
   portalAddress: string;
-  createdAt: number;
+  createdAt: string;
+  isDeleted: number;
 }
 
 export class ApiKeysModel {
@@ -18,30 +19,39 @@ export class ApiKeysModel {
     name: string;
     collaboratorAddress: string;
     portalAddress: string;
-    createdAt: number;
   }): ApiKey {
     const _id = uuidv7();
+    const now = new Date().toISOString();
     const sql = `INSERT INTO ${this.TABLE} (_id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt) 
     VALUES (?, ?, ?, ?, ?, ?)`;
 
-    QueryBuilder.execute(sql, [
+    const result = QueryBuilder.execute(sql, [
       _id,
       input.apiKeySeed,
       input.name,
       input.collaboratorAddress,
       input.portalAddress,
-      input.createdAt
+      now
     ]);
 
-    const created = this.findByApiKeySeed(input.apiKeySeed);
+    if (result.changes === 0) {
+      throw new Error('Failed to create API key');
+    }
+
+    const created = this.findById(_id);
     if (!created) {
       throw new Error('Failed to create API key');
     }
     return created;
   }
 
-  static findByApiKeySeed(apiKeySeed: string): ApiKey | undefined {
-    const sql = `SELECT _id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt FROM ${this.TABLE} WHERE apiKeySeed = ?`;
-    return QueryBuilder.selectOne<ApiKey>(sql, [apiKeySeed]);
+  static findById(_id: string): ApiKey | undefined {
+    const sql = `SELECT _id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt, isDeleted FROM ${this.TABLE} WHERE _id = ? AND isDeleted = 0`;
+    return QueryBuilder.selectOne<ApiKey>(sql, [_id]);
+  }
+
+  static delete(_id: string): void {
+    const sql = `UPDATE ${this.TABLE} SET isDeleted = 1 WHERE _id = ?`;
+    QueryBuilder.execute(sql, [_id]);
   }
 }

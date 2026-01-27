@@ -9,7 +9,7 @@ export const up = `
     name TEXT NOT NULL UNIQUE,
     collaboratorAddress TEXT NOT NULL UNIQUE,
     portalAddress TEXT NOT NULL,
-    createdAt INTEGER NOT NULL
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `;
 

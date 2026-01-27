@@ -17,10 +17,5 @@ export function addApiKey(input: AddApiKeyInput): ApiKey {
     throw new Error(`Portal with address ${input.portalAddress} does not exist`);
   }
 
-  const createdAt = Math.floor(Date.now() / 1000);
-
-  return ApiKeysModel.create({
-    ...input,
-    createdAt,
-  });
+  return ApiKeysModel.create(input);
 }
