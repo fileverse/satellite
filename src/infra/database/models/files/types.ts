@@ -9,5 +9,8 @@ export interface UpdateFilePayload {
   localVersion?: number;
   onchainVersion?: number;
   syncStatus?: 'pending' | 'synced' | 'failed';
+  portalAddress?: string;
+  metadata?: Record<string, unknown>;
+  onChainFileId?: number;
 }
 
