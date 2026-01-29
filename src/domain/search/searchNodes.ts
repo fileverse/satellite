@@ -5,6 +5,7 @@ export interface SearchNodesParams {
   query: string;
   limit?: number;
   skip?: number;
+  portalAddress: string;
 }
 
 /**
@@ -27,14 +28,14 @@ export interface SearchNodesResult {
  * Normalization is at the API response level, not schema level
  */
 export default function searchNodes(params: SearchNodesParams): SearchNodesResult {
-  const { query, limit, skip } = params;
+  const { query, limit, skip, portalAddress } = params;
 
   if (!query || query.trim().length === 0) {
     return { nodes: [], total: 0, hasNext: false };
   }
 
   // Search only files by title (for now)
-  const files = FilesModel.searchByTitle(query, limit, skip);
+  const files = FilesModel.searchByTitle(query, portalAddress, limit, skip);
 
   // Normalize files to SearchNode format
   const normalizedNodes: SearchNode[] = files.map(file => ({
@@ -43,8 +44,8 @@ export default function searchNodes(params: SearchNodesParams): SearchNodesResul
   }));
 
   // Get total count for pagination
-  const countSql = `SELECT COUNT(*) as count FROM files WHERE LOWER(title) LIKE LOWER(?)`;
-  const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, [`%${query}%`]);
+  const countSql = `SELECT COUNT(*) as count FROM files WHERE LOWER(title) LIKE LOWER(?) AND isDeleted = 0 AND portalAddress = ?`;
+  const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, [`%${query}%`, portalAddress]);
   const total = totalResult?.count || 0;
 
   const hasNext = skip !== undefined && limit !== undefined 

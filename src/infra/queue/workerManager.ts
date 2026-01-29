@@ -69,6 +69,12 @@ export class WorkerManager {
   private async processCreateJob(job: Job<FileEvent>): Promise<void> {
     const { fileId, metadata } = job.data;
 
+    // Get file to retrieve portalAddress for update operations
+    const file = FilesModel.findByIdIncludingDeleted(fileId);
+    if (!file) {
+      throw new Error(`File ${fileId} not found`);
+    }
+
     // file was created and saved in local db. 
     // we need to publish this file now
     const result = await publishFile(fileId);
@@ -84,14 +90,14 @@ export class WorkerManager {
     const payload: UpdateFilePayload = {
       onchainVersion: metadata.localVersion,
     }
-    const updatedFile = FilesModel.update(fileId, payload);
+    const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
     // Once local and onchain versions become same, update syncStatus to 'synced' (from 'pending')
     if (updatedFile.localVersion === updatedFile.onchainVersion) {
       const payload: UpdateFilePayload = {
         syncStatus: 'synced', // TODO: use enum later
       }
-      FilesModel.update(fileId, payload);
+      FilesModel.update(fileId, payload, file.portalAddress);
     }
   }
 
@@ -103,7 +109,7 @@ export class WorkerManager {
       throw new Error('version field is required for update events');
     }
 
-    const file = FilesModel.findById(fileId);
+    const file = FilesModel.findByIdIncludingDeleted(fileId);
     if (!file) {
       return;
     }
@@ -125,21 +131,21 @@ export class WorkerManager {
     const payload: UpdateFilePayload = {
       onchainVersion: metadata.localVersion,
     }
-    const updatedFile = FilesModel.update(fileId, payload);
+    const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
     // Once local and onchain versions become same, update syncStatus to 'synced' (from 'pending')
     if (updatedFile.localVersion === updatedFile.onchainVersion) {
       const payload: UpdateFilePayload = {
         syncStatus: 'synced', // TODO: use enum later
       }
-      FilesModel.update(fileId, payload);
+      FilesModel.update(fileId, payload, file.portalAddress);
     }
   }
 
   private async processDeleteJob(job: Job<FileEvent>): Promise<void> {
     const { fileId, metadata } = job.data;
 
-    // Get the file including deleted ones to get its version
+    // Get the file including deleted ones to get its version and portalAddress
     const file = FilesModel.findByIdIncludingDeleted(fileId);
     if (!file) {
       return;
@@ -155,7 +161,7 @@ export class WorkerManager {
     const payload: UpdateFilePayload = {
       syncStatus: 'synced',
     }
-    FilesModel.update(fileId, payload);
+    FilesModel.update(fileId, payload, file.portalAddress);
   }
 
   private setupEventHandlers(): void {
