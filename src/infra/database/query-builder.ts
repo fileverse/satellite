@@ -5,7 +5,6 @@ import { DEFAULT_LIST_LIMIT } from '../../domain/file/constants';
 const db = databaseConnectionManager.getConnection();
 
 export class QueryBuilder {
-
   static select<T = any>(sql: string, params: any[] = []): T[] {
     const stmt = db.prepare(sql);
     return stmt.all(params) as T[];
@@ -16,7 +15,10 @@ export class QueryBuilder {
     return stmt.get(params) as T | undefined;
   }
 
-  static execute(sql: string, params: any[] = []): {
+  static execute(
+    sql: string,
+    params: any[] = []
+  ): {
     changes: number;
     lastInsertRowid: number | bigint;
   } {
@@ -34,22 +36,22 @@ export class QueryBuilder {
 
   static paginate(sql: string, options: QueryOptions = {}): string {
     let query = sql;
-    
+
     if (options.orderBy) {
       query += ` ORDER BY ${options.orderBy} ${options.orderDirection || 'ASC'}`;
     }
-    
+
     const hasOffset = (options.offset ?? 0) > 0;
     const limit = options.limit ?? (hasOffset ? DEFAULT_LIST_LIMIT : undefined);
-    
+
     if (limit) {
       query += ` LIMIT ${limit}`;
     }
-    
+
     if (hasOffset) {
       query += ` OFFSET ${options.offset}`;
     }
-    
+
     return query;
   }
 }

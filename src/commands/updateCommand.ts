@@ -6,11 +6,24 @@ import { Command } from 'commander';
 import { updateFile, getFile, UpdateFileInput } from '../domain/file';
 import { spawnSync } from 'child_process';
 import Table from 'cli-table3';
-import { formatDate, getElapsedTime, columnNames, columnWidth } from './utils/util';
+import {
+  formatDate,
+  getElapsedTime,
+  columnNames,
+  columnWidth,
+} from './utils/util';
 
 function showTable(updatedFile: any) {
   const table = new Table({
-    head: [columnNames.ddocId, columnNames.title, columnNames.status, columnNames.local, columnNames.onchain, columnNames.created, columnNames.lastModified],
+    head: [
+      columnNames.ddocId,
+      columnNames.title,
+      columnNames.status,
+      columnNames.local,
+      columnNames.onchain,
+      columnNames.created,
+      columnNames.lastModified,
+    ],
     colWidths: [
       columnWidth[columnNames.ddocId],
       columnWidth[columnNames.title],
@@ -26,7 +39,9 @@ function showTable(updatedFile: any) {
   const fileDdocId = (updatedFile as any).ddocId || 'N/A';
   table.push([
     fileDdocId,
-    updatedFile.title.length > 23 ? updatedFile.title.substring(0, 20) + '...' : updatedFile.title,
+    updatedFile.title.length > 23
+      ? updatedFile.title.substring(0, 20) + '...'
+      : updatedFile.title,
     updatedFile.syncStatus,
     updatedFile.localVersion,
     updatedFile.onchainVersion,
@@ -42,10 +57,7 @@ export const updateCommand = new Command()
   .description('Update an existing ddoc from a file')
   .argument('<ddocId>', 'The ddoc ID to update')
   .option('-f, --file <file_path>', 'path to file to update ddoc from')
-  .action(async (
-    ddocId: string,
-    options: { file?: string }
-  ) => {
+  .action(async (ddocId: string, options: { file?: string }) => {
     try {
       const file = await getFile(ddocId);
       if (!file) {
@@ -71,7 +83,10 @@ export const updateCommand = new Command()
       }
 
       // vi-editor flow
-      const tmpFilePath = path.join(os.tmpdir(), `tmp-${ddocId}-${Date.now()}.txt`);
+      const tmpFilePath = path.join(
+        os.tmpdir(),
+        `tmp-${ddocId}-${Date.now()}.txt`
+      );
       fs.writeFileSync(tmpFilePath, file.content);
 
       const editor = process.env.EDITOR || 'vi';
@@ -99,4 +114,3 @@ export const updateCommand = new Command()
       throw error;
     }
   });
-

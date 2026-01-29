@@ -13,7 +13,7 @@ export const expressErrorHandler = (
   },
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   console.log('error', err.details);
   const errorMessage = `Message: ${err.message}\nError Code: ${

@@ -20,7 +20,7 @@ const searchHandler = async (req: Request, res: Response) => {
   res.json({
     nodes: result.nodes,
     total: result.total,
-    hasNext: result.hasNext
+    hasNext: result.hasNext,
   });
 };
 

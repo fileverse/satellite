@@ -2,23 +2,27 @@
   "name": "satellite",
   "version": "1.0.0",
   "description": "Satellite",
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "ddctl": "./dist/commands/index.js"
   },
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc",
     "clean": "rm -rf dist",
-    "dev": "nodemon --exec ts-node src/index.ts",
-    "dev:worker": "nodemon --exec ts-node src/worker.ts",
-    "dev:cli": "ts-node src/commands/index.ts",
+    "postbuild": "node scripts/fix-esm-imports.js",
+    "dev": "nodemon --watch src --ext ts --exec \"npm run build && node dist/index.js\"",
+    "dev:worker": "nodemon --watch src --ext ts --exec \"npm run build && node dist/worker.js\"",
+    "dev:cli": "nodemon --watch src --ext ts --exec \"npm run build && node dist/commands/index.js\"",
     "start:api": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/worker.js",
+    "lint": "eslint . --ext .ts,.js",
+    "format": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "npm run build",
-    "migrate": "ts-node scripts/run-migrations.ts",
-    "migrate:create": "ts-node scripts/generate-migration.ts",
-    "migrate:rollback": "ts-node scripts/rollback-migrations.ts"
+    "migrate": "node --loader ts-node/esm scripts/run-migrations.ts",
+    "migrate:create": "node --loader ts-node/esm scripts/generate-migration.ts",
+    "migrate:rollback": "node --loader ts-node/esm scripts/rollback-migrations.ts"
   },
   "keywords": [],
   "author": "",
@@ -45,10 +49,11 @@
     "localtunnel": "^2.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
+    "permissionless": "^0.3.4",
     "redis": "^4.7.0",
     "short-uuid": "^6.0.3",
     "uuidv7": "^1.1.0",
-    "viem": "^2.29.2"
+    "viem": "^2.45.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
@@ -58,7 +63,12 @@
     "@types/localtunnel": "^2.0.4",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/parser": "^8.23.0",
+    "eslint": "^9.20.0",
+    "eslint-config-prettier": "^10.0.1",
     "nodemon": "^3.1.11",
+    "prettier": "^3.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

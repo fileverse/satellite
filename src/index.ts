@@ -4,7 +4,7 @@ import { runMigrations } from './infra/database/migrations';
 import { closeQueue } from './infra/queue';
 import { closeDatabase } from './infra/database';
 import app from './app';
-import localtunnel = require('localtunnel');
+import localtunnel from 'localtunnel';
 
 runMigrations();
 
@@ -66,5 +66,3 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-
-module.exports = app;

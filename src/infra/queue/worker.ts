@@ -7,7 +7,7 @@ export function startWorker(concurrency: number = 1): void {
   if (workerManager && workerManager.isActive()) {
     return;
   }
-  
+
   workerManager = new WorkerManager(FILE_EVENTS_QUEUE);
   workerManager.start(concurrency);
 }
@@ -22,4 +22,3 @@ export async function closeWorker(): Promise<void> {
 export function isWorkerActive(): boolean {
   return workerManager !== null && workerManager.isActive();
 }
-

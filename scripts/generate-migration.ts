@@ -1,7 +1,6 @@
-#!/usr/bin/env ts-node
-
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * Generate a new migration file with current timestamp
@@ -10,7 +9,10 @@ import * as path from 'path';
  */
 
 // Get the migrations directory path relative to project root
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..'
+);
 const migrationsDir = path.join(projectRoot, 'src/infra/database/migrations');
 
 // Get description from command line arguments

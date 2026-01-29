@@ -34,7 +34,9 @@ export class QueueManager {
   async addJob(event: FileEvent, options?: JobsOptions): Promise<void> {
     try {
       await this.queue.add(event.type, event, options);
-      logger.info(`Added file event job: ${event.type} for file ${event.fileId}`);
+      logger.info(
+        `Added file event job: ${event.type} for file ${event.fileId}`
+      );
     } catch (error: any) {
       logger.error(`Failed to add event job to queue:`, error);
       throw error;
@@ -67,4 +69,3 @@ export class QueueManager {
     return this.queue;
   }
 }
-

@@ -6,22 +6,32 @@ const createHandler = async (req: Request, res: Response) => {
     const input: CreateFolderInput = req.body;
 
     // Validate required fields
-    if (!input.onchainFileId || !input.folderId || !input.folderRef || !input.folderName || !input.portalAddress) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: onchainFileId, folderId, folderRef, folderName, and portalAddress are required' 
+    if (
+      !input.onchainFileId ||
+      !input.folderId ||
+      !input.folderRef ||
+      !input.folderName ||
+      !input.portalAddress
+    ) {
+      return res.status(400).json({
+        error:
+          'Missing required fields: onchainFileId, folderId, folderRef, folderName, and portalAddress are required',
       });
     }
 
     if (!input.metadataIPFSHash) {
-      return res.status(400).json({ 
-        error: 'Missing required field: metadataIPFSHash is required' 
+      return res.status(400).json({
+        error: 'Missing required field: metadataIPFSHash is required',
       });
     }
 
-    if (input.lastTransactionBlockNumber === undefined || 
-        input.lastTransactionBlockTimestamp === undefined) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: lastTransactionBlockNumber and lastTransactionBlockTimestamp are required' 
+    if (
+      input.lastTransactionBlockNumber === undefined ||
+      input.lastTransactionBlockTimestamp === undefined
+    ) {
+      return res.status(400).json({
+        error:
+          'Missing required fields: lastTransactionBlockNumber and lastTransactionBlockTimestamp are required',
       });
     }
 

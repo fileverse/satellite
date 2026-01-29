@@ -1,5 +1,13 @@
 import { Request, Response } from 'express';
-import { listFiles, getFile, createFile, updateFile, deleteFile, CreateFileInput, UpdateFileInput } from '../../../../domain/file';
+import {
+  listFiles,
+  getFile,
+  createFile,
+  updateFile,
+  deleteFile,
+  CreateFileInput,
+  UpdateFileInput,
+} from '../../../../domain/file';
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
 import { ClientUpdateFileInput } from './types';
@@ -18,7 +26,7 @@ const listHandler = async (req: Request, res: Response) => {
   res.json({
     ddocs: result.ddocs,
     total: result.total,
-    hasNext: result.hasNext
+    hasNext: result.hasNext,
   });
 };
 
@@ -55,13 +63,15 @@ const createHandler = async (req: Request, res: Response) => {
 
     if (!title) {
       return res.status(400).json({
-        error: 'Missing required field: title is required. When uploading a file, title is derived from the file name. When providing content directly, title must be provided.'
+        error:
+          'Missing required field: title is required. When uploading a file, title is derived from the file name. When providing content directly, title must be provided.',
       });
     }
 
     if (!fileContent) {
       return res.status(400).json({
-        error: 'Missing content: Either provide a file upload or fileContent text field'
+        error:
+          'Missing content: Either provide a file upload or fileContent text field',
       });
     }
 
@@ -100,7 +110,8 @@ const updateHandler = async (req: Request, res: Response) => {
     // At least one of title or content must be provided
     if (!title && !fileContent) {
       return res.status(400).json({
-        error: 'At least one field is required: Either provide title, content, or both. When uploading a file, title is derived from the file name. When providing content directly, you can provide title and/or content.'
+        error:
+          'At least one field is required: Either provide title, content, or both. When uploading a file, title is derived from the file name. When providing content directly, you can provide title and/or content.',
       });
     }
 
@@ -156,4 +167,3 @@ export const update = [updateMiddleware, updateHandler];
 export const list = [listHandler];
 export const get = [getHandler];
 export const del = [deleteHandler];
-

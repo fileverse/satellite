@@ -31,7 +31,7 @@ export class ApiKeysModel {
       input.name,
       input.collaboratorAddress,
       input.portalAddress,
-      now
+      now,
     ]);
 
     if (result.changes === 0) {

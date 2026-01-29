@@ -16,4 +16,3 @@ export const up = `
 export const down = `
   DROP TABLE IF EXISTS api_keys;
 `;
-

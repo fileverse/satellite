@@ -4,4 +4,3 @@ import { addApiKey } from './saveApiKey';
 import { removeApiKey } from './removeApiKey';
 
 export { publishFile, savePortal, addApiKey, removeApiKey };
-

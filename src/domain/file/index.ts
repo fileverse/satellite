@@ -4,7 +4,12 @@ import { FilesModel, File } from '../../infra/database/models';
 import { FileEvent, fileEventsQueue } from '../../infra/queue';
 import { DEFAULT_LIST_LIMIT } from './constants';
 
-import type { ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput } from './types';
+import type {
+  ListFilesParams,
+  ListFilesResult,
+  CreateFileInput,
+  UpdateFileInput,
+} from './types';
 import type { UpdateFilePayload } from '../../infra/database/models/files/types';
 
 function listFiles(params: ListFilesParams): ListFilesResult {
@@ -16,7 +21,7 @@ function listFiles(params: ListFilesParams): ListFilesResult {
   return {
     ddocs: result.files,
     total: result.total,
-    hasNext: result.hasNext
+    hasNext: result.hasNext,
   };
 }
 
@@ -53,7 +58,7 @@ async function createFile(input: CreateFileInput): Promise<File> {
     metadata: {
       localVersion: file.localVersion,
     },
-  }
+  };
 
   await fileEventsQueue.addJob(createFileEvent);
   return file;
@@ -69,7 +74,9 @@ async function updateFile(
   }
 
   if (!payload.title && !payload.content) {
-    throw new Error('At least one field is required: Either provide title, content, or both');
+    throw new Error(
+      'At least one field is required: Either provide title, content, or both'
+    );
   }
 
   const existingFile = FilesModel.findByDDocId(ddocId, portalAddress);
@@ -89,8 +96,8 @@ async function updateFile(
     type: 'update',
     metadata: {
       localVersion: updatedFile.localVersion,
-    }
-  }
+    },
+  };
 
   await fileEventsQueue.addJob(editFileEvent);
   return updatedFile;
@@ -111,7 +118,7 @@ async function deleteFile(ddocId: string, portalAddress: string): Promise<File> 
   const deleteFileEvent: FileEvent = {
     fileId: deletedFile._id,
     type: 'delete',
-    metadata: {}
+    metadata: {},
   };
 
   await fileEventsQueue.addJob(deleteFileEvent);
@@ -119,4 +126,9 @@ async function deleteFile(ddocId: string, portalAddress: string): Promise<File> 
 }
 
 export { listFiles, getFile, createFile, updateFile, deleteFile };
-export type { CreateFileInput, UpdateFileInput, ListFilesParams, ListFilesResult };
+export type {
+  CreateFileInput,
+  UpdateFileInput,
+  ListFilesParams,
+  ListFilesResult,
+};

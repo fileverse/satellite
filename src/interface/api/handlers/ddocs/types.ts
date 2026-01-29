@@ -6,4 +6,3 @@ export interface ClientUpdateFileInput {
   title?: string;
   content?: string;
 }
-

@@ -31,8 +31,8 @@ export class FilesModel {
     let metadata: Record<string, unknown> = {};
     try {
       if (fileRaw.metadata) {
-        metadata = typeof fileRaw.metadata === 'string' 
-          ? JSON.parse(fileRaw.metadata) 
+        metadata = typeof fileRaw.metadata === 'string'
+          ? JSON.parse(fileRaw.metadata)
           : fileRaw.metadata;
       }
     } catch (e) {

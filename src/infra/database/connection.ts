@@ -12,7 +12,7 @@ class DatabaseConnectionManager {
   private static instance: DatabaseConnectionManager;
   private db: Database.Database | null = null;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): DatabaseConnectionManager {
     if (!DatabaseConnectionManager.instance) {
@@ -28,7 +28,10 @@ class DatabaseConnectionManager {
 
       // Create database instance
       this.db = new Database(dbPath, {
-        verbose: config.NODE_ENV === 'development' ? logger.info.bind(logger) : undefined,
+        verbose:
+          config.NODE_ENV === 'development'
+            ? logger.info.bind(logger)
+            : undefined,
       });
 
       // Enable WAL mode for better concurrency
@@ -59,5 +62,5 @@ class DatabaseConnectionManager {
   }
 }
 
-export const databaseConnectionManager = DatabaseConnectionManager.getInstance();
-
+export const databaseConnectionManager =
+  DatabaseConnectionManager.getInstance();

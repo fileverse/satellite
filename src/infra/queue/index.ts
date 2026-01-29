@@ -20,4 +20,11 @@ async function closeQueue(): Promise<void> {
   await redisConnectionManager.close();
 }
 
-export { FileEvent, fileEventsQueue, closeQueue, closeWorker, isWorkerActive, startWorker };
+export {
+  FileEvent,
+  fileEventsQueue,
+  closeQueue,
+  closeWorker,
+  isWorkerActive,
+  startWorker,
+};

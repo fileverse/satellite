@@ -6,13 +6,18 @@ const INPUT_PATH = './file.png';
 const OUTPUT_PATH = `${INPUT_PATH}.enc`;
 
 async function main() {
-  if (existsSync(OUTPUT_PATH)) throw new Error(`Output file already exists: ${OUTPUT_PATH}`);
+  if (existsSync(OUTPUT_PATH))
+    throw new Error(`Output file already exists: ${OUTPUT_PATH}`);
 
-  const { stream, decryptionOptions } = encryptReadable(createReadStream(INPUT_PATH));
+  const { stream, decryptionOptions } = encryptReadable(
+    createReadStream(INPUT_PATH)
+  );
   await pipeline(stream, createWriteStream(OUTPUT_PATH));
   const options = await decryptionOptions;
 
-  process.stdout.write(`${JSON.stringify({ outputPath: OUTPUT_PATH, ...options })}\n`);
+  process.stdout.write(
+    `${JSON.stringify({ outputPath: OUTPUT_PATH, ...options })}\n`
+  );
 }
 
 main().catch((err) => {

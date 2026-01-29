@@ -40,7 +40,9 @@ export class WorkerManager {
 
     this.setupEventHandlers();
     this.isRunning = true;
-    logger.info(`Worker started for queue: ${this.queueName} (concurrency: ${concurrency})`);
+    logger.info(
+      `Worker started for queue: ${this.queueName} (concurrency: ${concurrency})`
+    );
   }
 
   private async processJob(job: Job<FileEvent>): Promise<void> {
@@ -81,7 +83,6 @@ export class WorkerManager {
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }
-
 
     // If publishing is successful, the local and onchain versions of the file are in sync
     // Hence, set onchainVersion = localVersion
@@ -203,4 +204,3 @@ export class WorkerManager {
     return this.worker;
   }
 }
-

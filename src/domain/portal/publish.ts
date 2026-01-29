@@ -14,7 +14,7 @@ export async function publishFile(fileId: string): Promise<PublishResult> {
 
   try {
     // Simulate onchain publishing by having a delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     return {
       success: true,

@@ -15,4 +15,3 @@ try {
   logger.error('Migration failed:', error);
   process.exit(1);
 }
-

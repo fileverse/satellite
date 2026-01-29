@@ -1,22 +1,26 @@
-import { getArgon2idHash } from "@fileverse/crypto/dist/argon";
-import { bytesToBase64, generateRandomBytes, toBytes } from "@fileverse/crypto/dist/utils"
-import { derivePBKDF2Key, encryptAesCBC } from "@fileverse/crypto/dist/kdf"
-import { secretBoxEncrypt } from "@fileverse/crypto/dist/nacl"
-import hkdf from "futoin-hkdf";
+import { getArgon2idHash } from '@fileverse/crypto/argon';
+import {
+    bytesToBase64,
+    generateRandomBytes,
+    toBytes,
+} from '@fileverse/crypto/utils';
+import { derivePBKDF2Key, encryptAesCBC } from '@fileverse/crypto/kdf';
+import { secretBoxEncrypt } from '@fileverse/crypto/nacl';
+import hkdf from 'futoin-hkdf';
 
-import tweetnacl from "tweetnacl";
-import { fromUint8Array, toUint8Array } from "js-base64";
-import { encryptReadable } from "./file-encryption";
-import { type Readable } from "node:stream";
-import { toAESKey, aesEncrypt } from "@fileverse/crypto/dist/webcrypto";
-
+import tweetnacl from 'tweetnacl';
+import { fromUint8Array, toUint8Array } from 'js-base64';
+import { encryptReadable } from './file-encryption';
+import { type Readable } from 'node:stream';
+import { toAESKey, aesEncrypt } from '@fileverse/crypto/webcrypto';
+import { KeyStore } from './key-store';
+import axios from 'axios';
 
 interface LinkKeyMaterialParams {
     ddocId: string;
     linkKey: string | undefined;
     linkKeyNonce: string | undefined;
 }
-
 
 const deriveKeyFromAg2Hash = async (pass: string, salt: Uint8Array) => {
     const key = await getArgon2idHash(pass, salt);
@@ -25,7 +29,6 @@ const deriveKeyFromAg2Hash = async (pass: string, salt: Uint8Array) => {
         info: Buffer.from('encryptionKey'),
     });
 };
-
 
 const decryptSecretKey = async (
     docId: string,
@@ -72,8 +75,9 @@ const getNaclSecretKey = async (ddocId: string) => {
     return { nonce, encryptedSecretKey, secretKey };
 };
 
-
-export const generateLinkKeyMaterial = async (params: LinkKeyMaterialParams) => {
+export const generateLinkKeyMaterial = async (
+    params: LinkKeyMaterialParams
+) => {
     if (params.linkKeyNonce && params.linkKey) {
         const { encryptedSecretKey, nonce, secretKey } =
             await getExistingEncryptionMaterial(
@@ -88,8 +92,7 @@ export const generateLinkKeyMaterial = async (params: LinkKeyMaterialParams) => 
     );
 
     return { secretKey, nonce, encryptedSecretKey };
-}
-
+};
 
 export const jsonToFile = (json: any, fileName: string) => {
     const blob = new Blob([JSON.stringify(json)], {
@@ -101,9 +104,13 @@ export const jsonToFile = (json: any, fileName: string) => {
     });
 
     return file;
-}
+};
 
-const appendAuthTagIvToBlob = async (blob: Blob, authTag: Uint8Array, iv: Uint8Array) => {
+const appendAuthTagIvToBlob = async (
+    blob: Blob,
+    authTag: Uint8Array,
+    iv: Uint8Array
+) => {
     const encryptedFileBytes = await blob.arrayBuffer();
     const encryptedBytes = new Uint8Array(encryptedFileBytes);
     const combinedLength = encryptedBytes.length + authTag.length + iv.length;
@@ -119,26 +126,30 @@ const appendAuthTagIvToBlob = async (blob: Blob, authTag: Uint8Array, iv: Uint8A
     combinedArray.set(iv, offset);
 
     return new Blob([combinedArray], { type: blob.type });
-}
-
+};
 
 export const encryptFile = async (file: File) => {
     const arrayBuffer = await file.arrayBuffer();
 
-    const readableStream = new Response(new Uint8Array(arrayBuffer)).body! as unknown as Readable;
+    const readableStream = new Response(new Uint8Array(arrayBuffer))
+        .body! as unknown as Readable;
 
     const { stream, decryptionOptions } = encryptReadable(readableStream);
 
     const { key, iv, authTag } = await decryptionOptions;
     const encryptedBlob = await new Response(stream).blob();
 
+    const encryptedBlobWithAuthTagIv = await appendAuthTagIvToBlob(
+        encryptedBlob,
+        toUint8Array(authTag),
+        toUint8Array(iv)
+    );
 
-    const encryptedBlobWithAuthTagIv = await appendAuthTagIvToBlob(encryptedBlob, toUint8Array(authTag), toUint8Array(iv));
-
-    return { encryptedFile: new File([encryptedBlobWithAuthTagIv], file.name), key };
-}
-
-
+    return {
+        encryptedFile: new File([encryptedBlobWithAuthTagIv], file.name),
+        key,
+    };
+};
 
 export const buildLinklock = (key: Uint8Array, fileKey: string) => {
     const ikm = generateRandomBytes();
@@ -157,16 +168,14 @@ export const buildLinklock = (key: Uint8Array, fileKey: string) => {
 
     const encryptedIkm = secretBoxEncrypt(ikm, key);
 
-    const lockedFileKey = iv + "__n__" + cipherText;
-    const keyMaterial = bytesToBase64(kdfSalt) + "__n__" + encryptedIkm;
+    const lockedFileKey = iv + '__n__' + cipherText;
+    const keyMaterial = bytesToBase64(kdfSalt) + '__n__' + encryptedIkm;
 
     return {
         lockedFileKey,
         keyMaterial,
-    }
-
-}
-
+    };
+};
 
 export const encryptTitleWithFileKey = async (
     title: string,
@@ -177,7 +186,39 @@ export const encryptTitleWithFileKey = async (
 
     const titleBytes = new TextEncoder().encode(title);
 
-    const encryptedTitle = await aesEncrypt(key, titleBytes, "base64");
+    const encryptedTitle = await aesEncrypt(key, titleBytes, 'base64');
 
     return encryptedTitle;
+};
+
+export const uploadFileToIPFS = async (
+    file: File,
+    ipfsType: string,
+    appFileId: string,
+    keyStore: KeyStore
+) => {
+    const token = ''; // need to think about this
+    const contractAddress = keyStore.getPortalAddress();
+    const invoker = ''; // need to think about this
+
+    const body = new FormData();
+    body.append('file', file);
+    body.append('ipfsType', ipfsType);
+    body.append('appFileId', appFileId);
+
+    body.append('sourceApp', 'ddoc');
+    const response = await axios.post(
+        process.env.UPLOAD_SERVER_URL as string,
+        body,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                contract: contractAddress,
+                invoker: invoker,
+                chain: process.env.chainId,
+            },
+        }
+    );
+
+    return response.data.ipfsHash;
 };

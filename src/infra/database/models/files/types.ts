@@ -13,4 +13,3 @@ export interface UpdateFilePayload {
   metadata?: Record<string, unknown>;
   onChainFileId?: number;
 }
-

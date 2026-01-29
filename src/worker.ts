@@ -11,8 +11,8 @@ setTimeout(() => {
   if (isWorkerActive()) {
     logger.info('BullMQ Worker started and active');
     return;
-  } 
-  
+  }
+
   logger.error('BullMQ Worker failed to start');
   process.exit(1);
 }, 100);

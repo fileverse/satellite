@@ -1,7 +1,7 @@
 /**
  * Rollback database migrations (development only)
  * Usage: npm run migrate:rollback [count]
- * 
+ *
  * Examples:
  *   npm run migrate:rollback        # Rollback 1 migration
  *   npm run migrate:rollback 2      # Rollback 2 migrations
@@ -36,4 +36,3 @@ try {
   logger.error('Rollback failed:', error);
   process.exit(1);
 }
-
