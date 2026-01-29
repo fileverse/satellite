@@ -8,10 +8,10 @@ import type { ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput
 import type { UpdateFilePayload } from '../../infra/database/models/files/types';
 
 function listFiles(params: ListFilesParams): ListFilesResult {
-  const { limit, skip } = params;
+  const { limit, skip, portalAddress } = params;
   const effectiveLimit = limit || DEFAULT_LIST_LIMIT;
 
-  const result = FilesModel.findAll(effectiveLimit, skip);
+  const result = FilesModel.findAll(portalAddress, effectiveLimit, skip);
 
   return {
     ddocs: result.files,
@@ -20,12 +20,12 @@ function listFiles(params: ListFilesParams): ListFilesResult {
   };
 }
 
-function getFile(ddocId: string): File | null {
+function getFile(ddocId: string, portalAddress: string): File | null {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
 
-  const file = FilesModel.findByDDocId(ddocId);
+  const file = FilesModel.findByDDocId(ddocId, portalAddress);
 
   if (!file) {
     return null;
@@ -35,8 +35,8 @@ function getFile(ddocId: string): File | null {
 }
 
 async function createFile(input: CreateFileInput): Promise<File> {
-  if (!input.title || !input.content) {
-    throw new Error('title and content are required');
+  if (!input.title || !input.content || !input.portalAddress) {
+    throw new Error('title, content, and portalAddress are required');
   }
 
   const ddocId = generate();
@@ -44,6 +44,7 @@ async function createFile(input: CreateFileInput): Promise<File> {
     title: input.title,
     content: input.content,
     ddocId: ddocId,
+    portalAddress: input.portalAddress,
   });
 
   const createFileEvent: FileEvent = {
@@ -61,6 +62,7 @@ async function createFile(input: CreateFileInput): Promise<File> {
 async function updateFile(
   ddocId: string,
   payload: UpdateFileInput,
+  portalAddress: string,
 ): Promise<File> {
   if (!ddocId) {
     throw new Error('ddocId is required');
@@ -70,7 +72,7 @@ async function updateFile(
     throw new Error('At least one field is required: Either provide title, content, or both');
   }
 
-  const existingFile = FilesModel.findByDDocId(ddocId);
+  const existingFile = FilesModel.findByDDocId(ddocId, portalAddress);
   if (!existingFile) {
     throw new Error(`File with ddocId ${ddocId} not found`);
   }
@@ -80,7 +82,7 @@ async function updateFile(
     localVersion: existingFile.localVersion + 1,
     syncStatus: 'pending', // since the update is done in local db, it's not on the chain yet. hence pending
   };
-  const updatedFile = FilesModel.update(existingFile._id, updatePayload);
+  const updatedFile = FilesModel.update(existingFile._id, updatePayload, portalAddress);
 
   const editFileEvent: FileEvent = {
     fileId: updatedFile._id,
@@ -94,12 +96,12 @@ async function updateFile(
   return updatedFile;
 }
 
-async function deleteFile(ddocId: string): Promise<File> {
+async function deleteFile(ddocId: string, portalAddress: string): Promise<File> {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
 
-  const existingFile = FilesModel.findByDDocId(ddocId);
+  const existingFile = FilesModel.findByDDocId(ddocId, portalAddress);
   if (!existingFile) {
     throw new Error(`File with ddocId ${ddocId} not found`);
   }
