@@ -1,60 +1,59 @@
-import { FilesModel, File, Folder } from '../../infra/database/models';
-import { QueryBuilder } from '../../infra/database';
+// import { QueryBuilder } from '../../infra/database';
 
-export interface SearchNodesParams {
-  query: string;
-  limit?: number;
-  skip?: number;
-  portalAddress: string;
-}
+// export interface SearchNodesParams {
+//   query: string;
+//   limit?: number;
+//   skip?: number;
+//   portalAddress: string;
+// }
 
-/**
- * Normalized response type for search results
- * Can contain both files and folders at the API response level
- */
-export type SearchNode = 
-  | ({ type: 'file' } & File)
-  | ({ type: 'folder' } & Folder);
+// /**
+//  * Normalized response type for search results
+//  * Can contain both files and folders at the API response level
+//  */
+// export type SearchNode = 
+//   | ({ type: 'file' } & File)
+//   | ({ type: 'folder' } & Folder);
 
-export interface SearchNodesResult {
-  nodes: SearchNode[];
-  total: number;
-  hasNext: boolean;
-}
+// export interface SearchNodesResult {
+//   nodes: SearchNode[];
+//   total: number;
+//   hasNext: boolean;
+// }
 
-/**
- * Domain function to search files (for now)
- * Returns normalized response that can contain folder entries as well
- * Normalization is at the API response level, not schema level
- */
-export default function searchNodes(params: SearchNodesParams): SearchNodesResult {
-  const { query, limit, skip, portalAddress } = params;
+// /**
+//  * Domain function to search files (for now)
+//  * Returns normalized response that can contain folder entries as well
+//  * Normalization is at the API response level, not schema level
+//  */
+// export default function searchNodes(params: SearchNodesParams): SearchNodesResult {
+//   const { query, limit, skip, portalAddress } = params;
 
-  if (!query || query.trim().length === 0) {
-    return { nodes: [], total: 0, hasNext: false };
-  }
+//   if (!query || query.trim().length === 0) {
+//     return { nodes: [], total: 0, hasNext: false };
+//   }
 
-  // Search only files by title (for now)
-  const files = FilesModel.searchByTitle(query, portalAddress, limit, skip);
+//   // Search only files by title (for now)
+//   const files = FilesModel.searchByTitle(query, portalAddress, limit, skip);
 
-  // Normalize files to SearchNode format
-  const normalizedNodes: SearchNode[] = files.map(file => ({
-    type: 'file' as const,
-    ...file,
-  }));
+//   // Normalize files to SearchNode format
+//   const normalizedNodes: SearchNode[] = files.map(file => ({
+//     type: 'file' as const,
+//     ...file,
+//   }));
 
-  // Get total count for pagination
-  const countSql = `SELECT COUNT(*) as count FROM files WHERE LOWER(title) LIKE LOWER(?) AND isDeleted = 0 AND portalAddress = ?`;
-  const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, [`%${query}%`, portalAddress]);
-  const total = totalResult?.count || 0;
+//   // Get total count for pagination
+//   const countSql = `SELECT COUNT(*) as count FROM files WHERE LOWER(title) LIKE LOWER(?) AND isDeleted = 0 AND portalAddress = ?`;
+//   const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, [`%${query}%`, portalAddress]);
+//   const total = totalResult?.count || 0;
 
-  const hasNext = skip !== undefined && limit !== undefined 
-    ? (skip + limit) < total 
-    : false;
+//   const hasNext = skip !== undefined && limit !== undefined 
+//     ? (skip + limit) < total 
+//     : false;
 
-  return {
-    nodes: normalizedNodes,
-    total,
-    hasNext
-  };
-}
+//   return {
+//     nodes: normalizedNodes,
+//     total,
+//     hasNext
+//   };
+// }

@@ -3,17 +3,16 @@ import { logger } from '../index';
 import { redisConnectionManager } from './connection';
 import { FileEvent, FILE_EVENTS_QUEUE } from './types';
 import { publishFile } from '../../domain/portal';
-import { FilesModel } from '../database/models';
-import { UpdateFilePayload } from '../database/models/files/types';
+import type { FileService } from '../../domain/file/FileService';
 
 export class WorkerManager {
   private worker: Worker<FileEvent> | null = null;
-  private queueName: string;
   private isRunning: boolean = false;
 
-  constructor(queueName: string = FILE_EVENTS_QUEUE) {
-    this.queueName = queueName;
-  }
+  constructor(
+    private readonly fileServiceFactory: () => FileService,
+    private readonly queueName: string = FILE_EVENTS_QUEUE,
+  ) {}
 
   start(concurrency: number = 1): void {
     if (this.isRunning) {
@@ -45,17 +44,18 @@ export class WorkerManager {
 
   private async processJob(job: Job<FileEvent>): Promise<void> {
     const { fileId, type } = job.data;
+    const fileSvc = this.fileServiceFactory();
 
     try {
       switch (type) {
         case 'create':
-          await this.processCreateJob(job);
+          await this.processCreateJob(job, fileSvc);
           break;
         case 'update':
-          await this.processUpdateJob(job);
+          await this.processUpdateJob(job, fileSvc);
           break;
         case 'delete':
-          await this.processDeleteJob(job);
+          await this.processDeleteJob(job, fileSvc);
           break;
         default:
           throw new Error(`Unknown event type: ${type}`);
@@ -66,102 +66,72 @@ export class WorkerManager {
     }
   }
 
-  private async processCreateJob(job: Job<FileEvent>): Promise<void> {
+  private async processCreateJob(job: Job<FileEvent>, fileSvc: FileService): Promise<void> {
     const { fileId, metadata } = job.data;
 
-    // Get file to retrieve portalAddress for update operations
-    const file = FilesModel.findByIdIncludingDeleted(fileId);
+    const file = await fileSvc.getById(fileId);
     if (!file) {
       throw new Error(`File ${fileId} not found`);
     }
 
-    // file was created and saved in local db. 
-    // we need to publish this file now
-    const result = await publishFile(fileId);
+    const result = await publishFile(fileId, fileSvc);
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }
 
-
-    // If publishing is successful, the local and onchain versions of the file are in sync
-    // Hence, set onchainVersion = localVersion
-    //
-    // As of now, syncStatus is set to 'pending' in local db (default value upon file creation)
-    const payload: UpdateFilePayload = {
+    await fileSvc.updateSyncState(fileId, file.portalAddress, {
       onchainVersion: metadata.localVersion,
-    }
-    const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
-
-    // Once local and onchain versions become same, update syncStatus to 'synced' (from 'pending')
-    if (updatedFile.localVersion === updatedFile.onchainVersion) {
-      const payload: UpdateFilePayload = {
-        syncStatus: 'synced', // TODO: use enum later
-      }
-      FilesModel.update(fileId, payload, file.portalAddress);
-    }
+    });
+    await fileSvc.updateSyncState(fileId, file.portalAddress, {
+      syncStatus: 'synced',
+    });
   }
 
-  private async processUpdateJob(job: Job<FileEvent>): Promise<void> {
+  private async processUpdateJob(job: Job<FileEvent>, fileSvc: FileService): Promise<void> {
     const { fileId, metadata } = job.data;
 
     if (metadata.localVersion === undefined) {
-      // TODO: should we throw error here, or fail silently by returning? Think!
       throw new Error('version field is required for update events');
     }
 
-    const file = FilesModel.findByIdIncludingDeleted(fileId);
+    const file = await fileSvc.getById(fileId);
     if (!file) {
       return;
     }
 
-    // Ignore out-of-order event
     if (metadata.localVersion < file.onchainVersion) {
       return;
     }
 
-    const result = await publishFile(fileId);
+    const result = await publishFile(fileId, fileSvc);
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }
 
-    // If publishing is successful, the local and onchain versions of the file are in sync
-    // Hence, set onchainVersion = localVersion
-    //
-    // As of now, syncStatus is set to 'pending' in local db
-    const payload: UpdateFilePayload = {
+    await fileSvc.updateSyncState(fileId, file.portalAddress, {
       onchainVersion: metadata.localVersion,
-    }
-    const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
-
-    // Once local and onchain versions become same, update syncStatus to 'synced' (from 'pending')
-    if (updatedFile.localVersion === updatedFile.onchainVersion) {
-      const payload: UpdateFilePayload = {
-        syncStatus: 'synced', // TODO: use enum later
-      }
-      FilesModel.update(fileId, payload, file.portalAddress);
-    }
+    });
+    await fileSvc.updateSyncState(fileId, file.portalAddress, {
+      syncStatus: 'synced',
+    });
   }
 
-  private async processDeleteJob(job: Job<FileEvent>): Promise<void> {
-    const { fileId, metadata } = job.data;
+  private async processDeleteJob(job: Job<FileEvent>, fileSvc: FileService): Promise<void> {
+    const { fileId } = job.data;
 
-    // Get the file including deleted ones to get its version and portalAddress
-    const file = FilesModel.findByIdIncludingDeleted(fileId);
+    const file = await fileSvc.getById(fileId);
     if (!file) {
       return;
     }
 
-    const result = await publishFile(fileId);
+    const result = await publishFile(fileId, fileSvc);
     if (!result.success) {
       throw new Error(`Publish deletion failed for file ${fileId}`);
     }
 
-    // For deletion, no comparison between local and onchain version is needed.
-    // File is already marked as deleted in local db, here we just update the syncStatus to 'synced' (from 'pending')
-    const payload: UpdateFilePayload = {
+    await fileSvc.updateSyncState(fileId, file.portalAddress, {
       syncStatus: 'synced',
-    }
-    FilesModel.update(fileId, payload, file.portalAddress);
+    });
   }
 
   private setupEventHandlers(): void {

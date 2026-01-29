@@ -1,9 +1,9 @@
-import { Router } from 'express';
-import { asyncHandlerArray } from '../../../../infra';
-import search from './search';
+// import { Router } from 'express';
+// import { asyncHandlerArray } from '../../../../infra';
+// import search from './search';
 
-const router = Router();
+// const router = Router();
 
-router.get('/', asyncHandlerArray(search));
+// router.get('/', asyncHandlerArray(search));
 
-export default router;
+// export default router;

@@ -1,13 +1,18 @@
-import { File } from '../../infra/database/models';
+import { FileEntity } from './FileEntity';
 
 export interface ListFilesParams {
-  limit?: number;
-  skip?: number;
+  limit: number;
+  skip: number;
+  portalAddress: string;
+}
+
+export interface GetFileParams {
+  ddocId: string,
   portalAddress: string;
 }
 
 export interface ListFilesResult {
-  ddocs: File[];
+  files: FileEntity[];
   total: number;
   hasNext: boolean;
 }

@@ -1,154 +1,120 @@
-import { Request, Response } from 'express';
-import { listFiles, getFile, createFile, updateFile, deleteFile, CreateFileInput, UpdateFileInput } from '../../../../domain/file';
+import { Response } from 'express';
+import {
+  CreateFileInput,
+  GetFileParams,
+  ListFilesParams,
+  ListFilesResult,
+  UpdateFileInput,
+} from '../../../../domain/file';
+import { FileEntity } from '../../../../domain/file/FileEntity';
+import { FileService } from '../../../../domain/file/FileService';
+import { successResponse } from '../../responses';
+import { BadRequestError, NotFoundError } from '../../../../errors';
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
-import { ClientUpdateFileInput } from './types';
+import type { DdocsRequest } from '../../middleware/ddocsContainer';
 
-const listHandler = async (req: Request, res: Response) => {
-  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
-  const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : undefined;
+const DEFAULT_LIST_LIMIT = 20;
+const DEFAULT_SKIP_COUNT = 0;
+
+const listHandler = async (req: DdocsRequest, res: Response) => {
+  const svc = req.context.fileService;
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : DEFAULT_LIST_LIMIT;
+  const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : DEFAULT_SKIP_COUNT;
   const portalAddress = req.headers['x-portal-address'] as string | undefined;
 
   if (!portalAddress) {
-    return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
+    throw new BadRequestError('Missing required header: x-portal-address is required');
   }
 
-  const result = listFiles({ limit, skip, portalAddress });
-
-  res.json({
-    ddocs: result.ddocs,
-    total: result.total,
-    hasNext: result.hasNext
-  });
+  const params: ListFilesParams = { skip, limit, portalAddress };
+  const result: ListFilesResult = await svc.list(params);
+  return successResponse(res, 200, 'OK', result);
 };
 
-const getHandler = async (req: Request, res: Response) => {
+const getHandler = async (req: DdocsRequest, res: Response) => {
+  const svc: FileService = req.context.fileService;
   const { ddocId } = req.params;
-  const portalAddress = req.headers['x-portal-address'] as string | undefined;
-
   if (!ddocId) {
-    return res.status(400).json({ error: 'ddocId is required' });
+    throw new BadRequestError('ddocId is missing');
   }
 
+  const portalAddress = req.headers['x-portal-address'] as string | undefined;
   if (!portalAddress) {
-    return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
+    throw new BadRequestError('Missing required header: x-portal-address is required');
   }
 
-  try {
-    const file = getFile(ddocId, portalAddress);
-
-    if (!file) {
-      return res.status(404).json({ error: 'DDoc not found' });
-    }
-
-    res.json(file);
-  } catch (error: any) {
-    return res.status(400).json({ error: error.message });
+  const params: GetFileParams = { ddocId, portalAddress };
+  const result: FileEntity | null = await svc.get(params);
+  if (result === null) {
+    throw new NotFoundError('File not found');
   }
+
+  return successResponse(res, 200, 'OK', result);
 };
 
-const createHandler = async (req: Request, res: Response) => {
-  try {
-    const { title, fileContent } = extractTitleAndContent(req);
-    // TODO: Extract portalAddress from auth header once authentication is implemented
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
-
-    if (!title) {
-      return res.status(400).json({
-        error: 'Missing required field: title is required. When uploading a file, title is derived from the file name. When providing content directly, title must be provided.'
-      });
-    }
-
-    if (!fileContent) {
-      return res.status(400).json({
-        error: 'Missing content: Either provide a file upload or fileContent text field'
-      });
-    }
-
-    if (!portalAddress) {
-      return res.status(400).json({
-        error: 'Missing required header: x-portal-address is required'
-      });
-    }
-
-    const payload: CreateFileInput = {
-      title: title,
-      content: fileContent,
-      portalAddress,
-    };
-
-    const file = await createFile(payload);
-    res.status(201).json({
-      message: 'File created successfully. Sync to on-chain is pending.',
-      data: { ...file },
-    });
-  } catch (error: any) {
-    return res.status(400).json({ error: error.message });
+const createHandler = async (req: DdocsRequest, res: Response) => {
+  const svc = req.context.fileService;
+  const { title, fileContent } = extractTitleAndContent(req);
+  if (!title) {
+    throw new BadRequestError('title is missing');
   }
+  if (!fileContent) {
+    throw new BadRequestError('file content is empty');
+  }
+
+  const portalAddress = req.headers['x-portal-address'] as string | undefined;
+  if (!portalAddress) {
+    throw new BadRequestError('missing required header: x-portal-address is required');
+  }
+
+  const payload: CreateFileInput = {
+    title,
+    content: fileContent,
+    portalAddress,
+  };
+  const file: FileEntity = await svc.create(payload);
+  return successResponse(
+    res,
+    201,
+    'File created successfully. On-chain publishing is pending.',
+    file,
+  );
 };
 
-const updateHandler = async (req: Request, res: Response) => {
-  try {
-    const { ddocId } = req.params;
-    const { title, fileContent } = extractTitleAndContent(req);
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
-
-    if (!portalAddress) {
-      return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
-    }
-
-    // At least one of title or content must be provided
-    if (!title && !fileContent) {
-      return res.status(400).json({
-        error: 'At least one field is required: Either provide title, content, or both. When uploading a file, title is derived from the file name. When providing content directly, you can provide title and/or content.'
-      });
-    }
-
-    const clientPayload: ClientUpdateFileInput = {};
-    if (title) {
-      clientPayload.title = title;
-    }
-    if (fileContent) {
-      clientPayload.content = fileContent;
-    }
-
-    // Map client-facing type to domain type
-    const domainPayload: UpdateFileInput = {
-      title: clientPayload.title,
-      content: clientPayload.content,
-    };
-
-    const result = await updateFile(ddocId, domainPayload, portalAddress);
-    res.status(200).json({
-      message: 'File updated successfully',
-      data: { ...result },
-    });
-  } catch (error: any) {
-    return res.status(400).json({ error: error.message });
+const updateHandler = async (req: DdocsRequest, res: Response) => {
+  const svc = req.context.fileService;
+  const { ddocId } = req.params;
+  const { title, fileContent } = extractTitleAndContent(req);
+  if (title !== undefined && title.trim().length === 0) {
+    throw new BadRequestError('title cannot be empty');
   }
+
+  const portalAddress = req.headers['x-portal-address'] as string | undefined;
+  if (!portalAddress) {
+    throw new BadRequestError('Missing required header: x-portal-address is required');
+  }
+
+  const payload: UpdateFileInput = { title, content: fileContent };
+  const file: FileEntity = await svc.update(ddocId, portalAddress, payload);
+  return successResponse(res, 200, 'File updated successfully', file);
 };
 
-const deleteHandler = async (req: Request, res: Response) => {
-  try {
-    const { ddocId } = req.params;
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
-
-    if (!ddocId) {
-      return res.status(400).json({ error: 'ddocId is required' });
-    }
-
-    if (!portalAddress) {
-      return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
-    }
-
-    const result = await deleteFile(ddocId, portalAddress);
-    res.status(200).json({
-      message: 'File deleted successfully',
-      data: { ...result },
-    });
-  } catch (error: any) {
-    return res.status(400).json({ error: error.message });
+const deleteHandler = async (req: DdocsRequest, res: Response) => {
+  const svc: FileService = req.context.fileService;
+  const { ddocId } = req.params;
+  if (!ddocId) {
+    throw new BadRequestError('ddocId is required');
   }
+
+  const portalAddress = req.headers['x-portal-address'] as string | undefined;
+  if (!portalAddress) {
+    throw new BadRequestError('Missing required header: x-portal-address is required');
+  }
+
+  const params: GetFileParams = { ddocId, portalAddress };
+  await svc.delete(params);
+  return successResponse(res, 200, 'File deleted successfully');
 };
 
 export const create = [createMiddleware, createHandler];
@@ -156,4 +122,3 @@ export const update = [updateMiddleware, updateHandler];
 export const list = [listHandler];
 export const get = [getHandler];
 export const del = [deleteHandler];
-

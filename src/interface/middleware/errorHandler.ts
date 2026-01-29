@@ -1,28 +1,28 @@
-import { NextFunction, Response } from 'express';
-import { reporter } from '../../infra';
-import { ValidationError } from './validator';
-import { Request } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { ApplicationError } from '../../errors';
+import { errorResponse } from '../api/responses';
+import { ValidationError } from 'express-validation';
 
-// eslint-disable-next-line no-unused-vars
+type ErrorWithCode = Error & { statusCode?: number; code?: number; details?: unknown };
+
+/**
+ * Central error handler. Only the API layer deals with HTTP:
+ * - ApplicationError → use its statusCode and message
+ * - express-validation ValidationError → 400
+ * - Unknown errors → 500, generic message (do not leak details to client)
+ */
 export const expressErrorHandler = (
-  err: Error & {
-    statusCode?: number;
-    code?: number;
-    token?: string;
-    details?: any;
-  },
+  err: ErrorWithCode,
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('error', err.details);
-  const errorMessage = `Message: ${err.message}\nError Code: ${
-    err.statusCode || err.code
-  }`;
-  reporter.reportError(errorMessage).catch(console.log);
-  if (err instanceof ValidationError) {
-    return res.status(err?.statusCode || 500).json({ message: err.message });
+  if (err instanceof ApplicationError) {
+    return errorResponse(res, err.statusCode, err.message);
   }
-  res.status(err.code || 500).json({ message: err.message });
-  next();
+  if (err instanceof ValidationError) {
+    const statusCode = err.statusCode ?? 400;
+    return errorResponse(res, statusCode, err.message);
+  }
+  return errorResponse(res, 500, 'Internal server error');
 };

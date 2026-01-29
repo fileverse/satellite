@@ -1,13 +1,13 @@
-import { FilesModel } from '../../infra/database/models';
+import type { FileService } from '../file/FileService';
 import { logger } from '../../infra';
 
 export interface PublishResult {
   success: boolean;
 }
 
-export async function publishFile(fileId: string): Promise<PublishResult> {
-  // use findByIdIncludingDeleted to process deleted events as well
-  const file = FilesModel.findByIdIncludingDeleted(fileId);
+export async function publishFile(fileId: string, fileService: FileService): Promise<PublishResult> {
+  // this fetches files including deleted because, deleted files have to be synced as well.
+  const file = await fileService.getById(fileId);
   if (!file) {
     throw new Error(`File with _id ${fileId} not found`);
   }

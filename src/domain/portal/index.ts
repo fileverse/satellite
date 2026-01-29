@@ -1,7 +1,8 @@
 import { publishFile } from './publish';
-import { savePortal } from './savePortal';
-import { addApiKey } from './saveApiKey';
-import { removeApiKey } from './removeApiKey';
 
-export { publishFile, savePortal, addApiKey, removeApiKey };
-
+export { publishFile };
+export type { SavePortalInput, UpdatePortalInput, AddApiKeyInput } from './types';
+export { PortalEntity } from './PortalEntity';
+export { ApiKeyEntity } from './ApiKeyEntity';
+export { PortalService } from './PortalService';
+export { ApiKeyService } from './ApiKeyService';
