@@ -57,15 +57,14 @@ export class FilesRepository {
     return [];
   }
 
-  create(file: FileEntity): FileEntity {
+  create(file: FileEntity): void {
     const sql = `
       INSERT INTO files
       (_id, ddocId, title, content, portalAddress, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      RETURNING *;
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
 
-    const result: FileRow | null = this.db.selectOne(sql, [
+    const result: ExecuteResult = this.db.execute(sql, [
       file.id,
       file.ddocId,
       file.title,
@@ -78,14 +77,9 @@ export class FilesRepository {
       file.createdAt,
       file.updatedAt,
     ]);
-    if (result === null) {
-      /**
-       * Logically this scenario won't ever happen, but handling this so as to satisfy Typescript's type system. 
-       * Because, selectOne can return null.
-       */
-      throw new Error('Invariant violation: INSERT RETURNING returned no row')
+    if (result.changes === 0) {
+      throw new Error(`Something went wrong. No rows were affected.`)
     }
-    return this.createEntityFromRow(result);
   }
 
   update(f: FileEntity): void {

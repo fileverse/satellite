@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import type { FileService } from "../../../domain/file/FileService";
-import { databaseConnectionManager } from "../../../infra/database/connection";
+import { FileService } from "../../../domain/file/FileService";
 import { SqliteExecutor } from "../../../infra/database/executor/SqliteExecutor";
 import { FilesRepository } from "../../../infra/database/repositories/FilesRepository";
-import { FileService as FileServiceClass } from "../../../domain/file/FileService";
+import { databaseConnectionManager } from "../../../infra/database/connection";
 import { fileEventsQueue } from "../../../infra/queue";
 
 export type DdocsRequest = Request & {
@@ -22,7 +21,7 @@ export function ddocsContainerMiddleware(
   const filesRepository = new FilesRepository(executor);
 
   (req as DdocsRequest).context = {
-    fileService: new FileServiceClass(filesRepository, fileEventsQueue),
+    fileService: new FileService(filesRepository, fileEventsQueue),
   };
 
   next();

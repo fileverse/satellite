@@ -48,7 +48,6 @@ export class FileEntity {
   get createdAt() { return this._createdAt; }
   get updatedAt() { return this._updatedAt; }
 
-  /** Returns a new entity with title/content merged from payload (only set when provided). */
   withUpdate(payload: UpdateFileInput): FileEntity {
     return new FileEntity(
       this._id,
@@ -64,37 +63,4 @@ export class FileEntity {
       new Date().toISOString(),
     );
   }
-
-  // toRow(): FileRow {
-  //   return { ...this.row };
-  // }
-
-  /** API response shape (no _id). Used by handlers so mapping stays in domain. */
-  // toResponse(): {
-  //   id: string;
-  //   ddocId: string;
-  //   title: string;
-  //   content: string;
-  //   portalAddress: string;
-  //   localVersion: number;
-  //   onchainVersion: number;
-  //   syncStatus: string;
-  //   isDeleted: number;
-  //   createdAt: string;
-  //   updatedAt: string;
-  // } {
-  //   return {
-  //     id: this.row._id,
-  //     ddocId: this.row.ddocId,
-  //     title: this.row.title,
-  //     content: this.row.content,
-  //     portalAddress: this.row.portalAddress,
-  //     localVersion: this.row.localVersion,
-  //     onchainVersion: this.row.onchainVersion,
-  //     syncStatus: this.row.syncStatus,
-  //     isDeleted: this.row.isDeleted,
-  //     createdAt: this.row.createdAt,
-  //     updatedAt: this.row.updatedAt,
-  //   };
-  // }
 }

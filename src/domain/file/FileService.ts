@@ -1,7 +1,9 @@
 import { FilesRepository } from "../../infra/database/repositories/FilesRepository";
 import type { FileEvent } from "../../infra/queue/types";
+import { fileEventsQueue } from "../../infra/queue";
 import type { CreateFileInput, UpdateFileInput } from "./types";
 import { FileEntity } from "./FileEntity";
+import {QueueManager} from "../../infra/queue/queueManager";
 
 export interface IFileEventsQueue {
   addJob(event: FileEvent, options?: unknown): Promise<void>;
@@ -10,16 +12,26 @@ export interface IFileEventsQueue {
 export class FileService {
   constructor(
     private readonly filesRepository: FilesRepository,
-    private readonly events: IFileEventsQueue,
+    private readonly fileEventsQueue: QueueManager,
   ) {}
 
   async create(
     payload: CreateFileInput
   ): Promise<FileEntity> {
     const file: FileEntity = FileEntity.create(payload);
-    const createdFile: FileEntity = this.filesRepository.create(file);
-    // push to queue now
-    return createdFile;
+    this.filesRepository.create(file);
+
+    // add file creation event to queue
+    const createFileEvent: FileEvent = {
+      fileId: file.id,
+      type: 'create',
+      metadata: {
+        localVersion: file.localVersion,
+      },
+    }
+    await this.fileEventsQueue.addJob(createFileEvent);
+
+    return file;
   }
 
   async update(
@@ -33,20 +45,23 @@ export class FileService {
 
     const currentFile: FileEntity | null = this.filesRepository.findByDDocId(ddocId, portal);
     if (currentFile === null) {
-      // TODO: do better
+      // TODO: do better error handling
       throw new Error(`file with ddocId ${ddocId} could not be found`);
     }
-
 
     const updatedFile: FileEntity = currentFile.withUpdate(payload);
     this.filesRepository.update(updatedFile);
 
-    // await this.events.addJob({
-    //   fileId: saved.id,
-    //   type: 'update',
-    //   metadata: { localVersion: saved.localVersion },
-    // });
-    
+    // add file update event to queue
+    const updateFileEvent: FileEvent = {
+      fileId: updatedFile.id,
+      type: 'update',
+      metadata: {
+        localVersion: updatedFile.localVersion,
+      }
+    }
+    await this.fileEventsQueue.addJob(updateFileEvent);
+
     return updatedFile
   }
 }
