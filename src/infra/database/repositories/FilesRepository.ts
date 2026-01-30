@@ -5,8 +5,20 @@ import { FileRow } from "./FileRow";
 export class FilesRepository {
   constructor(private readonly db: SqliteExecutor) {}
 
-  private transformRowToEntity(row: FileRow): FileEntity {
-    return new FileEntity(row);
+  private createEntityFromRow(row: FileRow): FileEntity {
+    return new FileEntity(
+      row._id,
+      row.ddocId,
+      row.title,
+      row.content,
+      row.portalAddress,
+      row.localVersion,
+      row.onchainVersion,
+      row.syncStatus,
+      row.isDeleted,
+      row.createdAt,
+      row.updatedAt,
+    )
   }
 
   findByDDocId(ddocId: string, portalAddress: string): FileEntity | null {
@@ -20,7 +32,7 @@ export class FilesRepository {
     if (row === null) {
       return row;
     }
-    return this.transformRowToEntity(row);
+    return this.createEntityFromRow(row);
   }
 
   findById(_id: string, portalAddress: string): FileEntity | null {
@@ -34,7 +46,7 @@ export class FilesRepository {
     if (row === null) {
       return null;
     }
-    return this.transformRowToEntity(row);
+    return this.createEntityFromRow(row);
   }
 
   findAll(): FileEntity[] {
@@ -73,7 +85,7 @@ export class FilesRepository {
        */
       throw new Error('Invariant violation: INSERT RETURNING returned no row')
     }
-    return this.transformRowToEntity(result);
+    return this.createEntityFromRow(result);
   }
 
   update(f: FileEntity): void {

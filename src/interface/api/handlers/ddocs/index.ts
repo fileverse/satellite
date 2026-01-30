@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { listFiles, getFile, createFile, updateFile, deleteFile, CreateFileInput, UpdateFileInput } from '../../../../domain/file';
+import { listFiles, getFile, deleteFile, CreateFileInput, UpdateFileInput } from '../../../../domain/file';
 import type { DdocsRequest } from '../../middleware/ddocsContainer';
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
@@ -93,6 +93,9 @@ const updateHandler = async (req: DdocsRequest, res: Response) => {
     const svc = req.context.fileService;
     const { ddocId } = req.params;
     const { title, fileContent } = extractTitleAndContent(req);
+    if (title !== undefined && title.trim().length === 0) {
+      return res.status(400).json({error: 'title cannot be empty'});
+    }
 
     const portalAddress = req.headers['x-portal-address'] as string | undefined;
     if (!portalAddress) {
@@ -109,12 +112,8 @@ const updateHandler = async (req: DdocsRequest, res: Response) => {
         message: 'file updated successfully',
         data: file,
       });
-  } catch (error: unknown) {
-    // TODO: do better
-    const message = error instanceof Error ? error.message : 'Update failed';
-    if (message.includes('not found')) {
-      return res.status(404).json({ error: message });
-    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Something went wrong';
     return res.status(400).json({ error: message });
   }
 }

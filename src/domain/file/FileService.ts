@@ -16,7 +16,7 @@ export class FileService {
   async create(
     payload: CreateFileInput
   ): Promise<FileEntity> {
-    const file: FileEntity = new FileEntity(payload);
+    const file: FileEntity = FileEntity.create(payload);
     const createdFile: FileEntity = this.filesRepository.create(file);
     // push to queue now
     return createdFile;
@@ -26,15 +26,19 @@ export class FileService {
     ddocId: string,
     portal: string,
     payload: UpdateFileInput,
-  ): Promise<FileEntity> { // TODO: is return type correct here? What to return in case of errors?
-    // TODO: verify if this works without await, it should because this is better-sqlite3
+  ): Promise<FileEntity> {
+    if (payload.title !== undefined && payload.title.trim().length === 0) {
+      throw new Error('title cannot be empty');
+    }
+
     const currentFile: FileEntity | null = this.filesRepository.findByDDocId(ddocId, portal);
-    if (!currentFile) {
+    if (currentFile === null) {
       // TODO: do better
       throw new Error(`file with ddocId ${ddocId} could not be found`);
     }
 
-    const updatedFile: FileEntity = currentFile.withUpdate(payload).bumpLocalVersion();
+
+    const updatedFile: FileEntity = currentFile.withUpdate(payload);
     this.filesRepository.update(updatedFile);
 
     // await this.events.addJob({

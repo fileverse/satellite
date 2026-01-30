@@ -4,33 +4,38 @@ import type { CreateFileInput, UpdateFileInput } from "./types";
 import { generate } from "short-uuid";
 
 export class FileEntity {
-  private readonly _id: string;
-  private readonly _ddocId: string;
-  private readonly _title: string;
-  private readonly _content: string;
-  private readonly _portalAddress: string;
-  private readonly _localVersion: number;
-  private readonly _onchainVersion: number;
-  private readonly _syncStatus: string;
-  private readonly _isDeleted: number;
-  private readonly _createdAt: string;
-  private readonly _updatedAt: string;
-  
-  constructor(private readonly input: CreateFileInput) {
-    const now = new Date().toISOString();
-    this._id = uuidv7();
-    this._ddocId = generate();
-    this._title = input.title;
-    this._content = input.content;
-    this._portalAddress = input.portalAddress;
-    this._localVersion = 1;
-    this._onchainVersion = 0;
-    this._syncStatus = 'pending';
-    this._isDeleted = 0;
-    this._createdAt = now;
-    this._updatedAt = now;
-  }
 
+  constructor(
+    private readonly _id: string,
+    private readonly _ddocId: string,
+    private readonly _title: string,
+    private readonly _content: string,
+    private readonly _portalAddress: string,
+    private readonly _localVersion: number,
+    private readonly _onchainVersion: number,
+    private readonly _syncStatus: string,
+    private readonly _isDeleted: number,
+    private readonly _createdAt: string,
+    private readonly _updatedAt: string,
+  ) {}
+
+  static create(input: CreateFileInput): FileEntity {
+    const now = new Date().toISOString();
+    return new FileEntity(
+      uuidv7(),
+      generate(),
+      input.title,
+      input.content,
+      input.portalAddress,
+      1,
+      0,
+      'pending',
+      0,
+      now,
+      now,
+    );
+  }
+  
   get id() { return this._id; }
   get ddocId() { return this._ddocId; }
   get title() { return this._title; }
@@ -45,23 +50,20 @@ export class FileEntity {
 
   /** Returns a new entity with title/content merged from payload (only set when provided). */
   withUpdate(payload: UpdateFileInput): FileEntity {
-    const entity = { ...this };
-    if (payload.title) {
-      entity.title = payload.title;
-    }
-    if (payload.content) {
-      entity.content = payload.content;
-    }
-    return new FileEntity(entity);
+    return new FileEntity(
+      this._id,
+      this._ddocId,
+      payload.title ?? this._title,
+      payload.content ?? this._content,
+      this._portalAddress,
+      this._localVersion + 1,
+      this._onchainVersion,
+      'pending',
+      this._isDeleted,
+      this._createdAt,
+      new Date().toISOString(),
+    );
   }
-
-  // bumpLocalVersion(): FileEntity {
-  //   return new FileEntity({
-  //     ...this.row,
-  //     localVersion: this.row.localVersion + 1,
-  //     syncStatus: 'pending',
-  //   });
-  // }
 
   // toRow(): FileRow {
   //   return { ...this.row };
