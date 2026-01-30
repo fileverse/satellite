@@ -45,15 +45,15 @@ const addKeyHandler = async (req: Request, res: Response) => {
 
 const removeKeyHandler = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { collaboratorAddress } = req.body;
 
-    if (!id) {
+    if (!collaboratorAddress) {
       return res.status(400).json({
-        error: 'API key ID is required'
+        error: 'collaboratorAddress is required in request payload'
       });
     }
 
-    const deletedApiKey = removeApiKey(id);
+    const deletedApiKey = removeApiKey(collaboratorAddress);
     res.status(200).json({
       message: 'API key removed successfully',
       data: deletedApiKey,
