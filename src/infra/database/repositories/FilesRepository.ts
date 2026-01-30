@@ -1,4 +1,3 @@
-import { uuidv7 } from "uuidv7";
 import { FileEntity } from "../../../domain/file/FileEntity";
 import { ExecuteResult, SqliteExecutor } from "../executor/SqliteExecutor";
 import { FileRow } from "./FileRow";
@@ -16,7 +15,11 @@ export class FilesRepository {
       FROM files
       WHERE ddocId = ? AND portalAddress = ? AND isDeleted = 0
     `;
-    const row = this.db.selectOne<FileRow>(sql, [ddocId, portalAddress]);
+
+    const row: FileRow | null = this.db.selectOne<FileRow>(sql, [ddocId, portalAddress]);
+    if (row === null) {
+      return row;
+    }
     return this.transformRowToEntity(row);
   }
 
@@ -26,12 +29,11 @@ export class FilesRepository {
       FROM files
       WHERE _id = ? AND portalAddress = ? AND isDeleted = 0
     `;
+
     const row = this.db.selectOne<FileRow>(sql, [_id, portalAddress]);
     if (row === null) {
-      // TODO: handle this case
       return null;
     }
-
     return this.transformRowToEntity(row);
   }
 
@@ -43,29 +45,34 @@ export class FilesRepository {
     return [];
   }
 
-  create(f: FileEntity): FileEntity {
-    const _id = uuidv7();
+  create(file: FileEntity): FileEntity {
     const sql = `
       INSERT INTO files
-      (_id, title, content, ddocId, portalAddress)
-      VALUES (?, ?, ?, ?, ?)
+      (_id, ddocId, title, content, portalAddress, localVersion, onchainVersion, syncStatus, isDeleted, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *;
     `;
 
     const result: FileRow | null = this.db.selectOne(sql, [
-      _id,
-      f.title,
-      f.content,
-      f.ddocId,
-      f.portalAddress,
+      file.id,
+      file.ddocId,
+      file.title,
+      file.content,
+      file.portalAddress,
+      file.localVersion,
+      file.onchainVersion,
+      file.syncStatus,
+      file.isDeleted,
+      file.createdAt,
+      file.updatedAt,
     ]);
-
     if (result === null) {
-      // Crash loudly!
-      // TODO: Check if there is a better way of handling this.
+      /**
+       * Logically this scenario won't ever happen, but handling this so as to satisfy Typescript's type system. 
+       * Because, selectOne can return null.
+       */
       throw new Error('Invariant violation: INSERT RETURNING returned no row')
     }
-
     return this.transformRowToEntity(result);
   }
 
@@ -85,7 +92,6 @@ export class FilesRepository {
       f.id,
       f.portalAddress,
     ]);
-
     if (result.changes === 0) {
       throw new Error(`Something went wrong. No rows were affected.`)
     }

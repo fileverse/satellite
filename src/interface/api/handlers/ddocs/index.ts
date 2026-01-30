@@ -107,9 +107,8 @@ const updateHandler = async (req: DdocsRequest, res: Response) => {
     res.status(200)
       .json({
         message: 'file updated successfully',
-        data: file.toResponse(), // TODO: check if we can remove the toResponse()
+        data: file,
       });
-
   } catch (error: unknown) {
     // TODO: do better
     const message = error instanceof Error ? error.message : 'Update failed';

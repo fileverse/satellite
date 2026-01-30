@@ -14,20 +14,12 @@ export class FileService {
   ) {}
 
   async create(
-    paylod: CreateFileInput,
+    payload: CreateFileInput
   ): Promise<FileEntity> {
-    // i only know/understand entity
-    // Right now, FileEntity takes a row when instantiated.
-    // This is wrong. 
-    // FileEntity should not depend or be created from a row.
-    // It should be created from the arguments it is provided with.
-    // The only job of the Row thing is to represent a row in the database. 
-    // So we need to create FileEntity from CreateFileInput
-    // It has the necessary fields and values for creating a File. 
-    // For the remaining fields, there will be default values.
-    // Like for newly created File, localVersion is 1, onchainVersion is 0, sync state is pending.. and so on
-    const file: FileEntity = new FileEntity()
-    this.filesRepository.create(file)
+    const file: FileEntity = new FileEntity(payload);
+    const createdFile: FileEntity = this.filesRepository.create(file);
+    // push to queue now
+    return createdFile;
   }
 
   async update(
