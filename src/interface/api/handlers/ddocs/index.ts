@@ -4,6 +4,7 @@ import type { DdocsRequest } from '../../middleware/ddocsContainer';
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
 import { ClientUpdateFileInput } from './types';
+import { FileEntity } from '../../../../domain/file/FileEntity';
 
 const listHandler = async (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
@@ -91,37 +92,29 @@ const createHandler = async (req: Request, res: Response) => {
 const updateHandler = async (req: DdocsRequest, res: Response) => {
   // Flow: Handler → FileService → FilesRepository → SqliteExecutor
   try {
+    const svc = req.container.fileService;
     const { ddocId } = req.params;
     const { title, fileContent } = extractTitleAndContent(req);
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
 
+    const portalAddress = req.headers['x-portal-address'] as string | undefined;
     if (!portalAddress) {
       return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
     }
 
-    if (!title && !fileContent) {
-      return res.status(400).json({
-        error: 'At least one field is required: Either provide title, content, or both. When uploading a file, title is derived from the file name. When providing content directly, you can provide title and/or content.'
-      });
-    }
-
-    const clientPayload: ClientUpdateFileInput = {};
-    if (title) clientPayload.title = title;
-    if (fileContent) clientPayload.content = fileContent;
-
-    const domainPayload: UpdateFileInput = {
-      title: clientPayload.title,
-      content: clientPayload.content,
+    const payload: UpdateFileInput = { 
+      title, 
+      content: fileContent 
     };
-
-    const service = req.container.fileService;
-    const file = await service.update(ddocId, domainPayload, portalAddress);
-
-    res.status(200).json({
-      message: 'File updated successfully',
-      data: file.toResponse(),
-    });
+    const file: FileEntity = await svc.update(ddocId, portalAddress, payload);
+    return res
+      .status(200)
+      .json({
+        message: 'file updated successfully',
+        data: file.toResponse(), // TODO: check if we can remove the toResponse()
+      });
+      
   } catch (error: unknown) {
+    // TODO: do better
     const message = error instanceof Error ? error.message : 'Update failed';
     if (message.includes('not found')) {
       return res.status(404).json({ error: message });

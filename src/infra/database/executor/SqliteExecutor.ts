@@ -1,5 +1,10 @@
 import type Database from "better-sqlite3";
 
+export interface ExecuteResult {
+  changes: number;
+  lastInsertRowid?: number | bigint;
+}
+
 export class SqliteExecutor {
   constructor(private readonly db: Database.Database) {}
 
@@ -14,8 +19,12 @@ export class SqliteExecutor {
     return row ?? null;
   }
 
-  execute(sql: string, params: unknown[] = []): void {
+  execute(sql: string, params: unknown[] = []): ExecuteResult {
     const stmt = this.db.prepare(sql);
-    stmt.run(params);
+    const result = stmt.run(params);
+    return {
+      changes: result.changes,
+      lastInsertRowid: result.lastInsertRowid,
+    }
   }
 }

@@ -15,25 +15,25 @@ export class FileService {
 
   async update(
     ddocId: string,
-    payload: UpdateFileInput,
     portal: string,
-  ): Promise<FileEntity> {
-    const fileRow = this.filesRepository.findByDDocId(ddocId, portal);
-    if (!fileRow) {
-      throw new Error(`File with ddocId ${ddocId} not found`);
+    payload: UpdateFileInput,
+  ): Promise<FileEntity> { // TODO: is return type correct here? What to return in case of errors?
+    // TODO: verify if this works without await, it should because this is better-sqlite3
+    const currentFile: FileEntity | null = this.filesRepository.findByDDocId(ddocId, portal);
+    if (!currentFile) {
+      // TODO: do better
+      throw new Error(`file with ddocId ${ddocId} could not be found`);
     }
 
-    const file = new FileEntity(fileRow);
-    const updated = file.withUpdate(payload).bumpLocalVersion();
-    const savedRow = this.filesRepository.update(updated.toRow());
-    const saved = new FileEntity(savedRow);
+    const updatedFile: FileEntity = currentFile.withUpdate(payload).bumpLocalVersion();
+    this.filesRepository.update(updatedFile);
 
-    await this.events.addJob({
-      fileId: saved.id,
-      type: 'update',
-      metadata: { localVersion: saved.localVersion },
-    });
-
-    return saved;
+    // await this.events.addJob({
+    //   fileId: saved.id,
+    //   type: 'update',
+    //   metadata: { localVersion: saved.localVersion },
+    // });
+    
+    return updatedFile
   }
 }

@@ -1,19 +1,24 @@
 // Translator: domain talks in Row here; domain layer converts Row ↔ Entity.
 // SQL lives only here. Returns Row only.
 
+import { FileEntity } from "../../../domain/file/FileEntity";
 import { SqliteExecutor } from "../executor/SqliteExecutor";
 import { FileRow } from "./FileRow";
 
 export class FilesRepository {
   constructor(private readonly db: SqliteExecutor) {}
 
-  findByDDocId(ddocId: string, portalAddress: string): FileRow | null {
+  findByDDocId(
+    ddocId: string, 
+    portalAddress: string
+  ): FileEntity | null {
     const sql = `
       SELECT *
       FROM files
       WHERE ddocId = ? AND portalAddress = ? AND isDeleted = 0
     `;
-    return this.db.selectOne<FileRow>(sql, [ddocId, portalAddress]);
+    const row = this.db.selectOne<FileRow>(sql, [ddocId, portalAddress]);
+    return null; // TODO: convert row to FileEntity
   }
 
   findById(_id: string, portalAddress: string): FileRow | null {
@@ -37,13 +42,15 @@ export class FilesRepository {
     throw new Error("Not implemented");
   }
 
-  update(row: FileRow): FileRow {
+  update(file: FileEntity): void {
+    const row = file.toRow();
     const sql = `
       UPDATE files
       SET title = ?, content = ?, localVersion = ?, syncStatus = ?, updatedAt = ?
       WHERE _id = ? AND portalAddress = ?
     `;
-    this.db.execute(sql, [
+
+    const result = this.db.execute(sql, [
       row.title,
       row.content,
       row.localVersion,
@@ -52,11 +59,10 @@ export class FilesRepository {
       row._id,
       row.portalAddress,
     ]);
-    const saved = this.findById(row._id, row.portalAddress);
-    if (!saved) {
-      throw new Error("Failed to update file");
+
+    if (result.changes === 0) {
+      throw new Error(`Something went wrong. No rows were affected.`)
     }
-    return saved;
   }
 
   delete(_id: string): FileRow {

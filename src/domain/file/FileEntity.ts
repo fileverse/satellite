@@ -18,10 +18,14 @@ export class FileEntity {
 
   /** Returns a new entity with title/content merged from payload (only set when provided). */
   withUpdate(payload: UpdateFileInput): FileEntity {
-    const next = { ...this.row };
-    if (payload.title !== undefined) next.title = payload.title;
-    if (payload.content !== undefined) next.content = payload.content;
-    return new FileEntity(next);
+    const entity = { ...this.row }; // current file
+    if (payload.title) {
+      entity.title = payload.title;
+    }
+    if (payload.content) {
+      entity.content = payload.content;
+    }
+    return new FileEntity(entity);
   }
 
   bumpLocalVersion(): FileEntity {
