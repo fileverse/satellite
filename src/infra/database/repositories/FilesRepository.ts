@@ -1,12 +1,13 @@
+import { uuidv7 } from "uuidv7";
 import { FileEntity } from "../../../domain/file/FileEntity";
-import { SqliteExecutor } from "../executor/SqliteExecutor";
+import { ExecuteResult, SqliteExecutor } from "../executor/SqliteExecutor";
 import { FileRow } from "./FileRow";
 
 export class FilesRepository {
   constructor(private readonly db: SqliteExecutor) {}
 
-  private toEntity(row: FileRow | null): FileEntity | null {
-    return row ? new FileEntity(row) : null;
+  private transformRowToEntity(row: FileRow): FileEntity {
+    return new FileEntity(row);
   }
 
   findByDDocId(ddocId: string, portalAddress: string): FileEntity | null {
@@ -16,7 +17,7 @@ export class FilesRepository {
       WHERE ddocId = ? AND portalAddress = ? AND isDeleted = 0
     `;
     const row = this.db.selectOne<FileRow>(sql, [ddocId, portalAddress]);
-    return this.toEntity(row);
+    return this.transformRowToEntity(row);
   }
 
   findById(_id: string, portalAddress: string): FileEntity | null {
@@ -26,7 +27,12 @@ export class FilesRepository {
       WHERE _id = ? AND portalAddress = ? AND isDeleted = 0
     `;
     const row = this.db.selectOne<FileRow>(sql, [_id, portalAddress]);
-    return this.toEntity(row);
+    if (row === null) {
+      // TODO: handle this case
+      return null;
+    }
+
+    return this.transformRowToEntity(row);
   }
 
   findAll(): FileEntity[] {
@@ -37,26 +43,47 @@ export class FilesRepository {
     return [];
   }
 
-  insert(_row: FileRow): FileEntity {
-    throw new Error("Not implemented");
+  create(f: FileEntity): FileEntity {
+    const _id = uuidv7();
+    const sql = `
+      INSERT INTO files
+      (_id, title, content, ddocId, portalAddress)
+      VALUES (?, ?, ?, ?, ?)
+      RETURNING *;
+    `;
+
+    const result: FileRow | null = this.db.selectOne(sql, [
+      _id,
+      f.title,
+      f.content,
+      f.ddocId,
+      f.portalAddress,
+    ]);
+
+    if (result === null) {
+      // Crash loudly!
+      // TODO: Check if there is a better way of handling this.
+      throw new Error('Invariant violation: INSERT RETURNING returned no row')
+    }
+
+    return this.transformRowToEntity(result);
   }
 
-  update(file: FileEntity): void {
-    const row = file.toRow();
+  update(f: FileEntity): void {
     const sql = `
       UPDATE files
       SET title = ?, content = ?, localVersion = ?, syncStatus = ?, updatedAt = ?
       WHERE _id = ? AND portalAddress = ?
     `;
 
-    const result = this.db.execute(sql, [
-      row.title,
-      row.content,
-      row.localVersion,
-      row.syncStatus,
+    const result: ExecuteResult = this.db.execute(sql, [
+      f.title,
+      f.content,
+      f.localVersion,
+      f.syncStatus,
       new Date().toISOString(),
-      row._id,
-      row.portalAddress,
+      f.id,
+      f.portalAddress,
     ]);
 
     if (result.changes === 0) {

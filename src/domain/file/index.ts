@@ -6,6 +6,7 @@ import { DEFAULT_LIST_LIMIT } from './constants';
 
 import type { ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput } from './types';
 import type { UpdateFilePayload } from '../../infra/database/models/files/types';
+import { FileEntity } from './FileEntity';
 
 function listFiles(params: ListFilesParams): ListFilesResult {
   const { limit, skip, portalAddress } = params;
@@ -34,13 +35,17 @@ function getFile(ddocId: string, portalAddress: string): File | null {
   return file;
 }
 
-async function createFile(input: CreateFileInput): Promise<File> {
-  if (!input.title || !input.content || !input.portalAddress) {
+async function createFile(
+  payload: CreateFileInput
+): Promise<FileEntity> {
+  // Note: we don't allow creating files with empty content
+  if (!payload.title || !payload.content || !payload.portalAddress) {
+    // TODO: handle error better
     throw new Error('title, content, and portalAddress are required');
   }
 
   const ddocId = generate();
-  const file = FilesModel.create({
+  const file: FileEntity = FilesModel.create({
     title: input.title,
     content: input.content,
     ddocId: ddocId,

@@ -49,43 +49,41 @@ const getHandler = async (req: Request, res: Response) => {
   }
 };
 
-const createHandler = async (req: Request, res: Response) => {
+const createHandler = async (req: DdocsRequest, res: Response) => {
   try {
+    const svc = req.context.fileService;
     const { title, fileContent } = extractTitleAndContent(req);
-    // TODO: Extract portalAddress from auth header once authentication is implemented
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
-
     if (!title) {
       return res.status(400).json({
-        error: 'Missing required field: title is required. When uploading a file, title is derived from the file name. When providing content directly, title must be provided.'
+        error: 'title is missing'
       });
     }
-
     if (!fileContent) {
       return res.status(400).json({
-        error: 'Missing content: Either provide a file upload or fileContent text field'
+        error: 'file content is empty'
       });
     }
 
+    const portalAddress = req.headers['x-portal-address'] as string | undefined;
     if (!portalAddress) {
       return res.status(400).json({
-        error: 'Missing required header: x-portal-address is required'
+        error: 'missing required header: x-portal-address is required'
       });
     }
 
     const payload: CreateFileInput = {
-      title: title,
+      title,
       content: fileContent,
       portalAddress,
     };
-
-    const file = await createFile(payload);
-    res.status(201).json({
-      message: 'File created successfully. Sync to on-chain is pending.',
-      data: { ...file },
-    });
+    const file: FileEntity = await svc.create(payload);
+    res.status(201)
+      .json({
+        message: 'File created successfully. On-chain publishing is penging.',
+        data: file, // TODO: check if response needs any formatting, if not remove toResponse function used by update logic.
+      });
   } catch (error: any) {
-    return res.status(400).json({ error: error.message });
+    return res.status(500).json({ error: `Something went wrong: ${error}.` });
   }
 };
 
@@ -101,13 +99,12 @@ const updateHandler = async (req: DdocsRequest, res: Response) => {
       return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
     }
 
-    const payload: UpdateFileInput = { 
-      title, 
-      content: fileContent 
+    const payload: UpdateFileInput = {
+      title,
+      content: fileContent
     };
     const file: FileEntity = await svc.update(ddocId, portalAddress, payload);
-    return res
-      .status(200)
+    res.status(200)
       .json({
         message: 'file updated successfully',
         data: file.toResponse(), // TODO: check if we can remove the toResponse()
