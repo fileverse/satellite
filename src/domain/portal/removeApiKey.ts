@@ -1,15 +1,15 @@
 import { ApiKeysModel, ApiKey } from '../../infra/database/models';
 
-export function removeApiKey(_id: string): ApiKey {
-  if (!_id) {
-    throw new Error('API key ID is required');
+export function removeApiKey(collaboratorAddress: string): ApiKey {
+  if (!collaboratorAddress) {
+    throw new Error('collaboratorAddress is required');
   }
 
-  const apiKey = ApiKeysModel.findById(_id);
+  const apiKey = ApiKeysModel.findByCollaboratorAddress(collaboratorAddress);
   if (!apiKey) {
     throw new Error('API key not found');
   }
 
-  ApiKeysModel.delete(_id);
+  ApiKeysModel.delete(apiKey._id);
   return { ...apiKey, isDeleted: 1 };
 }
