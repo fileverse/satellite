@@ -1,6 +1,3 @@
-// Translator: domain talks in Row here; domain layer converts Row ↔ Entity.
-// SQL lives only here. Returns Row only.
-
 import { FileEntity } from "../../../domain/file/FileEntity";
 import { SqliteExecutor } from "../executor/SqliteExecutor";
 import { FileRow } from "./FileRow";
@@ -8,37 +5,39 @@ import { FileRow } from "./FileRow";
 export class FilesRepository {
   constructor(private readonly db: SqliteExecutor) {}
 
-  findByDDocId(
-    ddocId: string, 
-    portalAddress: string
-  ): FileEntity | null {
+  private toEntity(row: FileRow | null): FileEntity | null {
+    return row ? new FileEntity(row) : null;
+  }
+
+  findByDDocId(ddocId: string, portalAddress: string): FileEntity | null {
     const sql = `
       SELECT *
       FROM files
       WHERE ddocId = ? AND portalAddress = ? AND isDeleted = 0
     `;
     const row = this.db.selectOne<FileRow>(sql, [ddocId, portalAddress]);
-    return null; // TODO: convert row to FileEntity
+    return this.toEntity(row);
   }
 
-  findById(_id: string, portalAddress: string): FileRow | null {
+  findById(_id: string, portalAddress: string): FileEntity | null {
     const sql = `
       SELECT *
       FROM files
       WHERE _id = ? AND portalAddress = ? AND isDeleted = 0
     `;
-    return this.db.selectOne<FileRow>(sql, [_id, portalAddress]);
+    const row = this.db.selectOne<FileRow>(sql, [_id, portalAddress]);
+    return this.toEntity(row);
   }
 
-  findAll(): FileRow[] {
+  findAll(): FileEntity[] {
     return [];
   }
 
-  findPaginated(_limit: number, _offset: number): FileRow[] {
+  findPaginated(_limit: number, _offset: number): FileEntity[] {
     return [];
   }
 
-  insert(_row: FileRow): FileRow {
+  insert(_row: FileRow): FileEntity {
     throw new Error("Not implemented");
   }
 
@@ -65,7 +64,7 @@ export class FilesRepository {
     }
   }
 
-  delete(_id: string): FileRow {
+  delete(_id: string): FileEntity {
     throw new Error("Not implemented");
   }
 }

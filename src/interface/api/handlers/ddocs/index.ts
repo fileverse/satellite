@@ -92,7 +92,7 @@ const createHandler = async (req: Request, res: Response) => {
 const updateHandler = async (req: DdocsRequest, res: Response) => {
   // Flow: Handler → FileService → FilesRepository → SqliteExecutor
   try {
-    const svc = req.container.fileService;
+    const svc = req.context.fileService;
     const { ddocId } = req.params;
     const { title, fileContent } = extractTitleAndContent(req);
 
@@ -112,7 +112,7 @@ const updateHandler = async (req: DdocsRequest, res: Response) => {
         message: 'file updated successfully',
         data: file.toResponse(), // TODO: check if we can remove the toResponse()
       });
-      
+
   } catch (error: unknown) {
     // TODO: do better
     const message = error instanceof Error ? error.message : 'Update failed';
