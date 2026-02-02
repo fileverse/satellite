@@ -56,10 +56,15 @@ export const updateCommand = new Command()
   .name('update')
   .description('Update an existing ddoc from a file')
   .argument('<ddocId>', 'The ddoc ID to update')
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
   .option('-f, --file <file_path>', 'path to file to update ddoc from')
-  .action(async (ddocId: string, options: { file?: string }) => {
+  .action(async (ddocId: string, options: { file?: string, portalAddress?: string }) => {
     try {
-      const file = await getFile(ddocId);
+      if (!options.portalAddress) {
+        throw new Error('Portal address is required');
+      }
+
+      const file = await getFile(ddocId, options.portalAddress);
       if (!file) {
         throw new Error(`ddoc with ${ddocId} not found.`);
       }
@@ -76,7 +81,7 @@ export const updateCommand = new Command()
           title,
           content,
         };
-        const updatedFile = await updateFile(ddocId, payload);
+        const updatedFile = await updateFile(ddocId, payload, options.portalAddress);
         console.log('\n✓ Ddoc updated successfully!\n');
         showTable(updatedFile);
         return;
@@ -103,7 +108,7 @@ export const updateCommand = new Command()
           title: file.title, // keeping same title as current
           content: newContent,
         };
-        const updatedFile = await updateFile(ddocId, payload);
+        const updatedFile = await updateFile(ddocId, payload, options.portalAddress);
         console.log('\n✓ Ddoc updated successfully!\n');
         showTable(updatedFile);
       }

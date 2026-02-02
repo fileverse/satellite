@@ -5,11 +5,16 @@ export const deleteCommand = new Command()
   .name('delete')
   .description('Delete one or more ddocs by their IDs')
   .argument('<ddocIds...>', 'One or more ddoc IDs to delete (space-separated)')
-  .action(async (ddocIds: string[]) => {
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
+  .action(async (ddocIds: string[], options: { portalAddress?: string }) => {
     try {
+      if (!options.portalAddress) {
+        throw new Error('Portal address is required');
+      }
+
       for (const ddocId of ddocIds) {
         try {
-          await deleteFile(ddocId);
+          await deleteFile(ddocId, options.portalAddress);
           console.log(`ddoc ${ddocId} deleted successfully`);
         } catch (error: any) {
           console.error(`Error deleting ddoc ${ddocId}:`, error.message);

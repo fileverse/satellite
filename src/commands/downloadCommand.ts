@@ -7,9 +7,14 @@ export const downloadCommand = new Command()
   .description('Download a ddoc to a local file')
   .argument('<ddocId>', 'The ddoc ID to download')
   .option('-o, --output <filename>', 'Output filename (only supports markdown)')
-  .action(async (ddocId: string, options: { output?: string }) => {
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
+  .action(async (ddocId: string, options: { output?: string, portalAddress?: string }) => {
     try {
-      const file = getFile(ddocId);
+      if (!options.portalAddress) {
+        throw new Error('Portal address is required');
+      }
+
+      const file = getFile(ddocId, options.portalAddress);
       if (!file) {
         console.error(`Ddoc with ID "${ddocId}" not found.`);
         return;

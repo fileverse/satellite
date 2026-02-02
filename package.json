@@ -28,7 +28,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@fileverse/crypto": "^0.0.18",
+    "@stablelib/ed25519": "^2.0.2",
     "@types/multer": "^2.0.0",
     "@ucans/ucans": "^0.12.0",
     "axios": "^1.7.9",
@@ -52,6 +52,7 @@
     "permissionless": "^0.3.4",
     "redis": "^4.7.0",
     "short-uuid": "^6.0.3",
+    "tweetnacl": "^1.0.3",
     "uuidv7": "^1.1.0",
     "viem": "^2.45.0"
   },

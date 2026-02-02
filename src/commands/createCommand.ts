@@ -14,10 +14,15 @@ export const createCommand = new Command()
   .name('create')
   .description('Create a new ddoc from a file')
   .argument('<filepath>', 'Path to the file to create ddoc from')
-  .action(async (filepath: string) => {
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
+  .action(async (filepath: string, options: { portalAddress?: string }) => {
     try {
       if (!fs.existsSync(filepath)) {
         throw new Error(`File not found: ${filepath}`);
+      }
+
+      if (!options.portalAddress) {
+        throw new Error('Portal address is required');
       }
 
       const content = fs.readFileSync(filepath, 'utf-8');
@@ -26,7 +31,7 @@ export const createCommand = new Command()
       }
 
       const title = path.basename(filepath);
-      const file = await createFile({ title, content });
+      const file = await createFile({ title, content, portalAddress: options.portalAddress });
 
       console.log('\nDdoc created successfully!\n');
       const table = new Table({

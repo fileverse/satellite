@@ -16,16 +16,16 @@ let tunnel: Awaited<ReturnType<typeof localtunnel>> | undefined;
 const server = app.listen(port, ip, async () => {
   logger.info(`🚀 Server ready at http://${ip}:${port}`);
   if (process.env.NODE_ENV === 'production') return;
-  try {
-    tunnel = await localtunnel({
-      port,
-      host: process.env.TUNNEL_HOST || undefined,
-      subdomain: process.env.TUNNEL_SUBDOMAIN || undefined,
-    });
-    logger.info(`Tunnel ready at ${tunnel.url}`);
-  } catch (error) {
-    logger.error('Failed to start tunnel:', error);
-  }
+  // try {
+  //   tunnel = await localtunnel({
+  //     port,
+  //     host: process.env.TUNNEL_HOST || undefined,
+  //     subdomain: process.env.TUNNEL_SUBDOMAIN || undefined,
+  //   });
+  //   logger.info(`Tunnel ready at ${tunnel.url}`);
+  // } catch (error) {
+  //   logger.error('Failed to start tunnel:', error);
+  // }
 });
 
 const shutdown = async () => {

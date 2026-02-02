@@ -54,4 +54,9 @@ export class ApiKeysModel {
     const sql = `UPDATE ${this.TABLE} SET isDeleted = 1 WHERE _id = ?`;
     QueryBuilder.execute(sql, [_id]);
   }
+
+  static findByPortalAddress(portalAddress: string): ApiKey | undefined {
+    const sql = `SELECT _id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt, isDeleted FROM ${this.TABLE} WHERE portalAddress = ? AND isDeleted = 0`;
+    return QueryBuilder.selectOne<ApiKey>(sql, [portalAddress]);
+  }
 }

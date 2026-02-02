@@ -6,9 +6,11 @@ import {
     encryptTitleWithFileKey,
     generateLinkKeyMaterial,
     jsonToFile,
+    prepareCallData,
     uploadFileToIPFS,
 } from './file-utils';
 import { randomBytes } from 'node:crypto';
+import { AgentClient } from './smart-agent';
 
 export class FileManager {
     private keyStore: KeyStore;
@@ -17,7 +19,7 @@ export class FileManager {
         this.keyStore = keyStore;
     }
 
-    async publishFile(file: any) {
+    async publishFile(file: any, agentClient: AgentClient) {
         const { encryptedSecretKey, nonce, secretKey } =
             await generateLinkKeyMaterial({
                 ddocId: file.ddocId,
@@ -43,7 +45,7 @@ export class FileManager {
 
         const linkLock = buildLinklock(secretKey, key);
 
-        const encryptedTitle = await encryptTitleWithFileKey(title, key);
+        const encryptedTitle = await encryptTitleWithFileKey({ title, key });
 
         const metadata = {
             title: encryptedTitle,
@@ -52,8 +54,9 @@ export class FileManager {
             appLock,
             ddocId: file.ddocId,
             nonce: fromUint8Array(nonce),
-            owner: '',
+            owner: agentClient.getAgentAddress(),
             version: '4',
+            sourceApp: 'satellite'
         };
 
         // call upload files
@@ -61,20 +64,37 @@ export class FileManager {
             jsonToFile(metadata, `${fromUint8Array(randomBytes(16))}-METADATA`),
             'METADATA',
             file.ddocId,
-            this.keyStore
+            this.keyStore,
+            agentClient.getAgentAddress()
         );
         const contentHash = await uploadFileToIPFS(
             encryptedFile,
             'CONTENT',
             file.ddocId,
-            this.keyStore
+            this.keyStore,
+            agentClient.getAgentAddress()
         );
         const gateHash = await uploadFileToIPFS(
             jsonToFile(linkLock, `${fromUint8Array(randomBytes(16))}-GATE`),
             'GATE',
             file.ddocId,
-            this.keyStore
+            this.keyStore,
+            agentClient.getAgentAddress()
         );
-        // call contract functions
+
+        const callData = prepareCallData({
+            metadataHash,
+            contentHash,
+            gateHash,
+            appFileId: file.appFileId,
+            fileId: file.fileId,
+        });
+
+        const trx = await agentClient.executeUserOperationRequest({
+            contractAddress: this.keyStore.getPortalAddress(),
+            data: callData,
+        }, 1000000);
+
+        return trx;
     }
 }

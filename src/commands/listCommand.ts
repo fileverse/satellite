@@ -12,6 +12,7 @@ import {
 export const listCommand = new Command()
   .name('list')
   .description('List all ddocs')
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
   .option('-l, --limit <number>', 'Limit the number of results', parseInt)
   .option('-s, --skip <number>', 'Skip the first N results', parseInt)
   .action(async (options) => {
@@ -19,6 +20,7 @@ export const listCommand = new Command()
       const params = {
         limit: options.limit,
         skip: options.skip,
+        portalAddress: options.portalAddress,
       };
 
       const result = listFiles(params);

@@ -15,6 +15,9 @@ import { type Readable } from 'node:stream';
 import { toAESKey, aesEncrypt } from '@fileverse/crypto/webcrypto';
 import { KeyStore } from './key-store';
 import axios from 'axios';
+import { ADD_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from '../constants';
+import { encodeFunctionData, Hex } from 'viem';
+import { config } from '../config';
 
 interface LinkKeyMaterialParams {
     ddocId: string;
@@ -177,14 +180,14 @@ export const buildLinklock = (key: Uint8Array, fileKey: string) => {
     };
 };
 
-export const encryptTitleWithFileKey = async (
-    title: string,
-    fileKey: string
-) => {
-    const key = await toAESKey(toUint8Array(fileKey));
+export const encryptTitleWithFileKey = async (args: {
+    title: string;
+    key: string;
+}) => {
+    const key = await toAESKey(toUint8Array(args.key));
     if (!key) throw new Error('Key is undefined');
 
-    const titleBytes = new TextEncoder().encode(title);
+    const titleBytes = new TextEncoder().encode(args.title);
 
     const encryptedTitle = await aesEncrypt(key, titleBytes, 'base64');
 
@@ -195,11 +198,13 @@ export const uploadFileToIPFS = async (
     file: File,
     ipfsType: string,
     appFileId: string,
-    keyStore: KeyStore
+    keyStore: KeyStore,
+    agentAddress: Hex
 ) => {
-    const token = ''; // need to think about this
+    const did = config.UPLOAD_SERVER_DID as string;
+    const token = await keyStore.getAuthToken(did);
     const contractAddress = keyStore.getPortalAddress();
-    const invoker = ''; // need to think about this
+    const invoker = agentAddress;
 
     const body = new FormData();
     body.append('file', file);
@@ -208,7 +213,7 @@ export const uploadFileToIPFS = async (
 
     body.append('sourceApp', 'ddoc');
     const response = await axios.post(
-        process.env.UPLOAD_SERVER_URL as string,
+        UPLOAD_SERVER_URL,
         body,
         {
             headers: {
@@ -222,3 +227,59 @@ export const uploadFileToIPFS = async (
 
     return response.data.ipfsHash;
 };
+
+
+const getEditFileTrxCalldata = (args: {
+    fileId: number;
+    appFileId: string;
+    metadataHash: string;
+    contentHash: string;
+    gateHash: string;
+}) => {
+    return encodeFunctionData({
+        abi: EDIT_FILE_ABI,
+        functionName: 'editFile',
+        args: [BigInt(args.fileId),
+        args.appFileId,
+        args.metadataHash,
+        args.contentHash,
+        args.gateHash,
+            2,
+        BigInt(0)]
+    })
+}
+
+const getAddFileTrxCalldata = (args: {
+    appFileId: string;
+    metadataHash: string;
+    contentHash: string;
+    gateHash: string;
+}) => {
+    return encodeFunctionData({
+        abi: ADD_FILE_ABI,
+        functionName: 'addFile',
+        args: [args.appFileId, 2, args.metadataHash, args.contentHash, args.gateHash, BigInt(0)]
+    })
+}
+
+
+export const prepareCallData = (args: {
+    metadataHash: string;
+    contentHash: string;
+    gateHash: string;
+    appFileId: string,
+    fileId?: number
+}) => {
+
+    if (args.fileId) {
+        return getEditFileTrxCalldata({
+            fileId: args.fileId,
+            appFileId: args.appFileId,
+            metadataHash: args.metadataHash,
+            contentHash: args.contentHash,
+            gateHash: args.gateHash,
+        });
+    }
+    return getAddFileTrxCalldata(args);
+
+}

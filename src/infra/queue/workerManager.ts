@@ -47,20 +47,21 @@ export class WorkerManager {
 
   private async processJob(job: Job<FileEvent>): Promise<void> {
     const { fileId, type } = job.data;
-
+    logger.info('processJob', fileId, type);
+    // console.log('job', job);
     try {
       switch (type) {
         case 'create':
           await this.processCreateJob(job);
           break;
-        case 'update':
-          await this.processUpdateJob(job);
-          break;
-        case 'delete':
-          await this.processDeleteJob(job);
-          break;
-        default:
-          throw new Error(`Unknown event type: ${type}`);
+        // case 'update':
+        //   await this.processUpdateJob(job);
+        //   break;
+        // case 'delete':
+        //   await this.processDeleteJob(job);
+        //   break;
+        // default:
+        //   throw new Error(`Unknown event type: ${type}`);
       }
     } catch (error: any) {
       logger.error(`Error processing ${type} event for file ${fileId}:`, error);
@@ -88,18 +89,18 @@ export class WorkerManager {
     // Hence, set onchainVersion = localVersion
     //
     // As of now, syncStatus is set to 'pending' in local db (default value upon file creation)
-    const payload: UpdateFilePayload = {
-      onchainVersion: metadata.localVersion,
-    }
-    const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
+    // const payload: UpdateFilePayload = {
+    //   onchainVersion: metadata.localVersion,
+    // }
+    // const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
     // Once local and onchain versions become same, update syncStatus to 'synced' (from 'pending')
-    if (updatedFile.localVersion === updatedFile.onchainVersion) {
-      const payload: UpdateFilePayload = {
-        syncStatus: 'synced', // TODO: use enum later
-      }
-      FilesModel.update(fileId, payload, file.portalAddress);
-    }
+    // if (updatedFile.localVersion === updatedFile.onchainVersion) {
+    //   const payload: UpdateFilePayload = {
+    //     syncStatus: 'synced', // TODO: use enum later
+    //   }
+    //   FilesModel.update(fileId, payload, file.portalAddress);
+    // }
   }
 
   private async processUpdateJob(job: Job<FileEvent>): Promise<void> {

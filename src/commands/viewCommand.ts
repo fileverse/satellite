@@ -5,14 +5,19 @@ export const viewCommand = new Command()
   .name('view')
   .description('View content preview of a ddoc')
   .argument('<ddocId>', 'The ddoc ID to view')
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
   .option(
     '-n, --lines <number>',
     'Number of lines to preview (default: 10)',
     '10'
   )
-  .action(async (ddocId: string, options: { lines?: string }) => {
+  .action(async (ddocId: string, options: { lines?: string, portalAddress?: string }) => {
     try {
-      const file = getFile(ddocId);
+      if (!options.portalAddress) {
+        throw new Error('Portal address is required');
+      }
+
+      const file = getFile(ddocId, options.portalAddress);
       if (!file) {
         console.error(`Ddoc with ID "${ddocId}" not found.`);
         return;

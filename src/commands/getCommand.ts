@@ -12,9 +12,14 @@ export const getCommand = new Command()
   .name('get')
   .description('Get a ddoc by its ID')
   .argument('<ddocId>', 'The ddoc ID to retrieve')
-  .action(async (ddocId: string) => {
+  .option('-p, --portalAddress <portalAddress>', 'Portal address')
+  .action(async (ddocId: string, options: { portalAddress?: string }) => {
+    if (!options.portalAddress) {
+      throw new Error('Portal address is required');
+    }
+
     try {
-      const file = getFile(ddocId);
+      const file = getFile(ddocId, options.portalAddress);
       if (!file) {
         console.error(`Ddoc with ID "${ddocId}" not found.`);
         return;
