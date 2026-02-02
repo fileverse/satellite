@@ -30,7 +30,7 @@ class DatabaseConnectionManager {
       this.db = new Database(dbPath, {
         verbose:
           config.NODE_ENV === 'development'
-            ? logger.info.bind(logger)
+            ? (msg: unknown) => logger.debug(String(msg))
             : undefined,
       });
 

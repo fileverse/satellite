@@ -12,4 +12,8 @@ export interface UpdateFilePayload {
   portalAddress?: string;
   metadata?: Record<string, unknown>;
   onChainFileId?: number;
+  linkKey?: string;
+  linkKeyNonce?: string;
+  commentKey?: string;
 }
+

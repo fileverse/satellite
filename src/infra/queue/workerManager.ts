@@ -47,21 +47,19 @@ export class WorkerManager {
 
   private async processJob(job: Job<FileEvent>): Promise<void> {
     const { fileId, type } = job.data;
-    logger.info('processJob', fileId, type);
-    // console.log('job', job);
     try {
       switch (type) {
         case 'create':
           await this.processCreateJob(job);
           break;
-        // case 'update':
-        //   await this.processUpdateJob(job);
-        //   break;
+        case 'update':
+          await this.processUpdateJob(job);
+          break;
         // case 'delete':
         //   await this.processDeleteJob(job);
         //   break;
-        // default:
-        //   throw new Error(`Unknown event type: ${type}`);
+        default:
+          throw new Error(`Unknown event type: ${type}`);
       }
     } catch (error: any) {
       logger.error(`Error processing ${type} event for file ${fileId}:`, error);
@@ -80,7 +78,7 @@ export class WorkerManager {
 
     // file was created and saved in local db. 
     // we need to publish this file now
-    const result = await publishFile(fileId);
+    const result = await publishFile(fileId, 'add');
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }
@@ -89,18 +87,25 @@ export class WorkerManager {
     // Hence, set onchainVersion = localVersion
     //
     // As of now, syncStatus is set to 'pending' in local db (default value upon file creation)
-    // const payload: UpdateFilePayload = {
-    //   onchainVersion: metadata.localVersion,
-    // }
-    // const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
+    const payload: UpdateFilePayload = {
+      onchainVersion: metadata.localVersion,
+      onChainFileId: result.onChainFileId,
+      linkKey: result.linkKey,
+      linkKeyNonce: result.linkKeyNonce,
+      commentKey: result.commentKey,
+      metadata: result.metadata,
+    }
+    const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
     // Once local and onchain versions become same, update syncStatus to 'synced' (from 'pending')
-    // if (updatedFile.localVersion === updatedFile.onchainVersion) {
-    //   const payload: UpdateFilePayload = {
-    //     syncStatus: 'synced', // TODO: use enum later
-    //   }
-    //   FilesModel.update(fileId, payload, file.portalAddress);
-    // }
+    if (updatedFile.localVersion === updatedFile.onchainVersion) {
+      const payload: UpdateFilePayload = {
+        syncStatus: 'synced', // TODO: use enum later
+      }
+      FilesModel.update(fileId, payload, file.portalAddress);
+    }
+
+    logger.info(`File ${fileId} created and published successfully`);
   }
 
   private async processUpdateJob(job: Job<FileEvent>): Promise<void> {
@@ -121,7 +126,7 @@ export class WorkerManager {
       return;
     }
 
-    const result = await publishFile(fileId);
+    const result = await publishFile(fileId, 'update');
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }
@@ -132,6 +137,7 @@ export class WorkerManager {
     // As of now, syncStatus is set to 'pending' in local db
     const payload: UpdateFilePayload = {
       onchainVersion: metadata.localVersion,
+      metadata: result.metadata
     }
     const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
@@ -142,29 +148,30 @@ export class WorkerManager {
       }
       FilesModel.update(fileId, payload, file.portalAddress);
     }
+    logger.info(`File ${fileId} updated and published successfully`);
   }
 
-  private async processDeleteJob(job: Job<FileEvent>): Promise<void> {
-    const { fileId, metadata } = job.data;
+  // private async processDeleteJob(job: Job<FileEvent>): Promise<void> {
+  //   const { fileId, metadata } = job.data;
 
-    // Get the file including deleted ones to get its version and portalAddress
-    const file = FilesModel.findByIdIncludingDeleted(fileId);
-    if (!file) {
-      return;
-    }
+  //   // Get the file including deleted ones to get its version and portalAddress
+  //   const file = FilesModel.findByIdIncludingDeleted(fileId);
+  //   if (!file) {
+  //     return;
+  //   }
 
-    const result = await publishFile(fileId);
-    if (!result.success) {
-      throw new Error(`Publish deletion failed for file ${fileId}`);
-    }
+  //   const result = await publishFile(fileId);
+  //   if (!result.success) {
+  //     throw new Error(`Publish deletion failed for file ${fileId}`);
+  //   }
 
-    // For deletion, no comparison between local and onchain version is needed.
-    // File is already marked as deleted in local db, here we just update the syncStatus to 'synced' (from 'pending')
-    const payload: UpdateFilePayload = {
-      syncStatus: 'synced',
-    }
-    FilesModel.update(fileId, payload, file.portalAddress);
-  }
+  //   // For deletion, no comparison between local and onchain version is needed.
+  //   // File is already marked as deleted in local db, here we just update the syncStatus to 'synced' (from 'pending')
+  //   const payload: UpdateFilePayload = {
+  //     syncStatus: 'synced',
+  //   }
+  //   FilesModel.update(fileId, payload, file.portalAddress);
+  // }
 
   private setupEventHandlers(): void {
     if (!this.worker) return;

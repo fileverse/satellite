@@ -5,7 +5,7 @@ import { Command } from 'commander';
 import '../config';
 
 import { logger } from '../infra/logger';
-logger.level('error');
+logger.level = 'error';
 
 import { runMigrations } from '../infra/database/migrations';
 runMigrations();

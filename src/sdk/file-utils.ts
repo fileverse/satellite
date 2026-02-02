@@ -2,7 +2,6 @@ import { getArgon2idHash } from '@fileverse/crypto/argon';
 import {
     bytesToBase64,
     generateRandomBytes,
-    toBytes,
 } from '@fileverse/crypto/utils';
 import { derivePBKDF2Key, encryptAesCBC } from '@fileverse/crypto/kdf';
 import { secretBoxEncrypt } from '@fileverse/crypto/nacl';
@@ -12,11 +11,10 @@ import tweetnacl from 'tweetnacl';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import { gcmEncrypt } from './file-encryption';
 import { toAESKey, aesEncrypt } from '@fileverse/crypto/webcrypto';
-import { KeyStore } from './key-store';
 import axios from 'axios';
 import { ADD_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from '../constants';
-import { encodeFunctionData, Hex } from 'viem';
-import { config } from '../config';
+import { encodeFunctionData, Hex, parseEventLogs, Abi } from 'viem';
+
 
 interface LinkKeyMaterialParams {
     ddocId: string;
@@ -151,17 +149,23 @@ export const encryptFile = async (file: File) => {
     };
 };
 
-export const buildLinklock = (key: Uint8Array, fileKey: string) => {
+export const buildLinklock = (key: Uint8Array, fileKey: Uint8Array, commentKey: Uint8Array) => {
     const ikm = generateRandomBytes();
     const kdfSalt = generateRandomBytes();
     const derivedEphermalKey = derivePBKDF2Key(ikm, kdfSalt);
 
-    const messageToEncrypt = toBytes(fileKey);
-
     const { iv, cipherText } = encryptAesCBC(
         {
             key: derivedEphermalKey,
-            message: messageToEncrypt,
+            message: fileKey,
+        },
+        'base64'
+    );
+
+    const { iv: commentIv, cipherText: commentCipherText } = encryptAesCBC(
+        {
+            key: derivedEphermalKey,
+            message: commentKey,
         },
         'base64'
     );
@@ -169,11 +173,17 @@ export const buildLinklock = (key: Uint8Array, fileKey: string) => {
     const encryptedIkm = secretBoxEncrypt(ikm, key);
 
     const lockedFileKey = iv + '__n__' + cipherText;
+
+    const lockedChatKey = commentIv + '__n__' + commentCipherText;
+
     const keyMaterial = bytesToBase64(kdfSalt) + '__n__' + encryptedIkm;
+
+
 
     return {
         lockedFileKey,
         keyMaterial,
+        lockedChatKey,
     };
 };
 
@@ -191,17 +201,24 @@ export const encryptTitleWithFileKey = async (args: {
     return encryptedTitle;
 };
 
-export const uploadFileToIPFS = async (
+interface UploadFileParams {
     file: File,
     ipfsType: string,
     appFileId: string,
-    keyStore: KeyStore,
-    agentAddress: Hex
+}
+
+export interface UploadFileAuthParams {
+    token: string,
+    invoker: Hex,
+    contractAddress: Hex,
+}
+
+export const uploadFileToIPFS = async (
+    fileParams: UploadFileParams,
+    authParams: UploadFileAuthParams
 ) => {
-    const did = config.UPLOAD_SERVER_DID as string;
-    const token = await keyStore.getAuthToken(did);
-    const contractAddress = keyStore.getPortalAddress();
-    const invoker = agentAddress;
+    const { file, ipfsType, appFileId } = fileParams;
+    const { token, invoker, contractAddress } = authParams;
 
     const body = new FormData();
     body.append('file', file);
@@ -209,8 +226,9 @@ export const uploadFileToIPFS = async (
     body.append('appFileId', appFileId);
 
     body.append('sourceApp', 'ddoc');
+    const uploadEndpoint = UPLOAD_SERVER_URL + '/upload';
     const response = await axios.post(
-        UPLOAD_SERVER_URL,
+        uploadEndpoint,
         body,
         {
             headers: {
@@ -280,3 +298,86 @@ export const prepareCallData = (args: {
     return getAddFileTrxCalldata(args);
 
 }
+
+export const createEncryptedContentFile = async (content: any) => {
+    const contentFile = jsonToFile(
+        { file: content, source: 'ddoc' },
+        `${fromUint8Array(generateRandomBytes(16))}-CONTENT`
+    );
+    return encryptFile(contentFile);
+};
+
+export interface FileMetadataParams {
+    encryptedTitle: string;
+    encryptedFileSize: number;
+    appLock: Record<string, string>;
+    ownerLock: Record<string, string>;
+    ddocId: string;
+    nonce: string;
+    owner: string;
+}
+
+export const buildFileMetadata = (params: FileMetadataParams) => ({
+    title: params.encryptedTitle,
+    size: params.encryptedFileSize,
+    mimeType: 'application/json',
+    appLock: params.appLock,
+    ownerLock: params.ownerLock,
+    ddocId: params.ddocId,
+    nonce: params.nonce,
+    owner: params.owner,
+    version: '4',
+    sourceApp: 'satellite'
+});
+
+export const parseFileEventLog = (
+    logs: any[],
+    eventName: string,
+    abi: Abi
+): number => {
+    const [parsedLog] = parseEventLogs({ abi, logs, eventName });
+
+    if (!parsedLog)
+        throw new Error(`${eventName} event not found`);
+
+    const fileId = (parsedLog as any).args.fileId;
+
+    if (!fileId)
+        throw new Error('FileId not found in event logs');
+
+    return Number(fileId);
+};
+
+export interface UploadFilesParams {
+    metadata: Record<string, any>;
+    encryptedFile: File;
+    linkLock: Record<string, string>;
+    ddocId: string;
+}
+
+export const uploadAllFilesToIPFS = async (
+    params: UploadFilesParams,
+    authParams: UploadFileAuthParams
+) => {
+    const { metadata, encryptedFile, linkLock, ddocId } = params;
+
+    const [metadataHash, contentHash, gateHash] = await Promise.all([
+        uploadFileToIPFS({
+            file: jsonToFile(metadata, `${fromUint8Array(generateRandomBytes(16))}-METADATA`),
+            ipfsType: 'METADATA',
+            appFileId: ddocId,
+        }, authParams),
+        uploadFileToIPFS({
+            file: encryptedFile,
+            ipfsType: 'CONTENT',
+            appFileId: ddocId,
+        }, authParams),
+        uploadFileToIPFS({
+            file: jsonToFile(linkLock, `${fromUint8Array(generateRandomBytes(16))}-GATE`),
+            ipfsType: 'GATE',
+            appFileId: ddocId,
+        }, authParams),
+    ]);
+
+    return { metadataHash, contentHash, gateHash };
+};
