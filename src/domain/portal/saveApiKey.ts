@@ -1,7 +1,7 @@
 import {
   ApiKeysModel,
-  ApiKey,
   PortalsModel,
+  type ApiKey,
 } from '../../infra/database/models';
 
 export interface AddApiKeyInput {

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createFolder, CreateFolderInput } from '../../../../domain/folder';
+import { createFolder, type CreateFolderInput } from '../../../../domain/folder';
 
 const createHandler = async (req: Request, res: Response) => {
   try {

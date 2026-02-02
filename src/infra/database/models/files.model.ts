@@ -1,6 +1,6 @@
 import { QueryBuilder } from '../index';
 import { uuidv7 } from 'uuidv7';
-import { UpdateFilePayload } from './files/types';
+import type { UpdateFilePayload } from './files/types';
 
 export interface File {
   _id: string;

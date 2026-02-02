@@ -1,4 +1,4 @@
-import { FoldersModel, Folder } from '../../infra/database/models';
+import { FoldersModel, type Folder } from '../../infra/database/models';
 
 export interface ListFoldersParams {
   limit?: number;

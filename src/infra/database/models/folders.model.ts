@@ -1,5 +1,5 @@
 import { QueryBuilder } from '../index';
-import { File } from './files.model';
+import type { File } from './files.model';
 
 export interface Folder {
   _id: string;

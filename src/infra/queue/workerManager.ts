@@ -1,10 +1,10 @@
 import { Worker, Job } from 'bullmq';
 import { logger } from '../index';
 import { redisConnectionManager } from './connection';
-import { FileEvent, FILE_EVENTS_QUEUE } from './types';
+import { FILE_EVENTS_QUEUE, type FileEvent } from './types';
 import { publishFile } from '../../domain/portal';
 import { FilesModel } from '../database/models';
-import { UpdateFilePayload } from '../database/models/files/types';
+import type { UpdateFilePayload } from '../database/models/files/types';
 
 export class WorkerManager {
   private worker: Worker<FileEvent> | null = null;

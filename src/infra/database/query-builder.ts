@@ -1,5 +1,5 @@
 import { databaseConnectionManager } from './connection';
-import { QueryOptions } from './types';
+import type { QueryOptions } from './types';
 import { DEFAULT_LIST_LIMIT } from '../../domain/file/constants';
 
 const db = databaseConnectionManager.getConnection();

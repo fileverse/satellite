@@ -10,8 +10,7 @@ import hkdf from 'futoin-hkdf';
 
 import tweetnacl from 'tweetnacl';
 import { fromUint8Array, toUint8Array } from 'js-base64';
-import { encryptReadable } from './file-encryption';
-import { type Readable } from 'node:stream';
+import { gcmEncrypt } from './file-encryption';
 import { toAESKey, aesEncrypt } from '@fileverse/crypto/webcrypto';
 import { KeyStore } from './key-store';
 import axios from 'axios';
@@ -134,13 +133,11 @@ const appendAuthTagIvToBlob = async (
 export const encryptFile = async (file: File) => {
     const arrayBuffer = await file.arrayBuffer();
 
-    const readableStream = new Response(new Uint8Array(arrayBuffer))
-        .body! as unknown as Readable;
+    const plaintext = new Uint8Array(arrayBuffer);
 
-    const { stream, decryptionOptions } = encryptReadable(readableStream);
+    const { ciphertext, authTag, key, iv } = gcmEncrypt(plaintext);
 
-    const { key, iv, authTag } = await decryptionOptions;
-    const encryptedBlob = await new Response(stream).blob();
+    const encryptedBlob = new Blob([ciphertext], { type: file.type });
 
     const encryptedBlobWithAuthTagIv = await appendAuthTagIvToBlob(
         encryptedBlob,

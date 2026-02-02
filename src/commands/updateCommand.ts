@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import { Command } from 'commander';
-import { updateFile, getFile, UpdateFileInput } from '../domain/file';
+import { updateFile, getFile, type UpdateFileInput } from '../domain/file';
 import { spawnSync } from 'child_process';
 import Table from 'cli-table3';
 import {

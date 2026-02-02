@@ -1,7 +1,7 @@
 import { generate } from 'short-uuid';
 
-import { FilesModel, File } from '../../infra/database/models';
-import { FileEvent, fileEventsQueue } from '../../infra/queue';
+import { FilesModel, type File } from '../../infra/database/models';
+import { fileEventsQueue, type FileEvent } from '../../infra/queue';
 import { DEFAULT_LIST_LIMIT } from './constants';
 
 import type {

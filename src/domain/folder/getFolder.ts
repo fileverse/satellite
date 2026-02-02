@@ -1,4 +1,4 @@
-import { FoldersModel, FolderWithDDocs } from '../../infra/database/models';
+import { FoldersModel, type FolderWithDDocs } from '../../infra/database/models';
 
 /**
  * Domain function to get a single folder by folderRef and folderId

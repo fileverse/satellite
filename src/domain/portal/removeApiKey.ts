@@ -1,4 +1,4 @@
-import { ApiKeysModel, ApiKey } from '../../infra/database/models';
+import { ApiKeysModel, type ApiKey } from '../../infra/database/models';
 
 export function removeApiKey(_id: string): ApiKey {
   if (!_id) {

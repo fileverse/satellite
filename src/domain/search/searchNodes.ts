@@ -1,4 +1,4 @@
-import { FilesModel, File, Folder } from '../../infra/database/models';
+import { FilesModel, type File, type Folder } from '../../infra/database/models';
 import { QueryBuilder } from '../../infra/database';
 
 export interface SearchNodesParams {

@@ -1,23 +1,20 @@
-import { File, FilesModel, FileListResponse } from './files.model';
-import { PortalsModel, Portal } from './portals.model';
-import { ApiKeysModel, ApiKey } from './apikeys.model';
+import { type File, FilesModel, type FileListResponse } from './files.model';
+import { PortalsModel, type Portal } from './portals.model';
+import { ApiKeysModel, type ApiKey } from './apikeys.model';
 import {
-  Folder,
-  FolderWithDDocs,
+  type Folder,
+  type FolderWithDDocs,
+  type FolderListResponse,
   FoldersModel,
-  FolderListResponse,
 } from './folders.model';
 
-export {
+export { FilesModel, PortalsModel, ApiKeysModel, FoldersModel };
+export type {
   File,
-  FilesModel,
   FileListResponse,
   Portal,
-  PortalsModel,
   ApiKey,
-  ApiKeysModel,
   Folder,
   FolderWithDDocs,
-  FoldersModel,
   FolderListResponse,
 };

@@ -34,7 +34,7 @@ const fixFile = async (filePath) => {
   for (const rx of patterns) {
     next = next.replace(
       rx,
-      (_m, a, spec, b) => `${a}${resolveSpecifier(spec, filePath)}${b}`
+      (_m, a, spec, b) => `${a}${resolveSpecifier(spec, filePath)}${b}`,
     );
   }
   if (next !== original) await writeFile(filePath, next, 'utf8');
@@ -47,7 +47,7 @@ const walk = async (dir) => {
       const p = path.join(dir, e.name);
       if (e.isDirectory()) return walk(p);
       if (e.isFile() && p.endsWith('.js')) return fixFile(p);
-    })
+    }),
   );
 };
 

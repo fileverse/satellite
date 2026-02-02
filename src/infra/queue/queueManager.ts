@@ -1,7 +1,7 @@
 import { Queue, JobsOptions } from 'bullmq';
 import { logger } from '../index';
 import { redisConnectionManager } from './connection';
-import { FileEvent, FILE_EVENTS_QUEUE } from './types';
+import { FILE_EVENTS_QUEUE, type FileEvent } from './types';
 
 export class QueueManager {
   private static instances: Map<string, QueueManager> = new Map();

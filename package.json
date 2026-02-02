@@ -11,9 +11,9 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "postbuild": "node scripts/fix-esm-imports.js",
-    "dev": "nodemon --watch src --ext ts --exec \"npm run build && node dist/index.js\"",
-    "dev:worker": "nodemon --watch src --ext ts --exec \"npm run build && node dist/worker.js\"",
-    "dev:cli": "nodemon --watch src --ext ts --exec \"npm run build && node dist/commands/index.js\"",
+    "dev": "tsx watch src/index.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "dev:cli": "tsx watch src/commands/index.ts",
     "start:api": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/worker.js",
     "lint": "eslint . --ext .ts,.js",
@@ -28,6 +28,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fileverse/crypto": "^0.0.21",
     "@stablelib/ed25519": "^2.0.2",
     "@types/multer": "^2.0.0",
     "@ucans/ucans": "^0.12.0",
@@ -71,6 +72,7 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.5.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.5"
   }
 }

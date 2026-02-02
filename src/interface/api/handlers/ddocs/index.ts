@@ -5,12 +5,12 @@ import {
   createFile,
   updateFile,
   deleteFile,
-  CreateFileInput,
-  UpdateFileInput,
+  type CreateFileInput,
+  type UpdateFileInput,
 } from '../../../../domain/file';
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
-import { ClientUpdateFileInput } from './types';
+import type { ClientUpdateFileInput } from './types';
 
 const listHandler = async (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
