@@ -28,6 +28,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fileverse/content-processor": "^0.0.1",
     "@fileverse/crypto": "^0.0.21",
     "@stablelib/ed25519": "^2.0.2",
     "@types/multer": "^2.0.0",

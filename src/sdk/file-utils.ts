@@ -149,6 +149,20 @@ export const encryptFile = async (file: File) => {
     };
 };
 
+export const getNonceAppendedCipherText = (
+    nonce: Uint8Array,
+    cipherText: Uint8Array
+) => {
+    return (
+        fromUint8Array(nonce, true) +
+        '__n__' +
+        fromUint8Array(cipherText, true)
+    );
+};
+
+export const jsonToBytes = (json: Record<string, any>) =>
+    new TextEncoder().encode(JSON.stringify(json));
+
 export const buildLinklock = (key: Uint8Array, fileKey: Uint8Array, commentKey: Uint8Array) => {
     const ikm = generateRandomBytes();
     const kdfSalt = generateRandomBytes();
@@ -179,11 +193,27 @@ export const buildLinklock = (key: Uint8Array, fileKey: Uint8Array, commentKey: 
     const keyMaterial = bytesToBase64(kdfSalt) + '__n__' + encryptedIkm;
 
 
+    const fileKeyNonce = generateRandomBytes(24)
+    const encryptedFileKey = tweetnacl.secretbox(
+        jsonToBytes({ key: fromUint8Array(fileKey) }),
+        fileKeyNonce,
+        key
+    );
+
+
+    const chatKeyNonce = generateRandomBytes(24)
+    const encryptedChatKey = tweetnacl.secretbox(
+        commentKey,
+        chatKeyNonce,
+        key
+    );
 
     return {
-        lockedFileKey,
-        keyMaterial,
-        lockedChatKey,
+        lockedFileKey: getNonceAppendedCipherText(fileKeyNonce, encryptedFileKey),
+        lockedChatKey: getNonceAppendedCipherText(chatKeyNonce, encryptedChatKey),
+        lockedFileKey_v2: lockedFileKey,
+        lockedChatKey_v2: lockedChatKey,
+        keyMaterial
     };
 };
 

@@ -15,6 +15,7 @@ import { AgentClient } from './smart-agent';
 import { generateAESKey, exportAESKey } from "@fileverse/crypto/webcrypto"
 import { config } from '../config';
 import { ADDED_FILE_EVENT_ABI, EDITED_FILE_EVENT_ABI } from '../constants';
+import { markdownToYjs } from '@fileverse/content-processor'
 
 export class FileManager {
     private keyStore: KeyStore;
@@ -60,7 +61,8 @@ export class FileManager {
             linkKeyNonce: file.linkKeyNonce,
         });
 
-        const { encryptedFile, key } = await createEncryptedContentFile(file.content);
+        const yJSContent = markdownToYjs(file.content)
+        const { encryptedFile, key } = await createEncryptedContentFile(yJSContent);
         const commentKey = await exportAESKey(await generateAESKey(128));
 
         const { appLock, ownerLock } = this.createLocks(key, encryptedSecretKey, commentKey);
@@ -93,10 +95,11 @@ export class FileManager {
 
         const { logs } = await this.executeFileOperation(callData);
         const onChainFileId = parseFileEventLog(logs, 'AddedFile', ADDED_FILE_EVENT_ABI);
-
+        console.log("encryptedSecretKey", encryptedSecretKey);
+        console.log("onChainFileId", onChainFileId);
         return {
             onChainFileId,
-            linkKey: fromUint8Array(secretKey),
+            linkKey: encryptedSecretKey,
             linkKeyNonce: fromUint8Array(nonce),
             commentKey: fromUint8Array(commentKey),
             metadata,
