@@ -11,6 +11,7 @@ import {
 import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
 import type { ClientUpdateFileInput } from './types';
+import { ApiKeysModel } from '../../../../infra/database/models';
 
 const listHandler = async (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
@@ -59,7 +60,11 @@ const createHandler = async (req: Request, res: Response) => {
   try {
     const { title, fileContent } = extractTitleAndContent(req);
     // TODO: Extract portalAddress from auth header once authentication is implemented
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
+    const apiKey = req.headers['x-api-key'] as string | undefined;
+
+    if (!apiKey) {
+      return res.status(400).json({ error: 'Missing required header: x-api-key is required' });
+    }
 
     if (!title) {
       return res.status(400).json({
@@ -75,11 +80,12 @@ const createHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!portalAddress) {
-      return res.status(400).json({
-        error: 'Missing required header: x-portal-address is required'
-      });
+    const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+    if (!apiKeyInfo) {
+      return res.status(400).json({ error: 'Invalid API key' });
     }
+
+    const portalAddress = apiKeyInfo.portalAddress;
 
     const payload: CreateFileInput = {
       title: title,
@@ -101,9 +107,9 @@ const updateHandler = async (req: Request, res: Response) => {
   try {
     const { ddocId } = req.params;
     const { title, fileContent } = extractTitleAndContent(req);
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
+    const apiKeySeed = req.headers['x-api-key'] as string | undefined;
 
-    if (!portalAddress) {
+    if (!apiKeySeed) {
       return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
     }
 
@@ -128,6 +134,13 @@ const updateHandler = async (req: Request, res: Response) => {
       title: clientPayload.title,
       content: clientPayload.content,
     };
+
+    const apiKeyInfo = ApiKeysModel.findByApiKey(apiKeySeed);
+    if (!apiKeyInfo) {
+      return res.status(400).json({ error: 'Invalid API key' });
+    }
+
+    const portalAddress = apiKeyInfo.portalAddress;
 
     const result = await updateFile(ddocId, domainPayload, portalAddress);
     res.status(200).json({

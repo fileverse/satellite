@@ -5,8 +5,13 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
+    "satellite": "./dist/cli/index.js",
     "ddctl": "./dist/commands/index.js"
   },
+  "files": [
+    "dist",
+    "config/.env.example"
+  ],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
@@ -14,6 +19,7 @@
     "dev": "tsx watch src/index.ts",
     "dev:worker": "tsx watch src/worker.ts",
     "dev:cli": "tsx watch src/commands/index.ts",
+    "dev:satellite": "tsx src/cli/index.ts",
     "start:api": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/worker.js",
     "lint": "eslint . --ext .ts,.js",

@@ -59,4 +59,9 @@ export class ApiKeysModel {
     const sql = `SELECT _id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt, isDeleted FROM ${this.TABLE} WHERE portalAddress = ? AND isDeleted = 0`;
     return QueryBuilder.selectOne<ApiKey>(sql, [portalAddress]);
   }
+
+  static findByApiKey(apiKey: string): ApiKey | undefined {
+    const sql = `SELECT _id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt, isDeleted FROM ${this.TABLE} WHERE apiKeySeed = ? AND isDeleted = 0`;
+    return QueryBuilder.selectOne<ApiKey>(sql, [apiKey]);
+  }
 }

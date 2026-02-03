@@ -106,6 +106,7 @@ export class WorkerManager {
     }
 
     logger.info(`File ${fileId} created and published successfully`);
+    logger.info(`File can be accessed at https://v1-docs.fileverse.io/${file.portalAddress}/${result.onChainFileId}#key=${result.linkKey}`)
   }
 
   private async processUpdateJob(job: Job<FileEvent>): Promise<void> {

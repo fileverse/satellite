@@ -372,7 +372,7 @@ export const parseFileEventLog = (
 
     const fileId = (parsedLog as any).args.fileId;
 
-    if (!fileId)
+    if (fileId === undefined || fileId === null)
         throw new Error('FileId not found in event logs');
 
     return Number(fileId);

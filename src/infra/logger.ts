@@ -9,17 +9,17 @@ const pinoInstance = pino({
     level: (label) => ({ level: label }),
   },
   transport:
-    config.NODE_ENV !== 'production'
+    true
       ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'SYS:standard',
-            ignore: 'pid,hostname',
-            errorProps: '*',
-            errorLikeObjectKeys: ['err', 'error'],
-          },
-        }
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:standard',
+          ignore: 'pid,hostname',
+          errorProps: '*',
+          errorLikeObjectKeys: ['err', 'error'],
+        },
+      }
       : undefined,
 });
 

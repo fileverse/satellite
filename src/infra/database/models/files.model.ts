@@ -16,6 +16,9 @@ export interface File {
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  linkKey?: string | null;
+  linkKeyNonce?: string | null;
+  commentKey?: string | null;
 }
 
 export interface FileListResponse {
@@ -54,6 +57,9 @@ export class FilesModel {
       metadata: metadata || {},
       createdAt: fileRaw.createdAt,
       updatedAt: fileRaw.updatedAt,
+      linkKey: fileRaw.linkKey,
+      linkKeyNonce: fileRaw.linkKeyNonce,
+      commentKey: fileRaw.commentKey,
     };
   }
 
@@ -189,6 +195,7 @@ export class FilesModel {
 
     const updateChain = keys.join(', ');
     const sql = `UPDATE ${this.TABLE} SET ${updateChain} WHERE _id = ? AND portalAddress = ?`;
+
     QueryBuilder.execute(sql, values);
 
     const updated = this.findById(_id, portalAddress);

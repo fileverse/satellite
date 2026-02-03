@@ -16,6 +16,7 @@ import { generateAESKey, exportAESKey } from "@fileverse/crypto/webcrypto"
 import { config } from '../config';
 import { ADDED_FILE_EVENT_ABI, EDITED_FILE_EVENT_ABI } from '../constants';
 import { markdownToYjs } from '@fileverse/content-processor'
+import { logger } from '../infra';
 
 export class FileManager {
     private keyStore: KeyStore;
@@ -55,6 +56,7 @@ export class FileManager {
     }
 
     async addFile(file: any) {
+        logger.info(`Preparing to add file ${file.ddocId}`);
         const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
             ddocId: file.ddocId,
             linkKey: file.linkKey,
@@ -63,6 +65,7 @@ export class FileManager {
 
         const yJSContent = markdownToYjs(file.content)
         const { encryptedFile, key } = await createEncryptedContentFile(yJSContent);
+        logger.info(`Generated encrypted content file for file ${file.ddocId}`);
         const commentKey = await exportAESKey(await generateAESKey(128));
 
         const { appLock, ownerLock } = this.createLocks(key, encryptedSecretKey, commentKey);
@@ -84,6 +87,7 @@ export class FileManager {
             { metadata, encryptedFile, linkLock, ddocId: file.ddocId },
             authParams
         );
+        logger.info(`Uploaded files to IPFS for file ${file.ddocId}`);
 
         const callData = prepareCallData({
             metadataHash,
@@ -92,11 +96,11 @@ export class FileManager {
             appFileId: file.ddocId,
             fileId: file.fileId,
         });
+        logger.info(`Prepared call data for file ${file.ddocId}`);
 
         const { logs } = await this.executeFileOperation(callData);
         const onChainFileId = parseFileEventLog(logs, 'AddedFile', ADDED_FILE_EVENT_ABI);
-        console.log("encryptedSecretKey", encryptedSecretKey);
-        console.log("onChainFileId", onChainFileId);
+        logger.info(`Executed file operation for file ${file.ddocId}`);
         return {
             onChainFileId,
             linkKey: encryptedSecretKey,
@@ -107,13 +111,17 @@ export class FileManager {
     }
 
     async updateFile(file: any) {
+        logger.info(`Updating file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
         const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
             ddocId: file.ddocId,
             linkKey: file.linkKey,
             linkKeyNonce: file.linkKeyNonce,
         });
 
-        const { encryptedFile, key } = await createEncryptedContentFile(file.content);
+        logger.info(`Generating encrypted content file for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
+
+        const yjsContent = markdownToYjs(file.content);
+        const { encryptedFile, key } = await createEncryptedContentFile(yjsContent);
         const commentKey = toUint8Array(file.commentKey);
 
         const { appLock, ownerLock } = this.createLocks(key, encryptedSecretKey, commentKey);
@@ -131,6 +139,7 @@ export class FileManager {
         });
 
         const authParams = await this.getAuthParams();
+        logger.info(`Uploading files to IPFS for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
         const { metadataHash, contentHash, gateHash } = await uploadAllFilesToIPFS(
             { metadata, encryptedFile, linkLock, ddocId: file.ddocId },
             authParams
@@ -141,8 +150,9 @@ export class FileManager {
             contentHash,
             gateHash,
             appFileId: file.ddocId,
-            fileId: file.fileId,
+            fileId: file.onChainFileId,
         });
+        logger.info(`Executing file operation for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
 
         const { logs } = await this.executeFileOperation(callData);
         const onChainFileId = parseFileEventLog(logs, 'EditedFile', EDITED_FILE_EVENT_ABI);
