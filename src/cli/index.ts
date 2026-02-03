@@ -8,12 +8,15 @@ import {
   setupShutdownHandlers,
   waitForProcesses,
 } from './process-manager.js';
+import { promptForConfig, needsPrompting } from './prompts.js';
 
 const program = new Command()
   .name('satellite')
   .description('Run the Satellite server for Fileverse')
   .version('1.0.0')
-  .requiredOption('--apiKey <key>', 'API key for authentication')
+  .option('--apiKey <key>', 'API key for authentication')
+  .option('--pimlicoApiKey <key>', 'Pimlico API key for account abstraction')
+  .option('--rpcUrl <url>', 'RPC URL for blockchain connection')
   .option('--port <port>', 'Port to run the server on', '8001')
   .option('--redis <uri>', 'Redis URI', 'redis://localhost:6379')
   .option('--db <path>', 'Database path')
@@ -21,6 +24,18 @@ const program = new Command()
   .action(async (options) => {
     try {
       console.log('🛰️  Satellite - Starting initialization...\n');
+
+      if (needsPrompting(options)) {
+        const prompted = await promptForConfig({
+          apiKey: options.apiKey,
+          pimlicoApiKey: options.pimlicoApiKey,
+          rpcUrl: options.rpcUrl,
+        });
+        options.apiKey = prompted.apiKey;
+        options.pimlicoApiKey = prompted.pimlicoApiKey;
+        options.rpcUrl = prompted.rpcUrl;
+        console.log('');
+      }
 
       console.log('Validating Redis connection...');
       await validateRedisConnection(options.redis);
@@ -37,6 +52,8 @@ const program = new Command()
           redisUri: options.redis,
           port: options.port,
           apiKey: options.apiKey,
+          pimlicoApiKey: options.pimlicoApiKey,
+          rpcUrl: options.rpcUrl,
         });
         console.log(`✓ Configuration saved to ${envPath}\n`);
 

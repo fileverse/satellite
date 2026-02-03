@@ -8,6 +8,16 @@ export interface ConfigOptions {
   dbPath?: string;
   redisUri?: string;
   port?: string;
+  networkName?: string;
+  rpcUrl?: string;
+  pimlicoApiKey?: string;
+}
+
+const BASE_CONFIG = {
+  PORT: '8001',
+  NETWORK_NAME: 'sepolia',
+  UPLOAD_SERVER_URL: 'https://sepolia-dsheet-storage-fc05499ecd15.herokuapp.com',
+  SERVER_DID: "did:key:z6MkrrWQ11DoCzkLzoDuDnCszbwZZra3PmF62joDeMbpgCFD",
 }
 
 function getDefaultDbPath(): string {
@@ -34,18 +44,19 @@ export function scaffoldConfig(options: ConfigOptions = {}): string {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  const envContent = `PORT=${options.port || '8001'}
+
+  const envContent = `PORT=${options.port || BASE_CONFIG.PORT}
 IP=127.0.0.1
 DB_PATH=${dbPath}
 REDIS_URI=${options.redisUri || 'redis://localhost:6379'}
 NODE_ENV=production
 SERVICE_NAME=satellite
 LOG_LEVEL=info
-NETWORK_NAME=sepolia
-RPC_URL=https://eth-sepolia.g.alchemy.com/v2/l5pEloR1H0zPSG4iKHHFA
-UPLOAD_SERVER_URL=https://sepolia-dsheet-storage-fc05499ecd15.herokuapp.com
-PIMLICO_API_KEY=5c738253-a2f1-4bde-8019-e697dcb2bed0
-UPLOAD_SERVER_DID=did:key:z6MkrrWQ11DoCzkLzoDuDnCszbwZZra3PmF62joDeMbpgCFD
+NETWORK_NAME=${options.networkName || BASE_CONFIG.NETWORK_NAME}
+RPC_URL=${options.rpcUrl}
+UPLOAD_SERVER_URL=${BASE_CONFIG.UPLOAD_SERVER_URL}
+PIMLICO_API_KEY=${options.pimlicoApiKey}
+UPLOAD_SERVER_DID=${BASE_CONFIG.SERVER_DID}
 API_KEY=${options.apiKey}
 `;
 
