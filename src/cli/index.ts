@@ -13,7 +13,7 @@ import { promptForConfig, needsPrompting } from './prompts.js';
 const program = new Command()
   .name('satellite')
   .description('Run the Satellite server for Fileverse')
-  .version('1.0.0')
+  .version('0.0.1')
   .option('--apiKey <key>', 'API key for authentication')
   .option('--pimlicoApiKey <key>', 'Pimlico API key for account abstraction')
   .option('--rpcUrl <url>', 'RPC URL for blockchain connection')

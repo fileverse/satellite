@@ -1,10 +1,11 @@
 {
-  "name": "satellite",
-  "version": "1.0.0",
+  "name": "personal-satellite",
+  "version": "0.0.2",
   "description": "Satellite",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
+    "personal-satellite": "./dist/cli/index.js",
     "satellite": "./dist/cli/index.js",
     "ddctl": "./dist/commands/index.js"
   },
@@ -13,9 +14,10 @@
     "config/.env.example"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "postbuild": "node scripts/fix-esm-imports.js",
+    "prepublishOnly": "npm run typecheck && npm run clean && npm run build",
     "dev": "tsx watch src/index.ts",
     "dev:worker": "tsx watch src/worker.ts",
     "dev:cli": "tsx watch src/commands/index.ts",
@@ -25,7 +27,6 @@
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "npm run build",
     "migrate": "node --loader ts-node/esm scripts/run-migrations.ts",
     "migrate:create": "node --loader ts-node/esm scripts/generate-migration.ts",
     "migrate:rollback": "node --loader ts-node/esm scripts/rollback-migrations.ts"
@@ -81,6 +82,7 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.5.0",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.4.5"
   }
