@@ -4,6 +4,7 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 
 export interface ConfigOptions {
+  apiKey?: string;
   dbPath?: string;
   redisUri?: string;
   port?: string;
@@ -45,6 +46,7 @@ RPC_URL=https://eth-sepolia.g.alchemy.com/v2/l5pEloR1H0zPSG4iKHHFA
 UPLOAD_SERVER_URL=https://sepolia-dsheet-storage-fc05499ecd15.herokuapp.com
 PIMLICO_API_KEY=5c738253-a2f1-4bde-8019-e697dcb2bed0
 UPLOAD_SERVER_DID=did:key:z6MkrrWQ11DoCzkLzoDuDnCszbwZZra3PmF62joDeMbpgCFD
+API_KEY=${options.apiKey}
 `;
 
   fs.writeFileSync(envPath, envContent, 'utf-8');

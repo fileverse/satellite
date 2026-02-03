@@ -12,14 +12,23 @@ import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
 import type { ClientUpdateFileInput } from './types';
 import { ApiKeysModel } from '../../../../infra/database/models';
+import { config } from '../../../../config';
 
 const listHandler = async (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
   const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : undefined;
-  const portalAddress = req.headers['x-portal-address'] as string | undefined;
+  const apiKey = config.API_KEY as string;
+  if (!apiKey) {
+    throw new Error('API key is required');
+  }
+  const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+  if (!apiKeyInfo) {
+    throw new Error('Invalid API key');
+  }
+  const portalAddress = apiKeyInfo.portalAddress;
 
   if (!portalAddress) {
-    return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
+    throw new Error('Portal address is required');
   }
 
   const result = listFiles({ limit, skip, portalAddress });
@@ -33,7 +42,15 @@ const listHandler = async (req: Request, res: Response) => {
 
 const getHandler = async (req: Request, res: Response) => {
   const { ddocId } = req.params;
-  const portalAddress = req.headers['x-portal-address'] as string | undefined;
+  const apiKey = config.API_KEY as string;
+  if (!apiKey) {
+    throw new Error('API key is required');
+  }
+  const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+  if (!apiKeyInfo) {
+    throw new Error('Invalid API key');
+  }
+  const portalAddress = apiKeyInfo.portalAddress;
 
   if (!ddocId) {
     return res.status(400).json({ error: 'ddocId is required' });
@@ -59,8 +76,7 @@ const getHandler = async (req: Request, res: Response) => {
 const createHandler = async (req: Request, res: Response) => {
   try {
     const { title, fileContent } = extractTitleAndContent(req);
-    // TODO: Extract portalAddress from auth header once authentication is implemented
-    const apiKey = req.headers['x-api-key'] as string | undefined;
+    const apiKey = config.API_KEY as string;
 
     if (!apiKey) {
       return res.status(400).json({ error: 'Missing required header: x-api-key is required' });
@@ -107,7 +123,7 @@ const updateHandler = async (req: Request, res: Response) => {
   try {
     const { ddocId } = req.params;
     const { title, fileContent } = extractTitleAndContent(req);
-    const apiKeySeed = req.headers['x-api-key'] as string | undefined;
+    const apiKeySeed = config.API_KEY as string;
 
     if (!apiKeySeed) {
       return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });

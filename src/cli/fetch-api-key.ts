@@ -42,6 +42,10 @@ export interface ApiKeyMaterialResponse {
 
 const DEFAULT_API_URL = 'https://sepolia-dsheet-storage-fc05499ecd15.herokuapp.com/api-access';
 
+const bytestToJSON = (bytes: Uint8Array) => {
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
 export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyMaterialResponse> {
   const apiUrl = process.env.SATELLITE_API_URL || DEFAULT_API_URL;
 
@@ -50,16 +54,12 @@ export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyMaterialRes
     const fullUrl = apiUrl + `/${keyHash}`
     const response = await axios.get<ApiKeyResponse>(fullUrl);
 
-    console.log("response", response.data);
 
     const { encryptedKeyMaterial, encryptedAppMaterial, id } = response.data;
 
-    const keyMaterial = JSON.parse(new TextDecoder().decode(toUint8Array(encryptedKeyMaterial))) as KeyMaterial;
+    const keyMaterial = bytestToJSON(toUint8Array(encryptedKeyMaterial)) as KeyMaterial;
 
-    const appMaterial = JSON.parse(new TextDecoder().decode(toUint8Array(encryptedAppMaterial))) as AppKeyMaterial;
-
-    console.log("keyMaterial", keyMaterial);
-    console.log("appMaterial", appMaterial);
+    const appMaterial = bytestToJSON(toUint8Array(encryptedAppMaterial)) as AppKeyMaterial;
 
     return { keyMaterial, appMaterial, id };
   } catch (error) {

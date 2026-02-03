@@ -36,6 +36,7 @@ const program = new Command()
           dbPath: options.db,
           redisUri: options.redis,
           port: options.port,
+          apiKey: options.apiKey,
         });
         console.log(`✓ Configuration saved to ${envPath}\n`);
 
