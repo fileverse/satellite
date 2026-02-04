@@ -7,7 +7,7 @@ export interface ListFilesParams {
 }
 
 export interface ListFilesResult {
-  ddocs: File[];
+  ddocs: Partial<File>[];
   total: number;
   hasNext: boolean;
 }

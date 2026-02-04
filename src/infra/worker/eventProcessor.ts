@@ -1,3 +1,4 @@
+import { config } from '../../config';
 import { publishFile } from '../../domain/portal';
 import { FilesModel } from '../database/models';
 import type { Event } from '../database/models';
@@ -54,6 +55,7 @@ async function processCreateEvent(event: Event): Promise<void> {
     linkKeyNonce: result.linkKeyNonce,
     commentKey: result.commentKey,
     metadata: result.metadata,
+    link: `${config.FRONTEND_URL}/${file.portalAddress}/${result.onChainFileId}#key=${result.linkKey}`,
   };
   const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
@@ -61,10 +63,7 @@ async function processCreateEvent(event: Event): Promise<void> {
     FilesModel.update(fileId, { syncStatus: 'synced' }, file.portalAddress);
   }
 
-  logger.info(`File ${fileId} created and published successfully`);
-  logger.info(
-    `File can be accessed at https://v1-docs.fileverse.io/${file.portalAddress}/${result.onChainFileId}#key=${result.linkKey}`
-  );
+  logger.info(`File ${file.ddocId} created and published successfully`);
 }
 
 async function processUpdateEvent(event: Event): Promise<void> {
@@ -93,7 +92,7 @@ async function processUpdateEvent(event: Event): Promise<void> {
   if (updatedFile.localVersion === updatedFile.onchainVersion) {
     FilesModel.update(fileId, { syncStatus: 'synced' }, file.portalAddress);
   }
-  logger.info(`File ${fileId} updated and published successfully`);
+  logger.info(`File ${file.ddocId} updated and published successfully`);
 }
 
 async function processDeleteEvent(event: Event): Promise<void> {

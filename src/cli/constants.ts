@@ -6,6 +6,7 @@ export const STATIC_CONFIG = {
     DEFAULT_RPC_URL: 'https://rpc.sepolia.org',
     SERVICE_NAME: 'satellite',
     LOG_LEVEL: 'info',
+    FRONTEND_URL: 'https://v1-docs.fileverse.io',
 } as const;
 
 export const BASE_CONFIG = STATIC_CONFIG;

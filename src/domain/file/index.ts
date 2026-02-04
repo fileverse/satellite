@@ -17,14 +17,27 @@ function listFiles(params: ListFilesParams): ListFilesResult {
 
   const result = FilesModel.findAll(portalAddress, effectiveLimit, skip);
 
+  const processedFiles = result.files.map((file) => ({
+    ddocId: file.ddocId,
+    link: file.link,
+    title: file.title,
+    content: file.content,
+    localVersion: file.localVersion,
+    onchainVersion: file.onchainVersion,
+    syncStatus: file.syncStatus,
+    isDeleted: file.isDeleted,
+    onChainFileId: file.onChainFileId,
+    portalAddress: file.portalAddress,
+  }));
+
   return {
-    ddocs: result.files,
+    ddocs: processedFiles,
     total: result.total,
     hasNext: result.hasNext,
   };
 }
 
-function getFile(ddocId: string, portalAddress: string): File | null {
+function getFile(ddocId: string, portalAddress: string): Partial<File> | null {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
@@ -35,7 +48,18 @@ function getFile(ddocId: string, portalAddress: string): File | null {
     return null;
   }
 
-  return file;
+  return {
+    ddocId: file.ddocId,
+    link: file.link,
+    title: file.title,
+    content: file.content,
+    localVersion: file.localVersion,
+    onchainVersion: file.onchainVersion,
+    syncStatus: file.syncStatus,
+    isDeleted: file.isDeleted,
+    onChainFileId: file.onChainFileId,
+    portalAddress: file.portalAddress,
+  };
 }
 
 async function createFile(input: CreateFileInput): Promise<File> {
@@ -59,7 +83,7 @@ async function updateFile(
   ddocId: string,
   payload: UpdateFileInput,
   portalAddress: string,
-): Promise<File> {
+): Promise<Partial<File>> {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
@@ -83,7 +107,18 @@ async function updateFile(
   const updatedFile = FilesModel.update(existingFile._id, updatePayload, portalAddress);
 
   EventsModel.create({ type: 'update', fileId: updatedFile._id });
-  return updatedFile;
+  return {
+    ddocId: updatedFile.ddocId,
+    link: updatedFile.link,
+    title: updatedFile.title,
+    content: updatedFile.content,
+    localVersion: updatedFile.localVersion,
+    onchainVersion: updatedFile.onchainVersion,
+    syncStatus: updatedFile.syncStatus,
+    isDeleted: updatedFile.isDeleted,
+    onChainFileId: updatedFile.onChainFileId,
+    portalAddress: updatedFile.portalAddress,
+  };
 }
 
 async function deleteFile(ddocId: string, portalAddress: string): Promise<File> {

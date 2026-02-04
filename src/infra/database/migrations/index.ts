@@ -194,6 +194,12 @@ const migrations: MigrationFile[] = [
       CREATE INDEX IF NOT EXISTS idx_events_status_timestamp ON events(status, timestamp);
     `,
   },
+  {
+    timestamp: '20260205140000',
+    name: 'add_link_to_files',
+    up: `ALTER TABLE files ADD COLUMN link TEXT;`,
+    down: `ALTER TABLE files DROP COLUMN link;`,
+  },
 ];
 
 export function runMigrations(): void {

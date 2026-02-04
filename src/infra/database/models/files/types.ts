@@ -15,5 +15,6 @@ export interface UpdateFilePayload {
   linkKey?: string;
   linkKeyNonce?: string;
   commentKey?: string;
+  link?: string;
 }
 

@@ -19,6 +19,7 @@ export interface File {
   linkKey?: string | null;
   linkKeyNonce?: string | null;
   commentKey?: string | null;
+  link?: string | null;
 }
 
 export interface FileListResponse {
@@ -60,6 +61,7 @@ export class FilesModel {
       linkKey: fileRaw.linkKey,
       linkKeyNonce: fileRaw.linkKeyNonce,
       commentKey: fileRaw.commentKey,
+      link: fileRaw.link,
     };
   }
 
