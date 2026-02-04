@@ -28,7 +28,7 @@ Once installed, Satellite runs as a background process on your computer. It runs
 
 You may think of it as an gateway or an elevator that ushers you into the Fileverse ecosystem where you have all your valueable text as persistent, secure documents.
 
-<image below>
+![Satellite 1.1](satellite-1.1.png)
 
 
 # Welcome aboard

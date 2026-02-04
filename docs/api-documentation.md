@@ -343,24 +343,17 @@ This section helps you see where Satellite fits in your workflow — what this p
 | API-first | No built-in UI. You (or the community) can build editors, MCP servers, CLIs, or integrations on top of this API. "Having access via API" is the primary interface. |
 | Title + content (e.g. markdown) | Each doc has a title and body. Ideal for markdown as agent context, notes, or verifiable reference — with on-chain sync planned for later. |
 
-In short: If your expectation is *"agents should be able to make their own docs and keep a list so sessions don't mean the LLM has no idea what you're talking about"* — that is what this API supports. Agents (or your code) call the API to create/list/get/update/delete docs; you host the server; you build or plug in the rest (editor, MCP, CLI, etc.).
-
 ### What this API does not provide (yet)
 
 | Expectation | Status |
 | ----------- | ------ |
-| Built-in markdown editor (e.g. "simple dumb but beautiful", user + agent multiplayer in one UI) | Not in this package. This is an API only. You can build or use a separate editor that talks to this API. |
-| Real-time subscribe / multiplayer (live presence, typing, subscriptions) | Not in this API. Updates are request/response. Real-time could be a future layer. |
-| Auth (e.g. "run an auth script or give a browser link", "avoid config") | Not covered in this doc. Auth may live in another layer or product; this doc describes the ddocs API only. |
-| MCP server or official CLI for Cursor/agents | Not part of this API doc. The repo may include a CLI (`ddctl`); MCP or first-party CLI tooling may be added later. |
-| Zero config | Not guaranteed. You need to run the server. We keep the surface small but some config is required. |
-| Verifiable / on-chain context | Planned. Documents are queued for on-chain sync ("on-chain publishing is pending"); full verifiable context is a future capability. |
-
-If your main expectation is a ready-made, beautiful, multiplayer markdown editor out of the box — that is not what this API delivers today. It delivers the backend so you or others can build that on top.
+| user, agent multiplayer in one UI (live presence, typing suggestions) | User can edit files using the edit CLI command which opens the file in `vi` editor, but there are no plans as of now for supporting user + agent inside one ready-made markdown editor UI. |
+| MCP server or official CLI for Cursor/agents | We have thought about this and might soon ship this capability |
+| Zero config | <TODO> |
 
 ### Future possibilities
 
-These are not promises, but directions that align with feedback and could be supported later:
+These are not promises, but directions we can consider moving forward depending on user feedback.
 
 - MCP server so Cursor and other agents can discover and use Satellite without you writing HTTP calls.
 - CLI / skills for terminal-based agents (e.g. "prefer CLI/skills instead of MCP").
@@ -369,6 +362,5 @@ These are not promises, but directions that align with feedback and could be sup
 - Verifiable context — documents synced on-chain so agents can rely on "verifiable" markdown as source of truth.
 - First-party or community editor — a "sexy Fileverse md" or similar that uses this API.
 
-Keeping these three buckets clear (supported now / not yet / future) should help you quickly see where you can incorporate Satellite and where to look for or build alternatives.
 
 
