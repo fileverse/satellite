@@ -1,14 +1,13 @@
 # Ddocs API Reference
 
-The **Ddocs API** manages decentralized documents (ddocs) — files stored and synced.
+The Ddocs API manages decentralized documents (ddocs) — files stored and synced.
 
-**Base path:** `/api/ddocs`
+Base path: `/api/ddocs`
 
 ---
 
 ## Table of Contents
 
-- [Expectations & scope](#expectations--scope)
 - [Overview](#overview)
 - [Request & Response Format](#request--response-format)
 - [Endpoints](#endpoints)
@@ -18,52 +17,7 @@ The **Ddocs API** manages decentralized documents (ddocs) — files stored and s
   - [Update document](#update-document)
   - [Delete document](#delete-document)
 - [Data Models](#data-models)
-- [Error Reference](#error-reference)
-- [Examples](#examples)
-
----
-
-## Expectations & scope
-
-This section helps you see **where Satellite fits** in your workflow — what this package supports today, what it does not, and what might come later. Use it to decide how (and whether) to plug Satellite into your agents, editors, or tools.
-
-### Where Satellite fits today
-
-| What you get | How it helps |
-| ------------ | ------------ |
-| **REST API for documents** | Any LLM, agent, or tool (Claude Code, Cursor, ChatGPT, GLM, custom scripts, MCP servers you build, etc.) can **create, list, get, update, and delete** documents over HTTP. No vendor lock-in. |
-| **Persistent docs** | Documents are stored and listed. Agents can treat them as a **stable source of truth** — e.g. “go-to” markdown files that persist across sessions so the LLM knows what exists when it comes back. |
-| **Self-hosted** | You run the Satellite server yourself. Your docs and traffic stay on your infrastructure; you control privacy and data. |
-| **API-first** | No built-in UI. You (or the community) can build **editors, MCP servers, CLIs, or integrations** on top of this API. “Having access via API” is the primary interface. |
-| **Title + content (e.g. markdown)** | Each doc has a title and body. Ideal for markdown as agent context, notes, or verifiable reference — with on-chain sync planned for later. |
-
-**In short:** If your expectation is *“agents should be able to make their own docs and keep a list so sessions don’t mean the LLM has no idea what you’re talking about”* — **that is what this API supports.** Agents (or your code) call the API to create/list/get/update/delete docs; you host the server; you build or plug in the rest (editor, MCP, CLI, etc.).
-
-### What this API does not provide (yet)
-
-| Expectation | Status |
-| ----------- | ------ |
-| **Built-in markdown editor** (e.g. “simple dumb but beautiful”, user + agent multiplayer in one UI) | **Not in this package.** This is an API only. You can build or use a separate editor that talks to this API. |
-| **Real-time subscribe / multiplayer** (live presence, typing, subscriptions) | **Not in this API.** Updates are request/response. Real-time could be a future layer. |
-| **Auth** (e.g. “run an auth script or give a browser link”, “avoid config”) | **Not covered in this doc.** Auth may live in another layer or product; this doc describes the ddocs API only. |
-| **MCP server or official CLI** for Cursor/agents | **Not part of this API doc.** The repo may include a CLI (`ddctl`); MCP or first-party CLI tooling may be added later. |
-| **Zero config** | **Not guaranteed.** You need to run the server. We keep the surface small but some config is required. |
-| **Verifiable / on-chain context** | **Planned.** Documents are queued for on-chain sync (“on-chain publishing is pending”); full verifiable context is a future capability. |
-
-If your main expectation is a **ready-made, beautiful, multiplayer markdown editor** out of the box — that is **not** what this API delivers today. It delivers the **backend** so you or others can build that on top.
-
-### Future possibilities
-
-These are **not promises**, but directions that align with feedback and could be supported later:
-
-- **MCP server** so Cursor and other agents can discover and use Satellite without you writing HTTP calls.
-- **CLI / skills** for terminal-based agents (e.g. “prefer CLI/skills instead of MCP”).
-- **Auth** that’s simple for users and agents (e.g. script or browser link, minimal config).
-- **Real-time / subscribe** for collaborative editing or live updates.
-- **Verifiable context** — documents synced on-chain so agents can rely on “verifiable” markdown as source of truth.
-- **First-party or community editor** — a “sexy Fileverse md” or similar that uses this API.
-
-Keeping these three buckets clear (supported now / not yet / future) should help you quickly see **where you can incorporate Satellite** and where to look for or build alternatives.
+- [Current scope and roadmap](#current-scope-and-roadmap)
 
 ---
 
@@ -77,7 +31,7 @@ Keeping these three buckets clear (supported now / not yet / future) should help
 | `PUT`    | `/api/ddocs/:ddocId` | Update a document |
 | `DELETE` | `/api/ddocs/:ddocId` | Delete a document |
 
-Create and update support both **JSON** and **multipart/form-data** (file upload). File uploads are limited to **10 MB**.
+Create and update support both JSON and multipart/form-data (file upload). File uploads are limited to 10 MB.
 
 ---
 
@@ -119,14 +73,14 @@ Errors return:
 
 Creates a new document. On success it is stored locally and queued for on-chain publishing (async).
 
-**Request**
+Request
 
-- **Method:** `POST`
-- **Path:** `/api/ddocs`
+- Method: `POST`
+- Path: `/api/ddocs`
 
-**Body (choose one):**
+Body (choose one):
 
-1. **JSON**
+1. JSON
 
    ```json
    {
@@ -135,18 +89,18 @@ Creates a new document. On success it is stored locally and queued for on-chain 
    }
    ```
 
-2. **Multipart form (file upload)**
+2. Multipart form (file upload)
 
    - Field name: `file`
    - File: any text file (e.g. `.md`, `.txt`)
    - Title is derived from the filename (without extension). Content is the file body.
 
-**Validation**
+Validation
 
 - `title` — required, non-empty
 - `content` — required, non-empty (or non-empty file)
 
-**Response:** `201 Created`
+Response: `201 Created`
 
 ```json
 {
@@ -167,7 +121,7 @@ Creates a new document. On success it is stored locally and queued for on-chain 
 }
 ```
 
-**Errors**
+Errors
 
 | Status | Condition |
 |--------|-----------|
@@ -179,19 +133,19 @@ Creates a new document. On success it is stored locally and queued for on-chain 
 
 Returns a paginated list of documents.
 
-**Request**
+Request
 
-- **Method:** `GET`
-- **Path:** `/api/ddocs`
+- Method: `GET`
+- Path: `/api/ddocs`
 
-**Query parameters**
+Query parameters
 
 | Parameter | Type   | Default | Description |
 | --------- | ------ | ------- | ----------- |
 | `skip`    | number | `0`     | Number of documents to skip (offset). |
 | `limit`   | number | `20`    | Maximum number of documents to return. |
 
-**Response:** `200 OK`
+Response: `200 OK`
 
 ```json
 {
@@ -218,7 +172,7 @@ Returns a paginated list of documents.
 }
 ```
 
-**Errors**
+Errors
 
 | Status | Condition |
 |--------|-----------|
@@ -228,18 +182,18 @@ Returns a paginated list of documents.
 
 Returns a single document by its public `ddocId`.
 
-**Request**
+Request
 
-- **Method:** `GET`
-- **Path:** `/api/ddocs/:ddocId`
+- Method: `GET`
+- Path: `/api/ddocs/:ddocId`
 
-**Path parameters**
+Path parameters
 
 | Parameter | Type   | Description |
 | --------- | ------ | ----------- |
 | `ddocId`  | string | Short public identifier of the document (e.g. from create/list). |
 
-**Response:** `200 OK`
+Response: `200 OK`
 
 ```json
 {
@@ -260,7 +214,7 @@ Returns a single document by its public `ddocId`.
 }
 ```
 
-**Errors**
+Errors
 
 | Status | Condition |
 |--------|-----------|
@@ -273,20 +227,20 @@ Returns a single document by its public `ddocId`.
 
 Updates an existing document by `ddocId`. Supports partial updates (only send fields that change).
 
-**Request**
+Request
 
-- **Method:** `PUT`
-- **Path:** `/api/ddocs/:ddocId`
+- Method: `PUT`
+- Path: `/api/ddocs/:ddocId`
 
-**Path parameters**
+Path parameters
 
 | Parameter | Type   | Description |
 | --------- | ------ | ----------- |
 | `ddocId`  | string | Short public identifier of the document. |
 
-**Body (choose one):**
+Body (choose one):
 
-1. **JSON**
+1. JSON
 
    ```json
    {
@@ -295,16 +249,16 @@ Updates an existing document by `ddocId`. Supports partial updates (only send fi
    }
    ```
 
-2. **Multipart form (file upload)**
+2. Multipart form (file upload)
 
    - Field name: `file`
    - Title from filename (without extension); content from file body. Same as create.
 
-**Validation**
+Validation
 
 - `title` — if provided, must not be an empty or whitespace-only string.
 
-**Response:** `200 OK`
+Response: `200 OK`
 
 ```json
 {
@@ -325,7 +279,7 @@ Updates an existing document by `ddocId`. Supports partial updates (only send fi
 }
 ```
 
-**Errors**
+Errors
 
 | Status | Condition |
 |--------|-----------|
@@ -338,18 +292,18 @@ Updates an existing document by `ddocId`. Supports partial updates (only send fi
 
 Soft-deletes a document. The document is removed from normal listing and get; a background job is queued for on-chain sync.
 
-**Request**
+Request
 
-- **Method:** `DELETE`
-- **Path:** `/api/ddocs/:ddocId`
+- Method: `DELETE`
+- Path: `/api/ddocs/:ddocId`
 
-**Path parameters**
+Path parameters
 
 | Parameter | Type   | Description |
 | --------- | ------ | ----------- |
 | `ddocId`  | string | Short public identifier of the document. |
 
-**Response:** `200 OK`
+Response: `200 OK`
 
 ```json
 {
@@ -360,7 +314,7 @@ Soft-deletes a document. The document is removed from normal listing and get; a 
 
 No `data` field is returned.
 
-**Errors**
+Errors
 
 | Status | Condition |
 |--------|-----------|
@@ -396,58 +350,47 @@ No `data` field is returned.
 
 ---
 
-## Error Reference
+## Current scope and roadmap
 
-| HTTP Status | Error type   | When |
-| ----------- | ------------ | ----- |
-| 400         | Bad Request  | Missing/empty `title` or content, invalid body. |
-| 404         | Not Found    | No document for the given `ddocId`. |
-| 5xx         | Server Error | Unexpected server failure (see `errorMsg` and optional `error`). |
+This section helps you see where Satellite fits in your workflow — what this package supports today, what it does not, and what might come later. Use it to decide how (and whether) to plug Satellite into your agents, editors, or tools.
 
----
+### Where Satellite fits today
 
-## Examples
+| What you get | How it helps |
+| ------------ | ------------ |
+| REST API for documents | Any LLM, agent, or tool (Claude Code, Cursor, ChatGPT, GLM, custom scripts, MCP servers you build, etc.) can create, list, get, update, and delete documents over HTTP. No vendor lock-in. |
+| Persistent docs | Documents are stored and listed. Agents can treat them as a stable source of truth — e.g. "go-to" markdown files that persist across sessions so the LLM knows what exists when it comes back. |
+| Self-hosted | You run the Satellite server yourself. Your docs and traffic stay on your infrastructure; you control privacy and data. |
+| API-first | No built-in UI. You (or the community) can build editors, MCP servers, CLIs, or integrations on top of this API. "Having access via API" is the primary interface. |
+| Title + content (e.g. markdown) | Each doc has a title and body. Ideal for markdown as agent context, notes, or verifiable reference — with on-chain sync planned for later. |
 
-### Create with JSON
+In short: If your expectation is *"agents should be able to make their own docs and keep a list so sessions don't mean the LLM has no idea what you're talking about"* — that is what this API supports. Agents (or your code) call the API to create/list/get/update/delete docs; you host the server; you build or plug in the rest (editor, MCP, CLI, etc.).
 
-```bash
-curl -X POST 'http://localhost:3000/api/ddocs' \
-  -H 'Content-Type: application/json' \
-  -d '{"title": "Hello", "content": "# Hello\n\nWorld."}'
-```
+### What this API does not provide (yet)
 
-### Create with file upload
+| Expectation | Status |
+| ----------- | ------ |
+| Built-in markdown editor (e.g. "simple dumb but beautiful", user + agent multiplayer in one UI) | Not in this package. This is an API only. You can build or use a separate editor that talks to this API. |
+| Real-time subscribe / multiplayer (live presence, typing, subscriptions) | Not in this API. Updates are request/response. Real-time could be a future layer. |
+| Auth (e.g. "run an auth script or give a browser link", "avoid config") | Not covered in this doc. Auth may live in another layer or product; this doc describes the ddocs API only. |
+| MCP server or official CLI for Cursor/agents | Not part of this API doc. The repo may include a CLI (`ddctl`); MCP or first-party CLI tooling may be added later. |
+| Zero config | Not guaranteed. You need to run the server. We keep the surface small but some config is required. |
+| Verifiable / on-chain context | Planned. Documents are queued for on-chain sync ("on-chain publishing is pending"); full verifiable context is a future capability. |
 
-```bash
-curl -X POST 'http://localhost:3000/api/ddocs' \
-  -F 'file=@./README.md'
-```
+If your main expectation is a ready-made, beautiful, multiplayer markdown editor out of the box — that is not what this API delivers today. It delivers the backend so you or others can build that on top.
 
-### List with pagination
+### Future possibilities
 
-```bash
-curl -X GET 'http://localhost:3000/api/ddocs?skip=0&limit=10'
-```
+These are not promises, but directions that align with feedback and could be supported later:
 
-### Get one document
+- MCP server so Cursor and other agents can discover and use Satellite without you writing HTTP calls.
+- CLI / skills for terminal-based agents (e.g. "prefer CLI/skills instead of MCP").
+- Auth that's simple for users and agents (e.g. script or browser link, minimal config).
+- Real-time / subscribe for collaborative editing or live updates.
+- Verifiable context — documents synced on-chain so agents can rely on "verifiable" markdown as source of truth.
+- First-party or community editor — a "sexy Fileverse md" or similar that uses this API.
 
-```bash
-curl -X GET 'http://localhost:3000/api/ddocs/abc123short'
-```
-
-### Update (partial JSON)
-
-```bash
-curl -X PUT 'http://localhost:3000/api/ddocs/abc123short' \
-  -H 'Content-Type: application/json' \
-  -d '{"title": "New title"}'
-```
-
-### Delete
-
-```bash
-curl -X DELETE 'http://localhost:3000/api/ddocs/abc123short'
-```
+Keeping these three buckets clear (supported now / not yet / future) should help you quickly see where you can incorporate Satellite and where to look for or build alternatives.
 
 ---
 
