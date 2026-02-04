@@ -1,7 +1,7 @@
 import { config, validateDbPath } from './config';
 import { logger } from './infra';
 import { runMigrations } from './infra/database/migrations';
-import { closeQueue } from './infra/queue';
+import { closeWorker } from './infra/worker';
 import { closeDatabase } from './infra/database';
 import app from './app';
 import localtunnel from 'localtunnel';
@@ -49,10 +49,10 @@ const shutdown = async () => {
   }
 
   try {
-    await closeQueue();
-    logger.info('Queue connections closed');
+    await closeWorker();
+    logger.info('Worker closed');
   } catch (error) {
-    logger.error('Error closing queue:', error);
+    logger.error('Error closing worker:', error);
   }
 
   try {

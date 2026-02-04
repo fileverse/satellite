@@ -1,19 +1,24 @@
 import { validateDbPath } from './config';
 import { logger } from './infra';
-import { closeWorker, isWorkerActive, startWorker } from './infra/queue';
+import { runMigrations } from './infra/database/migrations';
+import { closeWorker, isWorkerActive, startWorker } from './infra/worker';
 
 validateDbPath();
+runMigrations();
 
-const concurrency = parseInt(process.env.QUEUE_CONCURRENCY || '1', 10);
-startWorker(concurrency);
+const pollIntervalMs = parseInt(
+  process.env.WORKER_POLL_INTERVAL_MS || '2000',
+  10
+);
+startWorker(pollIntervalMs);
 
 setTimeout(() => {
   if (isWorkerActive()) {
-    logger.info('BullMQ Worker started and active');
+    logger.info('File events worker started and active');
     return;
   }
 
-  logger.error('BullMQ Worker failed to start');
+  logger.error('Worker failed to start');
   process.exit(1);
 }, 100);
 
