@@ -1,12 +1,11 @@
 {
-  "name": "personal-satellite",
-  "version": "0.0.2",
+  "name": "my-satellite",
+  "version": "0.0.1",
   "description": "Satellite",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "personal-satellite": "./dist/cli/index.js",
-    "satellite": "./dist/cli/index.js",
+    "my-satellite": "./dist/cli/index.js",
     "ddctl": "./dist/commands/index.js"
   },
   "files": [
@@ -26,10 +25,7 @@
     "start:worker": "NODE_ENV=production node dist/worker.js",
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write .",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "node --loader ts-node/esm scripts/run-migrations.ts",
-    "migrate:create": "node --loader ts-node/esm scripts/generate-migration.ts",
-    "migrate:rollback": "node --loader ts-node/esm scripts/rollback-migrations.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
