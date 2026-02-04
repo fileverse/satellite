@@ -1,4 +1,4 @@
-import { FileEvent } from './types';
+import type { FileEvent } from './types';
 import { redisConnectionManager } from './connection';
 import { QueueManager } from './queueManager';
 import { FILE_EVENTS_QUEUE } from './types';
@@ -20,4 +20,11 @@ async function closeQueue(): Promise<void> {
   await redisConnectionManager.close();
 }
 
-export { FileEvent, fileEventsQueue, closeQueue, closeWorker, isWorkerActive, startWorker };
+export {
+  fileEventsQueue,
+  closeQueue,
+  closeWorker,
+  isWorkerActive,
+  startWorker,
+};
+export type { FileEvent };

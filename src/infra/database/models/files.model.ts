@@ -1,6 +1,6 @@
 import { QueryBuilder } from '../index';
 import { uuidv7 } from 'uuidv7';
-import { UpdateFilePayload } from './files/types';
+import type { UpdateFilePayload } from './files/types';
 
 export interface File {
   _id: string;
@@ -16,6 +16,9 @@ export interface File {
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  linkKey?: string | null;
+  linkKeyNonce?: string | null;
+  commentKey?: string | null;
 }
 
 export interface FileListResponse {
@@ -31,8 +34,8 @@ export class FilesModel {
     let metadata: Record<string, unknown> = {};
     try {
       if (fileRaw.metadata) {
-        metadata = typeof fileRaw.metadata === 'string' 
-          ? JSON.parse(fileRaw.metadata) 
+        metadata = typeof fileRaw.metadata === 'string'
+          ? JSON.parse(fileRaw.metadata)
           : fileRaw.metadata;
       }
     } catch (e) {
@@ -54,6 +57,9 @@ export class FilesModel {
       metadata: metadata || {},
       createdAt: fileRaw.createdAt,
       updatedAt: fileRaw.updatedAt,
+      linkKey: fileRaw.linkKey,
+      linkKeyNonce: fileRaw.linkKeyNonce,
+      commentKey: fileRaw.commentKey,
     };
   }
 
@@ -189,6 +195,7 @@ export class FilesModel {
 
     const updateChain = keys.join(', ');
     const sql = `UPDATE ${this.TABLE} SET ${updateChain} WHERE _id = ? AND portalAddress = ?`;
+
     QueryBuilder.execute(sql, values);
 
     const updated = this.findById(_id, portalAddress);

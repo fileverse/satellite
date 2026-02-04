@@ -64,11 +64,13 @@ npm install
 ### Configuration
 
 1. Copy environment template:
+
 ```bash
 cp config/.env.example config/.env
 ```
 
 2. Configure environment variables in `config/.env`:
+
 ```env
 PORT=8001
 IP=127.0.0.1
@@ -80,6 +82,7 @@ DB_PATH=/absolute/path/to/sqlite_db_name.db  # REQUIRED: Must be absolute path
 ```
 
 **Important Notes:**
+
 - `DB_PATH` is **required** and must be an **absolute path**
 - The directory will be created automatically if it doesn't exist
 - Example: `DB_PATH=/absolute/path/to/your/sqlite_db_name.db`
@@ -96,6 +99,7 @@ npm run clean && npm run build
 ```
 
 **Why clean before build?**
+
 - TypeScript compiler only updates changed files
 - Old compiled code can remain in `dist/` directory
 - Stale code causes errors that don't match your source
@@ -108,18 +112,21 @@ npm run clean && npm run build
 ### Development Mode
 
 **API Server:**
+
 ```bash
 npm run dev
 # Runs on http://127.0.0.1:8001
 ```
 
 **Worker (separate terminal):**
+
 ```bash
 npm run dev:worker
 # Processes sync jobs from queue
 ```
 
 **CLI Tool:**
+
 ```bash
 npm run dev:cli <command>
 # Example: npm run dev:cli list
@@ -129,22 +136,26 @@ npm run dev:cli <command>
 ### Production Mode
 
 1. **Build (always clean first):**
+
 ```bash
 npm run clean && npm run build
 # Compiles TypeScript to JavaScript in dist/
 ```
 
 2. **Run API Server:**
+
 ```bash
 npm run start:api
 ```
 
 3. **Run Worker:**
+
 ```bash
 npm run start:worker
 ```
 
 4. **Setup CLI (first time only):**
+
 ```bash
 # Make sure you're in the project root directory
 cd /path/to/satellite
@@ -162,6 +173,7 @@ ddctl --help
 **Important:** `npm link` must be run from the project root directory (where `package.json` is located). It reads `package.json` to find the `bin` field, and the paths are relative to the project root.
 
 5. **Use CLI:**
+
 ```bash
 ddctl <command>
 # Example: ddctl list
@@ -173,6 +185,7 @@ ddctl <command>
 Migrations run automatically on startup for both API server and CLI tool. They are **idempotent** - meaning they check which migrations have already been applied and only run pending ones.
 
 **Important Notes:**
+
 - Both API (`src/index.ts`) and CLI (`src/commands/index.ts`) run migrations on startup
 - Since they use the same database (via `DB_PATH`), only the first one to run will actually apply migrations
 - If migrations are already applied, subsequent runs will skip them (safe to run multiple times)
@@ -192,18 +205,21 @@ The CLI tool works from any directory because `DB_PATH` is resolved to an absolu
 ### Commands
 
 #### List ddocs
+
 ```bash
 ddctl list
 ddctl list --limit 10 --skip 20
 ```
 
 #### Get ddoc details
+
 ```bash
 ddctl get <ddocId>
 # Shows metadata table
 ```
 
 #### View ddoc content
+
 ```bash
 ddctl view <ddocId>
 ddctl view <ddocId> --lines 20
@@ -211,18 +227,21 @@ ddctl view <ddocId> --lines 20
 ```
 
 #### Create ddoc
+
 ```bash
 ddctl create <filepath>
 # Creates ddoc from file (title = filename)
 ```
 
 #### Update ddoc
+
 ```bash
 ddctl update <ddocId> --file <filepath>
 # Updates ddoc from file
 ```
 
 #### Download ddoc
+
 ```bash
 ddctl download <ddocId>
 ddctl download <ddocId> --output myfile.md
@@ -230,6 +249,7 @@ ddctl download <ddocId> --output myfile.md
 ```
 
 #### Delete ddoc
+
 ```bash
 ddctl delete <ddocId>
 ddctl delete <ddocId1> <ddocId2> <ddocId3>
@@ -243,11 +263,13 @@ Base URL: `http://127.0.0.1:8001/api/ddocs`
 ### Endpoints
 
 #### List Ddocs
+
 ```http
 GET /api/ddocs?limit=10&skip=0
 ```
 
 **Response:**
+
 ```json
 {
   "ddocs": [...],
@@ -257,28 +279,31 @@ GET /api/ddocs?limit=10&skip=0
 ```
 
 #### Get Ddoc
+
 ```http
 GET /api/ddocs/:ddocId
 ```
 
 **Response:**
+
 ```json
 {
-  "_id": "...",
-  "ddocId": "...",
-  "title": "...",
-  "content": "...",
-  "localVersion": 1,
-  "onchainVersion": 0,
-  "syncStatus": "pending",
-  "createdAt": "...",
-  "updatedAt": "..."
+ "_id": "...",
+ "ddocId": "...",
+ "title": "...",
+ "content": "...",
+ "localVersion": 1,
+ "onchainVersion": 0,
+ "syncStatus": "pending",
+ "createdAt": "...",
+ "updatedAt": "..."
 }
 ```
 
 #### Create Ddoc
 
 **Option 1: File Upload**
+
 ```http
 POST /api/ddocs
 Content-Type: multipart/form-data
@@ -287,6 +312,7 @@ file: <file>
 ```
 
 **Option 2: JSON**
+
 ```http
 POST /api/ddocs
 Content-Type: application/json
@@ -298,6 +324,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "message": "File created successfully. Sync to on-chain is pending.",
@@ -308,6 +335,7 @@ Content-Type: application/json
 #### Update Ddoc
 
 **Option 1: File Upload**
+
 ```http
 PUT /api/ddocs/:ddocId
 Content-Type: multipart/form-data
@@ -316,6 +344,7 @@ file: <file>
 ```
 
 **Option 2: JSON**
+
 ```http
 PUT /api/ddocs/:ddocId
 Content-Type: application/json
@@ -329,11 +358,13 @@ Content-Type: application/json
 **Note:** At least one of `title` or `fileContent` must be provided.
 
 #### Delete Ddoc
+
 ```http
 DELETE /api/ddocs/:ddocId
 ```
 
 **Response:**
+
 ```json
 {
   "message": "File deleted successfully",
@@ -390,6 +421,7 @@ src/
 ## Database Schema
 
 ### Files Table
+
 ```sql
 CREATE TABLE files (
   _id TEXT PRIMARY KEY,
@@ -416,10 +448,12 @@ CREATE TABLE files (
 ## Type System
 
 ### Domain Types (`src/domain/file/types.ts`)
+
 - `CreateFileInput`: `{ title: string, content: string }`
 - `UpdateFileInput`: `{ title?: string, content?: string }`
 
 ### API Types (`src/interface/api/handlers/ddocs/types.ts`)
+
 - `ClientUpdateFileInput`: Client-facing update type (maps to `UpdateFileInput`)
 
 **Note:** Domain layer is independent - API layer depends on domain, not vice versa.
@@ -449,26 +483,31 @@ npm run migrate:create <migration-name>
 ## Troubleshooting
 
 ### CLI doesn't work from other directories
+
 - Ensure `DB_PATH` is set to an **absolute path** in `config/.env`
 - Check that migrations have run (they run automatically)
 - Verify the path is correct: check logs for "SQLite database connected: <path>"
 
 ### CLI command not found or permission denied
+
 - Build the project: `npm run clean && npm run build`
 - Set execute permissions: `chmod +x dist/commands/index.js`
 - Link globally: `npm link`
 
 ### Code works in dev but not production
+
 - **Most common issue:** Stale `dist/` folder
 - Solution: `npm run clean && npm run build`
 - This ensures compiled code matches source code
 
 ### Worker not processing jobs
+
 - Verify Redis is running: `redis-cli ping`
 - Check `REDIS_URI` in config
 - Check worker logs for errors
 
 ### Database errors
+
 - Ensure `DB_PATH` is set and is an absolute path
 - Ensure database directory exists and is writable
 - Migrations run automatically on startup
@@ -487,4 +526,3 @@ npm run migrate:create <migration-name>
 - Check `README.md` for basic setup
 - Review migration files in `src/infra/database/migrations/`
 - Explore test files (if any) for usage examples
-

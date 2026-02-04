@@ -1,4 +1,4 @@
-import { FoldersModel, Folder } from '../../infra/database/models';
+import { FoldersModel, type Folder } from '../../infra/database/models';
 
 export interface CreateFolderInput {
   _id?: string;
@@ -34,7 +34,10 @@ export default function createFolder(input: CreateFolderInput): Folder {
   }
 
   // Check if folderRef already exists
-  const existing = FoldersModel.findByFolderRefAndId(input.folderRef, input.folderId);
+  const existing = FoldersModel.findByFolderRefAndId(
+    input.folderRef,
+    input.folderId
+  );
   if (existing) {
     throw new Error('Folder with this folderRef and folderId already exists');
   }

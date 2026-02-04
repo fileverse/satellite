@@ -9,7 +9,8 @@ const addPortalHandler = async (req: Request, res: Response) => {
 
     if (!portalAddress || !portalSeed || !ownerAddress) {
       return res.status(400).json({
-        error: 'Missing required fields: portalAddress, portalSeed, and ownerAddress are required'
+        error:
+          'Missing required fields: portalAddress, portalSeed, and ownerAddress are required',
       });
     }
 
@@ -29,11 +30,17 @@ const addKeyHandler = async (req: Request, res: Response) => {
 
     if (!apiKeySeed || !name || !collaboratorAddress || !portalAddress) {
       return res.status(400).json({
-        error: 'Missing required fields: apiKeySeed, name, collaboratorAddress, and portalAddress are required'
+        error:
+          'Missing required fields: apiKeySeed, name, collaboratorAddress, and portalAddress are required',
       });
     }
 
-    const apiKey = addApiKey({ apiKeySeed, name, collaboratorAddress, portalAddress });
+    const apiKey = addApiKey({
+      apiKeySeed,
+      name,
+      collaboratorAddress,
+      portalAddress,
+    });
     res.status(201).json({
       message: 'API key added successfully',
       data: apiKey,
@@ -49,7 +56,7 @@ const removeKeyHandler = async (req: Request, res: Response) => {
 
     if (!collaboratorAddress) {
       return res.status(400).json({
-        error: 'collaboratorAddress is required in request payload'
+        error: 'API key ID is required',
       });
     }
 

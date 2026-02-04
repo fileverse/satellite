@@ -1,4 +1,4 @@
-import redisClient, { RedisClientType } from './redis';
+import redisClient, { type RedisClientType } from './redis';
 
 class Cache {
   redisClient: RedisClientType | null;

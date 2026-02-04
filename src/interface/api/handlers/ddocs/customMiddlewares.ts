@@ -1,11 +1,11 @@
-import { Request, Response } from 'express'
+import { Request, Response } from 'express';
 import multer from 'multer';
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  }
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
 });
 
 export const createMiddleware = (req: Request, res: Response, next: any) => {
@@ -24,4 +24,4 @@ export const updateMiddleware = (req: Request, res: Response, next: any) => {
     return;
   }
   next();
-}
+};

@@ -13,7 +13,6 @@ export interface Portal {
 export class PortalsModel {
   private static readonly TABLE = 'portals';
 
-
   static findByPortalAddress(portalAddress: string): Portal | undefined {
     const sql = `SELECT _id, portalAddress, portalSeed, ownerAddress, createdAt, updatedAt FROM ${this.TABLE} WHERE portalAddress = ?`;
     return QueryBuilder.selectOne<Portal>(sql, [portalAddress]);
@@ -34,7 +33,7 @@ export class PortalsModel {
       input.portalSeed,
       input.ownerAddress,
       now,
-      now
+      now,
     ]);
 
     const created = this.findByPortalAddress(input.portalAddress);
@@ -44,10 +43,13 @@ export class PortalsModel {
     return created;
   }
 
-  static update(portalAddress: string, input: {
-    portalSeed?: string;
-    ownerAddress?: string;
-  }): Portal {
+  static update(
+    portalAddress: string,
+    input: {
+      portalSeed?: string;
+      ownerAddress?: string;
+    }
+  ): Portal {
     const now = new Date().toISOString();
     const keys: string[] = [];
     const values: any[] = [];
@@ -89,4 +91,3 @@ export class PortalsModel {
     return this.create(input);
   }
 }
-

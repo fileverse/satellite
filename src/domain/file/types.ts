@@ -1,4 +1,4 @@
-import { File } from '../../infra/database/models';
+import type { File } from '../../infra/database/models';
 
 export interface ListFilesParams {
   limit?: number;

@@ -5,4 +5,3 @@ export interface FileEvent {
 }
 
 export const FILE_EVENTS_QUEUE = 'file-events';
-

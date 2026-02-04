@@ -1,8 +1,8 @@
-// Import config early to validate DB_PATH
-import './config';
-
+import { validateDbPath } from './config';
 import { logger } from './infra';
 import { closeWorker, isWorkerActive, startWorker } from './infra/queue';
+
+validateDbPath();
 
 const concurrency = parseInt(process.env.QUEUE_CONCURRENCY || '1', 10);
 startWorker(concurrency);
@@ -11,8 +11,8 @@ setTimeout(() => {
   if (isWorkerActive()) {
     logger.info('BullMQ Worker started and active');
     return;
-  } 
-  
+  }
+
   logger.error('BullMQ Worker failed to start');
   process.exit(1);
 }, 100);

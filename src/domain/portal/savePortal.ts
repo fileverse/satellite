@@ -1,4 +1,4 @@
-import { PortalsModel, Portal } from '../../infra/database/models';
+import { PortalsModel, type Portal } from '../../infra/database/models';
 
 export interface SavePortalInput {
   portalAddress: string;

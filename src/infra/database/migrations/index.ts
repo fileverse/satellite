@@ -1,7 +1,5 @@
-import db from '../index';
+import getDb from '../index';
 import { logger } from '../../';
-import fs from 'fs';
-import path from 'path';
 
 interface MigrationFile {
   timestamp: string;
@@ -10,59 +8,115 @@ interface MigrationFile {
   down?: string;
 }
 
-/**
- * Load all migration files from the migrations directory
- * Migration files should be named: YYYYMMDDHHMMSS_description.ts (or .js in compiled mode)
- */
-function loadMigrations(): MigrationFile[] {
-  const migrationsDir = __dirname;
-  // Support both .ts (development) and .js (compiled) files
-  const files = fs.readdirSync(migrationsDir)
-    .filter(file => {
-      const isMigrationFile = (file.endsWith('.ts') || file.endsWith('.js')) && 
-                              file !== 'index.ts' && 
-                              file !== 'index.js' &&
-                              !file.endsWith('.js.map'); // Exclude source maps
-      return isMigrationFile;
-    })
-    .sort(); // Sort alphabetically (which works for timestamp format)
+const migrations: MigrationFile[] = [
+  {
+    timestamp: '20240101120000',
+    name: 'initial_schema',
+    up: `
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        timestamp TEXT PRIMARY KEY,
+        applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE TABLE IF NOT EXISTS files (
+        _id TEXT PRIMARY KEY,
+        ddocId TEXT NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        localVersion INTEGER NOT NULL DEFAULT 1,
+        onchainVersion INTEGER NOT NULL DEFAULT 0,
+        syncStatus TEXT NOT NULL DEFAULT 'pending',
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_files_createdAt ON files(createdAt);
+      CREATE INDEX IF NOT EXISTS idx_files_syncStatus ON files(syncStatus);
+      CREATE INDEX IF NOT EXISTS idx_files_title ON files(title);
+    `,
+    down: `
+      DROP TABLE IF EXISTS files;
+      DROP TABLE IF EXISTS schema_migrations;
+    `,
+  },
+  {
+    timestamp: '20251217122141',
+    name: 'add_is_deleted_to_files',
+    up: `ALTER TABLE files ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;`,
+    down: `ALTER TABLE files DROP COLUMN isDeleted;`,
+  },
+  {
+    timestamp: '20260127180254',
+    name: 'add_portals_table',
+    up: `
+      CREATE TABLE IF NOT EXISTS portals(
+        _id TEXT PRIMARY KEY,
+        portalAddress TEXT NOT NULL UNIQUE,
+        portalSeed TEXT NOT NULL UNIQUE,
+        ownerAddress TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    down: `DROP TABLE IF EXISTS portals;`,
+  },
+  {
+    timestamp: '20260127181448',
+    name: 'add_api_keys_table',
+    up: `
+      CREATE TABLE IF NOT EXISTS api_keys (
+        _id TEXT PRIMARY KEY,
+        apiKeySeed TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL UNIQUE,
+        collaboratorAddress TEXT NOT NULL UNIQUE,
+        portalAddress TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    down: `DROP TABLE IF EXISTS api_keys;`,
+  },
+  {
+    timestamp: '20260127223128',
+    name: 'add_is_deleted_to_api_keys',
+    up: `ALTER TABLE api_keys ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;`,
+    down: `ALTER TABLE api_keys DROP COLUMN isDeleted;`,
+  },
+  {
+    timestamp: '20260128141543',
+    name: 'add_portal_fields_to_files',
+    up: `
+      ALTER TABLE files ADD COLUMN portalAddress TEXT NOT NULL;
+      ALTER TABLE files ADD COLUMN metadata TEXT DEFAULT '{}';
+      ALTER TABLE files ADD COLUMN onChainFileId INTEGER;
+      
+      CREATE INDEX IF NOT EXISTS idx_files_portalAddress ON files(portalAddress);
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_files_portalAddress;
+      ALTER TABLE files DROP COLUMN onChainFileId;
+      ALTER TABLE files DROP COLUMN metadata;
+      ALTER TABLE files DROP COLUMN portalAddress;
+    `,
+  },
+  {
+    timestamp: '20260203023154',
+    name: 'add_file_fields',
+    up: `
+      ALTER TABLE files ADD COLUMN commentKey TEXT;
+      ALTER TABLE files ADD COLUMN linkKey TEXT;
+      ALTER TABLE files ADD COLUMN linkKeyNonce TEXT;
+    `,
+    down: `
+      ALTER TABLE files DROP COLUMN commentKey;
+      ALTER TABLE files DROP COLUMN linkKey;
+      ALTER TABLE files DROP COLUMN linkKeyNonce;
+    `,
+  },
+];
 
-  const migrations: MigrationFile[] = [];
-
-  for (const file of files) {
-    const filePath = path.join(migrationsDir, file);
-    // Extract timestamp from filename (first 14 digits) - support both .ts and .js
-    const match = file.match(/^(\d{14})_(.+)\.(ts|js)$/);
-
-    if (!match) {
-      logger.warn(`Skipping invalid migration file: ${file}`);
-      continue;
-    }
-
-    const [, timestamp, name] = match;
-    const migration = require(filePath);
-
-    if (!migration.up) {
-      logger.warn(`Migration ${file} is missing 'up' function`);
-      continue;
-    }
-
-    migrations.push({
-      timestamp,
-      name,
-      up: migration.up,
-      down: migration.down
-    });
-  }
-
-  return migrations;
-}
-
-/**
- * Run all pending migrations
- */
 export function runMigrations(): void {
-  // Create migrations table if it doesn't exist (with timestamp-based schema)
+  const db = getDb();
+  
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       timestamp TEXT PRIMARY KEY,
@@ -70,15 +124,22 @@ export function runMigrations(): void {
     );
   `);
 
-  const getAppliedMigrations = db.prepare('SELECT timestamp FROM schema_migrations');
-  const insertMigration = db.prepare('INSERT INTO schema_migrations (timestamp) VALUES (?)');
-
-  const appliedMigrations = new Set(
-    (getAppliedMigrations.all() as { timestamp: string }[]).map(m => m.timestamp)
+  const getAppliedMigrations = db.prepare(
+    'SELECT timestamp FROM schema_migrations'
+  );
+  const insertMigration = db.prepare(
+    'INSERT INTO schema_migrations (timestamp) VALUES (?)'
   );
 
-  const allMigrations = loadMigrations();
-  const pendingMigrations = allMigrations.filter(m => !appliedMigrations.has(m.timestamp));
+  const appliedMigrations = new Set(
+    (getAppliedMigrations.all() as { timestamp: string }[]).map(
+      (m) => m.timestamp
+    )
+  );
+
+  const pendingMigrations = migrations.filter(
+    (m) => !appliedMigrations.has(m.timestamp)
+  );
 
   if (pendingMigrations.length === 0) {
     logger.info('Database is up to date');
@@ -96,18 +157,14 @@ export function runMigrations(): void {
   logger.info(`Applied ${pendingMigrations.length} migration(s)`);
 }
 
-/**
- * Rollback migrations (development only)
- * @param count Number of migrations to rollback (default: 1)
- */
 export function rollbackMigrations(count: number = 1): void {
-  // Safety check: only allow rollback in development
   const nodeEnv = process.env.NODE_ENV || 'development';
   if (nodeEnv === 'production') {
     throw new Error('Migration rollback is not allowed in production environment');
   }
 
-  // Ensure migrations table exists
+  const db = getDb();
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       timestamp TEXT PRIMARY KEY,
@@ -115,8 +172,12 @@ export function rollbackMigrations(count: number = 1): void {
     );
   `);
 
-  const getAppliedMigrations = db.prepare('SELECT timestamp FROM schema_migrations ORDER BY timestamp DESC');
-  const deleteMigration = db.prepare('DELETE FROM schema_migrations WHERE timestamp = ?');
+  const getAppliedMigrations = db.prepare(
+    'SELECT timestamp FROM schema_migrations ORDER BY timestamp DESC'
+  );
+  const deleteMigration = db.prepare(
+    'DELETE FROM schema_migrations WHERE timestamp = ?'
+  );
 
   const appliedMigrations = getAppliedMigrations.all() as { timestamp: string }[];
 
@@ -126,21 +187,24 @@ export function rollbackMigrations(count: number = 1): void {
   }
 
   const migrationsToRollback = appliedMigrations.slice(0, count);
-  const allMigrations = loadMigrations();
-  const migrationMap = new Map(allMigrations.map(m => [m.timestamp, m]));
+  const migrationMap = new Map(migrations.map((m) => [m.timestamp, m]));
 
   db.transaction(() => {
     for (const appliedMigration of migrationsToRollback) {
       const migration = migrationMap.get(appliedMigration.timestamp);
 
       if (!migration) {
-        logger.warn(`Migration file not found for timestamp ${appliedMigration.timestamp}, removing from schema_migrations`);
+        logger.warn(
+          `Migration file not found for timestamp ${appliedMigration.timestamp}, removing from schema_migrations`
+        );
         deleteMigration.run(appliedMigration.timestamp);
         continue;
       }
 
       if (!migration.down) {
-        logger.warn(`Migration ${migration.timestamp}_${migration.name} has no 'down' function, skipping rollback`);
+        logger.warn(
+          `Migration ${migration.timestamp}_${migration.name} has no 'down' function, skipping rollback`
+        );
         deleteMigration.run(appliedMigration.timestamp);
         continue;
       }

@@ -37,4 +37,3 @@ app.use('/', router);
 app.use(expressErrorHandler as express.ErrorRequestHandler);
 
 export default app;
-

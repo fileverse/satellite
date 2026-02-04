@@ -5,7 +5,9 @@ const getHandler = async (req: Request, res: Response) => {
   const { folderRef, folderId } = req.params;
 
   if (!folderRef || !folderId) {
-    return res.status(400).json({ error: 'folderRef and folderId are required' });
+    return res
+      .status(400)
+      .json({ error: 'folderRef and folderId are required' });
   }
 
   try {

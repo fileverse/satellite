@@ -5,5 +5,11 @@ import { closeDatabase } from './database';
 
 import reporter from './reporter';
 
-export { logger, asyncHandler, asyncHandlerArray, reporter, closeQueue, closeDatabase };
-
+export {
+  logger,
+  asyncHandler,
+  asyncHandlerArray,
+  reporter,
+  closeQueue,
+  closeDatabase,
+};

@@ -22,6 +22,7 @@ npm run clean && npm run build
 ```
 
 **Why clean before build?**
+
 - Ensures compiled code (`dist/`) matches your source code (`src/`)
 - Prevents stale compiled code from causing errors
 - Always run `npm run clean && npm run build` after:
@@ -33,16 +34,19 @@ npm run clean && npm run build
 ## Run
 
 ### API Server
+
 ```bash
 npm run start:api
 ```
 
 ### Worker (for processing sync jobs)
+
 ```bash
 npm run start:worker
 ```
 
 ### Development
+
 ```bash
 # Run API server
 npm run dev
@@ -60,15 +64,18 @@ The CLI tool `ddctl` provides commands to manage your ddocs from the command lin
 **Important:** All commands must be run from the project root directory (where `package.json` is located).
 
 1. **Build the project:**
+
    ```bash
    npm run clean && npm run build
    ```
 
 2. **Set execute permissions and link globally:**
+
    ```bash
    chmod +x dist/commands/index.js
    npm link
    ```
+
    **Note:** `npm link` must be run from the project root directory because it reads `package.json` to find the binary path.
 
 3. **Verify installation:**
@@ -93,6 +100,7 @@ ddctl list
 Create a `.env` file in the `config/` directory with the following variables:
 
 **Required:**
+
 - `DB_PATH`: Database file path (required) - **Must be an absolute path**. Both API and CLI use the same database location.
   - **Examples:**
     - `DB_PATH=/Users/username/data/satellite.db`
@@ -104,6 +112,7 @@ Create a `.env` file in the `config/` directory with the following variables:
     - Both API server and CLI tool use the exact same database file
 
 **Optional:**
+
 - `PORT`: Server port (default: 8001)
 - `IP`: Server IP (default: 127.0.0.1)
 - `REDIS_URI`: Redis connection string (required for BullMQ, default: redis://localhost:6379)

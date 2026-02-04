@@ -1,4 +1,4 @@
-import { FilesModel, File, Folder } from '../../infra/database/models';
+import { FilesModel, type File, type Folder } from '../../infra/database/models';
 import { QueryBuilder } from '../../infra/database';
 
 export interface SearchNodesParams {
@@ -12,7 +12,7 @@ export interface SearchNodesParams {
  * Normalized response type for search results
  * Can contain both files and folders at the API response level
  */
-export type SearchNode = 
+export type SearchNode =
   | ({ type: 'file' } & File)
   | ({ type: 'folder' } & Folder);
 
@@ -38,7 +38,7 @@ export default function searchNodes(params: SearchNodesParams): SearchNodesResul
   const files = FilesModel.searchByTitle(query, portalAddress, limit, skip);
 
   // Normalize files to SearchNode format
-  const normalizedNodes: SearchNode[] = files.map(file => ({
+  const normalizedNodes: SearchNode[] = files.map((file) => ({
     type: 'file' as const,
     ...file,
   }));
@@ -48,13 +48,12 @@ export default function searchNodes(params: SearchNodesParams): SearchNodesResul
   const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, [`%${query}%`, portalAddress]);
   const total = totalResult?.count || 0;
 
-  const hasNext = skip !== undefined && limit !== undefined 
-    ? (skip + limit) < total 
-    : false;
+  const hasNext =
+    skip !== undefined && limit !== undefined ? skip + limit < total : false;
 
   return {
     nodes: normalizedNodes,
     total,
-    hasNext
+    hasNext,
   };
 }

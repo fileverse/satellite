@@ -1,7 +1,7 @@
 import { Queue, JobsOptions } from 'bullmq';
 import { logger } from '../index';
 import { redisConnectionManager } from './connection';
-import { FileEvent, FILE_EVENTS_QUEUE } from './types';
+import { FILE_EVENTS_QUEUE, type FileEvent } from './types';
 
 export class QueueManager {
   private static instances: Map<string, QueueManager> = new Map();
@@ -34,7 +34,9 @@ export class QueueManager {
   async addJob(event: FileEvent, options?: JobsOptions): Promise<void> {
     try {
       await this.queue.add(event.type, event, options);
-      logger.info(`Added file event job: ${event.type} for file ${event.fileId}`);
+      logger.info(
+        `Added file event job: ${event.type} for file ${event.fileId}`
+      );
     } catch (error: any) {
       logger.error(`Failed to add event job to queue:`, error);
       throw error;
@@ -67,4 +69,3 @@ export class QueueManager {
     return this.queue;
   }
 }
-

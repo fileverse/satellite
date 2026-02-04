@@ -71,4 +71,3 @@ class RedisConnectionManager {
 }
 
 export const redisConnectionManager = RedisConnectionManager.getInstance();
-

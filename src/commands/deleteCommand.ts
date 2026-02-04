@@ -1,24 +1,35 @@
 import { Command } from 'commander';
 import { deleteFile } from '../domain/file';
+import { getRuntimeConfig } from '../config';
+import { ApiKeysModel } from '../infra/database/models';
 
 export const deleteCommand = new Command()
-	.name('delete')
-	.description('Delete one or more ddocs by their IDs')
-	.argument('<ddocIds...>', 'One or more ddoc IDs to delete (space-separated)')
-	.action(async (ddocIds: string[]) => {
-		try {
-			for (const ddocId of ddocIds) {
-				try {
-					await deleteFile(ddocId);
-					console.log(`ddoc ${ddocId} deleted successfully`);
-				} catch (error: any) {
-					console.error(`Error deleting ddoc ${ddocId}:`, error.message);
-					// Continue with next ddoc instead of stopping
-				}
-			}
-		} catch (error: any) {
-			console.error('Error:', error.message);
-			throw error;
-		}
-	});
+  .name('delete')
+  .description('Delete one or more ddocs by their IDs')
+  .argument('<ddocIds...>', 'One or more ddoc IDs to delete (space-separated)')
+  .action(async (ddocIds: string[]) => {
+    try {
+      const runtimConfig = getRuntimeConfig();
 
+      const apiKey = runtimConfig.API_KEY;
+
+      if (!apiKey) throw new Error('API key is required');
+
+      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+
+      if (!portalAddress) throw new Error('Portal address is required');
+
+      for (const ddocId of ddocIds) {
+        try {
+          await deleteFile(ddocId, portalAddress);
+          console.log(`ddoc ${ddocId} deleted successfully`);
+        } catch (error: any) {
+          console.error(`Error deleting ddoc ${ddocId}:`, error.message);
+          // Continue with next ddoc instead of stopping
+        }
+      }
+    } catch (error: any) {
+      console.error('Error:', error.message);
+      throw error;
+    }
+  });
