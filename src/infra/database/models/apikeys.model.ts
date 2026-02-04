@@ -50,6 +50,11 @@ export class ApiKeysModel {
     return QueryBuilder.selectOne<ApiKey>(sql, [_id]);
   }
 
+  static findByCollaboratorAddress(collaboratorAddress: string): ApiKey | undefined {
+    const sql = `SELECT _id, apiKeySeed, name, collaboratorAddress, portalAddress, createdAt, isDeleted FROM ${this.TABLE} WHERE collaboratorAddress = ? AND isDeleted = 0 LIMIT 1`;
+    return QueryBuilder.selectOne<ApiKey>(sql, [collaboratorAddress]);
+  }
+
   static delete(_id: string): void {
     const sql = `UPDATE ${this.TABLE} SET isDeleted = 1 WHERE _id = ?`;
     QueryBuilder.execute(sql, [_id]);

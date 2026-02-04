@@ -6,6 +6,6 @@ const router = Router();
 
 router.post('/', asyncHandlerArray(addPortal));
 router.post('/apikey', asyncHandlerArray(addKey));
-router.delete('/apikey/:id', asyncHandlerArray(removeKey));
+router.delete('/apikey', asyncHandlerArray(removeKey));
 
 export default router;
