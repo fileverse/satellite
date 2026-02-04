@@ -67,7 +67,7 @@ export const updateCommand = new Command()
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error('Portal address is required');
 
-      const file = await getFile(ddocId, portalAddress);
+      const file = getFile(ddocId, portalAddress);
       if (!file) {
         throw new Error(`ddoc with ${ddocId} not found.`);
       }

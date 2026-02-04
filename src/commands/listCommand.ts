@@ -10,6 +10,7 @@ import {
 } from './utils/util';
 import { getRuntimeConfig } from '../config';
 import { ApiKeysModel } from '../infra/database/models';
+import { GetFileResult } from '../domain/file/types';
 
 export const listCommand = new Command()
   .name('list')
@@ -59,7 +60,7 @@ export const listCommand = new Command()
         style: { head: [] },
       });
 
-      result.ddocs.forEach((ddoc: File, index: number) => {
+      result.ddocs.forEach((ddoc: GetFileResult, index: number) => {
         const ddocId = (ddoc as any).ddocId || 'N/A';
         table.push([
           index + 1,

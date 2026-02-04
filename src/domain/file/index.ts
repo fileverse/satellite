@@ -28,6 +28,8 @@ function listFiles(params: ListFilesParams): ListFilesResult {
     isDeleted: file.isDeleted,
     onChainFileId: file.onChainFileId,
     portalAddress: file.portalAddress,
+    createdAt: file.createdAt,
+    updatedAt: file.updatedAt,
   }));
 
   return {
@@ -37,7 +39,22 @@ function listFiles(params: ListFilesParams): ListFilesResult {
   };
 }
 
-function getFile(ddocId: string, portalAddress: string): Partial<File> | null {
+interface GetFileResult {
+  ddocId: string;
+  link: string;
+  title: string;
+  content: string;
+  localVersion: number;
+  onchainVersion: number;
+  syncStatus: string;
+  isDeleted: number;
+  onChainFileId: number | null;
+  portalAddress: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function getFile(ddocId: string, portalAddress: string): GetFileResult | null {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
@@ -50,7 +67,7 @@ function getFile(ddocId: string, portalAddress: string): Partial<File> | null {
 
   return {
     ddocId: file.ddocId,
-    link: file.link,
+    link: file.link || '',
     title: file.title,
     content: file.content,
     localVersion: file.localVersion,
@@ -59,6 +76,8 @@ function getFile(ddocId: string, portalAddress: string): Partial<File> | null {
     isDeleted: file.isDeleted,
     onChainFileId: file.onChainFileId,
     portalAddress: file.portalAddress,
+    createdAt: file.createdAt,
+    updatedAt: file.updatedAt,
   };
 }
 
