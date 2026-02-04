@@ -12,12 +12,12 @@ import { createMiddleware, updateMiddleware } from './customMiddlewares';
 import { extractTitleAndContent } from './helper';
 import type { ClientUpdateFileInput } from './types';
 import { ApiKeysModel } from '../../../../infra/database/models';
-import { config } from '../../../../config';
+import { config, getRuntimeConfig } from '../../../../config';
 
 const listHandler = async (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
   const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : undefined;
-  const apiKey = config.API_KEY as string;
+  const apiKey = getRuntimeConfig().API_KEY;
   if (!apiKey) {
     throw new Error('API key is required');
   }
@@ -76,8 +76,7 @@ const getHandler = async (req: Request, res: Response) => {
 const createHandler = async (req: Request, res: Response) => {
   try {
     const { title, fileContent } = extractTitleAndContent(req);
-    const apiKey = config.API_KEY as string;
-
+    const apiKey = getRuntimeConfig().API_KEY;
     if (!apiKey) {
       return res.status(400).json({ error: 'Missing required header: x-api-key is required' });
     }
@@ -123,7 +122,7 @@ const updateHandler = async (req: Request, res: Response) => {
   try {
     const { ddocId } = req.params;
     const { title, fileContent } = extractTitleAndContent(req);
-    const apiKeySeed = config.API_KEY as string;
+    const apiKeySeed = getRuntimeConfig().API_KEY;
 
     if (!apiKeySeed) {
       return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
@@ -171,7 +170,18 @@ const updateHandler = async (req: Request, res: Response) => {
 const deleteHandler = async (req: Request, res: Response) => {
   try {
     const { ddocId } = req.params;
-    const portalAddress = req.headers['x-portal-address'] as string | undefined;
+
+    const apiKey = getRuntimeConfig().API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ error: 'API key is required' });
+    }
+
+    const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+    if (!apiKeyInfo) {
+      return res.status(400).json({ error: 'Invalid API key' });
+    }
+
+    const portalAddress = apiKeyInfo.portalAddress;
 
     if (!ddocId) {
       return res.status(400).json({ error: 'ddocId is required' });
