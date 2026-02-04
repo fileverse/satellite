@@ -8,19 +8,25 @@ import {
   columnNames,
   columnWidth,
 } from './utils/util';
+import { getRuntimeConfig } from '../config';
+import { ApiKeysModel } from '../infra/database/models';
 
 export const listCommand = new Command()
   .name('list')
   .description('List all ddocs')
-  .option('-p, --portalAddress <portalAddress>', 'Portal address')
   .option('-l, --limit <number>', 'Limit the number of results', parseInt)
   .option('-s, --skip <number>', 'Skip the first N results', parseInt)
   .action(async (options) => {
     try {
+      const runtimConfig = getRuntimeConfig();
+      const apiKey = runtimConfig.API_KEY;
+      if (!apiKey) throw new Error('API key is required');
+      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+      if (!portalAddress) throw new Error('Portal address is required');
       const params = {
         limit: options.limit,
         skip: options.skip,
-        portalAddress: options.portalAddress,
+        portalAddress,
       };
 
       const result = listFiles(params);

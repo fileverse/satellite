@@ -9,21 +9,28 @@ import {
   columnNames,
   columnWidth,
 } from './utils/util';
+import { getRuntimeConfig } from '../config';
+import { ApiKeysModel } from '../infra/database/models';
 
 export const createCommand = new Command()
   .name('create')
   .description('Create a new ddoc from a file')
   .argument('<filepath>', 'Path to the file to create ddoc from')
-  .option('-p, --portalAddress <portalAddress>', 'Portal address')
-  .action(async (filepath: string, options: { portalAddress?: string }) => {
+  .action(async (filepath: string) => {
     try {
       if (!fs.existsSync(filepath)) {
         throw new Error(`File not found: ${filepath}`);
       }
 
-      if (!options.portalAddress) {
-        throw new Error('Portal address is required');
-      }
+      const runtimConfig = getRuntimeConfig();
+
+      const apiKey = runtimConfig.API_KEY;
+
+      if (!apiKey) throw new Error('API key is required');
+
+      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+
+      if (!portalAddress) throw new Error('Portal address is required');
 
       const content = fs.readFileSync(filepath, 'utf-8');
       if (!content || content.trim().length === 0) {
@@ -31,7 +38,7 @@ export const createCommand = new Command()
       }
 
       const title = path.basename(filepath);
-      const file = await createFile({ title, content, portalAddress: options.portalAddress });
+      const file = await createFile({ title, content, portalAddress });
 
       console.log('\nDdoc created successfully!\n');
       const table = new Table({

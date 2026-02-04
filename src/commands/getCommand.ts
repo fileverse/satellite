@@ -7,19 +7,24 @@ import {
   columnNames,
   columnWidth,
 } from './utils/util';
+import { getRuntimeConfig } from '../config';
+import { ApiKeysModel } from '../infra/database/models';
 
 export const getCommand = new Command()
   .name('get')
   .description('Get a ddoc by its ID')
   .argument('<ddocId>', 'The ddoc ID to retrieve')
-  .option('-p, --portalAddress <portalAddress>', 'Portal address')
-  .action(async (ddocId: string, options: { portalAddress?: string }) => {
-    if (!options.portalAddress) {
-      throw new Error('Portal address is required');
-    }
+  .action(async (ddocId: string) => {
+
 
     try {
-      const file = getFile(ddocId, options.portalAddress);
+
+      const runtimConfig = getRuntimeConfig();
+      const apiKey = runtimConfig.API_KEY;
+      if (!apiKey) throw new Error('API key is required');
+      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+      if (!portalAddress) throw new Error('Portal address is required');
+      const file = getFile(ddocId, portalAddress);
       if (!file) {
         console.error(`Ddoc with ID "${ddocId}" not found.`);
         return;

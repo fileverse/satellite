@@ -1,23 +1,26 @@
 import { Command } from 'commander';
 import { getFile } from '../domain/file';
+import { getRuntimeConfig } from '../config';
+import { ApiKeysModel } from '../infra/database/models';
 
 export const viewCommand = new Command()
   .name('view')
   .description('View content preview of a ddoc')
   .argument('<ddocId>', 'The ddoc ID to view')
-  .option('-p, --portalAddress <portalAddress>', 'Portal address')
   .option(
     '-n, --lines <number>',
     'Number of lines to preview (default: 10)',
     '10'
   )
-  .action(async (ddocId: string, options: { lines?: string, portalAddress?: string }) => {
+  .action(async (ddocId: string, options: { lines?: string, }) => {
     try {
-      if (!options.portalAddress) {
-        throw new Error('Portal address is required');
-      }
+      const runtimConfig = getRuntimeConfig();
+      const apiKey = runtimConfig.API_KEY;
+      if (!apiKey) throw new Error('API key is required');
+      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+      if (!portalAddress) throw new Error('Portal address is required');
 
-      const file = getFile(ddocId, options.portalAddress);
+      const file = getFile(ddocId, portalAddress);
       if (!file) {
         console.error(`Ddoc with ID "${ddocId}" not found.`);
         return;
