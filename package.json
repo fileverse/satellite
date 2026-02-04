@@ -4,6 +4,11 @@
   "description": "Satellite",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./server": "./dist/index.js",
+    "./worker": "./dist/worker.js"
+  },
   "bin": {
     "my-satellite": "./dist/cli/index.js",
     "ddctl": "./dist/commands/index.js"
