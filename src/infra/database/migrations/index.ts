@@ -1,4 +1,4 @@
-import db from '../index';
+import getDb from '../index';
 import { logger } from '../../';
 
 interface MigrationFile {
@@ -115,6 +115,8 @@ const migrations: MigrationFile[] = [
 ];
 
 export function runMigrations(): void {
+  const db = getDb();
+  
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       timestamp TEXT PRIMARY KEY,
@@ -160,6 +162,8 @@ export function rollbackMigrations(count: number = 1): void {
   if (nodeEnv === 'production') {
     throw new Error('Migration rollback is not allowed in production environment');
   }
+
+  const db = getDb();
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (

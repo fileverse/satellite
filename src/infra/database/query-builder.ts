@@ -2,16 +2,18 @@ import { databaseConnectionManager } from './connection';
 import type { QueryOptions } from './types';
 import { DEFAULT_LIST_LIMIT } from '../../domain/file/constants';
 
-const db = databaseConnectionManager.getConnection();
+function getDb() {
+  return databaseConnectionManager.getConnection();
+}
 
 export class QueryBuilder {
   static select<T = any>(sql: string, params: any[] = []): T[] {
-    const stmt = db.prepare(sql);
+    const stmt = getDb().prepare(sql);
     return stmt.all(params) as T[];
   }
 
   static selectOne<T = any>(sql: string, params: any[] = []): T | undefined {
-    const stmt = db.prepare(sql);
+    const stmt = getDb().prepare(sql);
     return stmt.get(params) as T | undefined;
   }
 
@@ -22,7 +24,7 @@ export class QueryBuilder {
     changes: number;
     lastInsertRowid: number | bigint;
   } {
-    const stmt = db.prepare(sql);
+    const stmt = getDb().prepare(sql);
     const result = stmt.run(params);
     return {
       changes: result.changes,
@@ -31,7 +33,7 @@ export class QueryBuilder {
   }
 
   static transaction<T>(callback: () => T): T {
-    return db.transaction(callback)();
+    return getDb().transaction(callback)();
   }
 
   static paginate(sql: string, options: QueryOptions = {}): string {

@@ -4,9 +4,18 @@ import fs from 'fs';
 import os from 'os';
 import { STATIC_CONFIG } from '../cli/constants.js';
 
-const envPath = path.join(os.homedir(), '.satellite', '.env');
+const projectEnvPath = path.join(process.cwd(), 'config', '.env');
+const userEnvPath = path.join(os.homedir(), '.satellite', '.env');
+
+function getEnvPath(): string {
+  if (fs.existsSync(projectEnvPath)) {
+    return projectEnvPath;
+  }
+  return userEnvPath;
+}
 
 export function loadConfig(override = true): void {
+  const envPath = getEnvPath();
   dotenv.config({ path: envPath, override });
 }
 
@@ -29,7 +38,7 @@ export function validateDbPath(): void {
   if (!dbPath) {
     console.error('Error: DB_PATH environment variable is required');
     console.error(
-      'Please set DB_PATH in your .env file (~/.satellite/.env) or environment variables'
+      'Please set DB_PATH in your .env file (config/.env or ~/.satellite/.env) or run the CLI first'
     );
     process.exit(1);
   }
