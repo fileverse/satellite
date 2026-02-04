@@ -1,10 +1,8 @@
 # Ddocs API Reference
 
-The Ddocs API manages decentralized documents (ddocs) — files stored and synced.
+In this section we you find all the API endpoints exposed by the satellite
 
-Base path: `/api/ddocs`
-
----
+In this section you will find all the API endpoints of the Satellite package and the details around them.
 
 ## Table of Contents
 
@@ -19,8 +17,6 @@ Base path: `/api/ddocs`
 - [Data Models](#data-models)
 - [Current scope and roadmap](#current-scope-and-roadmap)
 
----
-
 ## Overview
 
 | Method   | Path        | Description        |
@@ -32,8 +28,6 @@ Base path: `/api/ddocs`
 | `DELETE` | `/api/ddocs/:ddocId` | Delete a document |
 
 Create and update support both JSON and multipart/form-data (file upload). File uploads are limited to 10 MB.
-
----
 
 ## Request & Response Format
 
@@ -64,8 +58,6 @@ Errors return:
   "error": "Optional technical detail"
 }
 ```
-
----
 
 ## Endpoints
 
@@ -127,7 +119,6 @@ Errors
 |--------|-----------|
 | 400    | Missing `title` or empty content |
 
----
 
 ### List documents
 
@@ -172,12 +163,6 @@ Response: `200 OK`
 }
 ```
 
-Errors
-
-| Status | Condition |
-|--------|-----------|
----
-
 ### Get document
 
 Returns a single document by its public `ddocId`.
@@ -220,8 +205,6 @@ Errors
 |--------|-----------|
 | 400    | Missing `ddocId` |
 | 404    | No document found for the given `ddocId` |
-
----
 
 ### Update document
 
@@ -286,8 +269,6 @@ Errors
 | 400    | Empty `title` when provided |
 | 404    | No document found for the given `ddocId` |
 
----
-
 ### Delete document
 
 Soft-deletes a document. The document is removed from normal listing and get; a background job is queued for on-chain sync.
@@ -321,7 +302,6 @@ Errors
 | 400    | Missing `ddocId` |
 | 404    | No document found for the given `ddocId` |
 
----
 
 ## Data Models
 
@@ -348,7 +328,6 @@ Errors
 | `total` | number   | Total count of documents. |
 | `hasNext` | boolean | Whether more pages exist after this one. |
 
----
 
 ## Current scope and roadmap
 
@@ -392,6 +371,4 @@ These are not promises, but directions that align with feedback and could be sup
 
 Keeping these three buckets clear (supported now / not yet / future) should help you quickly see where you can incorporate Satellite and where to look for or build alternatives.
 
----
 
-*Generated from the Satellite ddocs API. Base URL may vary by deployment; replace `localhost:3000` with your API host.*
