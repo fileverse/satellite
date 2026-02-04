@@ -1,21 +1,16 @@
 import { publishFile } from '../../domain/portal';
-import { EventsModel, FilesModel } from '../database/models';
+import { FilesModel } from '../database/models';
 import type { Event } from '../database/models';
 import type { UpdateFilePayload } from '../database/models/files/types';
 import { logger } from '../index';
 
-/**
- * Fetches the next processing event from the events table (sorted by timestamp ascending),
- * processes it (publishes the file), then marks it as processed.
- * Does nothing if there is no processing event.
- */
-export async function processNextEvent(): Promise<void> {
-  const event = EventsModel.findNextPending();
-  if (!event) {
-    return;
-  }
+export interface ProcessResult {
+  success: boolean;
+  error?: string;
+}
 
-  const { _id, fileId, type } = event;
+export async function processEvent(event: Event): Promise<ProcessResult> {
+  const { fileId, type } = event;
 
   try {
     switch (type) {
@@ -31,10 +26,11 @@ export async function processNextEvent(): Promise<void> {
       default:
         throw new Error(`Unknown event type: ${type}`);
     }
-    EventsModel.markProcessed(_id);
+    return { success: true };
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
     logger.error(`Error processing ${type} event for file ${fileId}:`, error);
-    throw error;
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -108,7 +104,6 @@ async function processDeleteEvent(event: Event): Promise<void> {
     return;
   }
 
-  // publishFile does not support 'delete' yet; mark as synced so event is consumed
   FilesModel.update(fileId, { syncStatus: 'synced' }, file.portalAddress);
   logger.info(`File ${fileId} delete event processed (syncStatus set to synced)`);
 }

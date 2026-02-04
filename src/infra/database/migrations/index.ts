@@ -130,6 +130,70 @@ const migrations: MigrationFile[] = [
       DROP TABLE IF EXISTS events;
     `,
   },
+  {
+    timestamp: '20260205100000',
+    name: 'add_events_retry_and_backoff',
+    up: `
+      -- SQLite doesn't allow modifying CHECK constraints, so we recreate the table
+      DROP INDEX IF EXISTS idx_events_status_timestamp;
+
+      CREATE TABLE events_new (
+        _id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
+        timestamp INTEGER NOT NULL,
+        fileId TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'processed', 'failed')),
+        retryCount INTEGER NOT NULL DEFAULT 0,
+        lastError TEXT,
+        lockedAt INTEGER,
+        nextRetryAt INTEGER
+      );
+
+      INSERT INTO events_new (_id, type, timestamp, fileId, status, retryCount, lastError, lockedAt, nextRetryAt)
+      SELECT _id, type, timestamp, fileId, 
+        CASE WHEN status = 'processing' THEN 'pending' ELSE status END,
+        0, NULL, NULL, NULL
+      FROM events;
+
+      DROP TABLE events;
+      ALTER TABLE events_new RENAME TO events;
+
+      CREATE INDEX IF NOT EXISTS idx_events_pending_eligible 
+        ON events (status, nextRetryAt, timestamp) 
+        WHERE status = 'pending';
+
+      CREATE INDEX IF NOT EXISTS idx_events_file_pending_ts 
+        ON events (fileId, status, timestamp) 
+        WHERE status = 'pending';
+
+      CREATE INDEX IF NOT EXISTS idx_events_processing_locked 
+        ON events (status, lockedAt) 
+        WHERE status = 'processing';
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_events_processing_locked;
+      DROP INDEX IF EXISTS idx_events_file_pending_ts;
+      DROP INDEX IF EXISTS idx_events_pending_eligible;
+
+      CREATE TABLE events_old (
+        _id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
+        timestamp INTEGER NOT NULL,
+        fileId TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'processed'))
+      );
+
+      INSERT INTO events_old (_id, type, timestamp, fileId, status)
+      SELECT _id, type, timestamp, fileId,
+        CASE WHEN status = 'pending' THEN 'processing' ELSE 'processed' END
+      FROM events WHERE status IN ('pending', 'processing', 'processed');
+
+      DROP TABLE events;
+      ALTER TABLE events_old RENAME TO events;
+
+      CREATE INDEX IF NOT EXISTS idx_events_status_timestamp ON events(status, timestamp);
+    `,
+  },
 ];
 
 export function runMigrations(): void {

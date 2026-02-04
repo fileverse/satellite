@@ -1,3 +1,7 @@
-import { closeWorker, isWorkerActive, startWorker } from './worker';
-
-export { closeWorker, isWorkerActive, startWorker };
+export {
+  closeWorker,
+  isWorkerActive,
+  startWorker,
+  getWorkerActiveCount,
+} from './worker';
+export { notifyNewEvent } from './workerSignal';

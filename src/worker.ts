@@ -6,11 +6,8 @@ import { closeWorker, isWorkerActive, startWorker } from './infra/worker';
 validateDbPath();
 runMigrations();
 
-const pollIntervalMs = parseInt(
-  process.env.WORKER_POLL_INTERVAL_MS || '2000',
-  10
-);
-startWorker(pollIntervalMs);
+const concurrency = parseInt(process.env.WORKER_CONCURRENCY || '5', 10);
+startWorker(concurrency);
 
 setTimeout(() => {
   if (isWorkerActive()) {
