@@ -9,6 +9,7 @@ import {
 } from './process-manager.js';
 import { promptForConfig, needsPrompting } from './prompts.js';
 import { loadConfig } from '../config/index.js';
+import { initializeWithData } from '../init/index.js';
 
 const program = new Command()
   .name('satellite')
@@ -52,7 +53,17 @@ const program = new Command()
         loadConfig();
         console.log(`✓ Configuration saved to ${envPath}\n`);
 
-        await initializeDatabase(data);
+        const { runMigrations } = await import('../infra/database/migrations/index.js');
+        runMigrations();
+        console.log('✓ Database migrations complete');
+
+        const result = initializeWithData(data);
+        console.log('✓ Portal saved');
+        if (result.apiKeySaved) {
+          console.log('✓ API key saved');
+        } else {
+          console.log('✓ API key already exists');
+        }
       } else if (!configExists()) {
         console.error(
           'Error: --skip-fetch requires existing configuration. Run without --skip-fetch first.'
@@ -60,7 +71,7 @@ const program = new Command()
         process.exit(1);
       }
 
-      console.log('Starting services...');
+      console.log('\nStarting services...');
       setupShutdownHandlers();
       startAll();
 
@@ -82,41 +93,5 @@ Press Ctrl+C to stop.
       process.exit(1);
     }
   });
-
-async function initializeDatabase(data: Awaited<ReturnType<typeof fetchApiKeyData>>) {
-  const { runMigrations } = await import('../infra/database/migrations/index.js');
-  runMigrations();
-  console.log('✓ Database migrations complete');
-
-  const { savePortal } = await import('../domain/portal/savePortal.js');
-  const { addApiKey } = await import('../domain/portal/saveApiKey.js');
-  const { ApiKeysModel } = await import('../infra/database/models/apikeys.model.js');
-
-  const { keyMaterial, appMaterial } = data;
-
-  const portalData = {
-    portalAddress: appMaterial.portalAddress,
-    portalSeed: appMaterial.portalSeed,
-    ownerAddress: appMaterial.ownerAddress,
-  };
-
-  const apiKeyData = {
-    apiKeySeed: keyMaterial.apiKeySeed,
-    name: keyMaterial.name,
-    collaboratorAddress: keyMaterial.collaboratorAddress,
-    portalAddress: appMaterial.portalAddress,
-  }
-
-  savePortal(portalData);
-  console.log('✓ Portal saved');
-
-  const existingApiKey = ApiKeysModel.findByPortalAddress(apiKeyData.portalAddress);
-  if (!existingApiKey) {
-    addApiKey(apiKeyData);
-    console.log('✓ API key saved');
-  } else {
-    console.log('✓ API key already exists');
-  }
-}
 
 program.parse();

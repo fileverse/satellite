@@ -3,42 +3,52 @@ import { logger } from './infra';
 import { runMigrations } from './infra/database/migrations';
 import { closeWorker } from './infra/worker';
 import { closeDatabase } from './infra/database';
+import { initializeFromApiKey } from './init';
 import app from './app';
 import localtunnel from 'localtunnel';
 
-validateDbPath();
-runMigrations();
-
 const port = parseInt(config.PORT || '8001', 10);
-const ip = config.IP || '127.0.0.1';
+const ip = config.IP || '0.0.0.0';
 
 let tunnel: Awaited<ReturnType<typeof localtunnel>> | undefined;
+let server: ReturnType<typeof app.listen>;
 
-const server = app.listen(port, ip, async () => {
-  logger.info(`🚀 Server ready at http://${ip}:${port}`);
-  if (process.env.NODE_ENV === 'production') return;
-  // try {
-  //   tunnel = await localtunnel({
-  //     port,
-  //     host: process.env.TUNNEL_HOST || undefined,
-  //     subdomain: process.env.TUNNEL_SUBDOMAIN || undefined,
-  //   });
-  //   logger.info(`Tunnel ready at ${tunnel.url}`);
-  // } catch (error) {
-  //   logger.error('Failed to start tunnel:', error);
-  // }
+async function startServer() {
+  validateDbPath();
+  runMigrations();
+
+  const apiKey = config.API_KEY;
+  if (!apiKey) {
+    logger.error('API_KEY environment variable is not set');
+    process.exit(1);
+  }
+
+  logger.info('Initializing server with API key...');
+  await initializeFromApiKey(apiKey);
+  logger.info('Server initialization complete');
+
+  server = app.listen(port, ip, async () => {
+    logger.info(`🚀 Server ready at http://${ip}:${port}`);
+  });
+}
+
+startServer().catch((error) => {
+  logger.error('Failed to start server:', error);
+  process.exit(1);
 });
 
 const shutdown = async () => {
   logger.info('Shutting down gracefully...');
 
-  try {
-    await new Promise<void>((resolve, reject) => {
-      server.close((error?: Error) => (error ? reject(error) : resolve()));
-    });
-    logger.info('HTTP server closed');
-  } catch (error) {
-    logger.error('Error closing HTTP server:', error);
+  if (server) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error?: Error) => (error ? reject(error) : resolve()));
+      });
+      logger.info('HTTP server closed');
+    } catch (error) {
+      logger.error('Error closing HTTP server:', error);
+    }
   }
 
   try {
