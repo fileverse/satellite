@@ -337,19 +337,19 @@ This section helps you see where Satellite fits in your workflow — what this p
 
 | What you get | How it helps |
 | ------------ | ------------ |
-| REST API for documents | Any LLM, agent, or tool (Claude Code, Cursor, ChatGPT, GLM, custom scripts, MCP servers you build, etc.) can create, list, get, update, and delete documents over HTTP. No vendor lock-in. |
-| Persistent docs | Documents are stored and listed. Agents can treat them as a stable source of truth — e.g. "go-to" markdown files that persist across sessions so the LLM knows what exists when it comes back. |
-| Self-hosted | You run the Satellite server yourself. Your docs and traffic stay on your infrastructure; you control privacy and data. |
-| API-first | No built-in UI. You (or the community) can build editors, MCP servers, CLIs, or integrations on top of this API. "Having access via API" is the primary interface. |
-| Title + content (e.g. markdown) | Each doc has a title and body. Ideal for markdown as agent context, notes, or verifiable reference — with on-chain sync planned for later. |
+| REST API for documents | A full REST API lets any LLM, agent, or tool (Claude Code, Cursor, ChatGPT, custom scripts, MCP servers) create, list, get, update, and delete documents over HTTP—with no vendor lock-in. |
+| Persistent docs | Documents are stored on-chain. Agents can treat them as a stable source of truth |
+| Self-hosted | You run the Satellite server. Your docs and traffic stay on your infrastructure; you control privacy and data. |
+| API-first | There is no built-in UI. You or the community build editors, MCP servers, CLIs, or integrations on top of this API; the primary interface is the API itself. |
+| Title + content (e.g. markdown) | Each document has a title and body. Suited for markdown as agent context, notes, or verifiable reference; on-chain sync is planned for later. |
 
 ### What this API does not provide (yet)
 
 | Expectation | Status |
 | ----------- | ------ |
-| user, agent multiplayer in one UI (live presence, typing suggestions) | User can edit files using the edit CLI command which opens the file in `vi` editor, but there are no plans as of now for supporting user + agent inside one ready-made markdown editor UI. |
-| MCP server or official CLI for Cursor/agents | We have thought about this and might soon ship this capability |
-| Zero config | <TODO> |
+| Built-in collaborative editor (user and agent in one UI, live presence, typing) | Not included. Editing is supported via the CLI (e.g. open in your editor); a ready-made shared editor is not on the current roadmap. |
+| MCP server or official CLI for Cursor/agents | Under consideration; may be offered in a future release. |
+| Zero config | Some setup is required (e.g. running the server and configuring the environment). Zero-config usage is not supported today. |
 
 ### Future possibilities
 

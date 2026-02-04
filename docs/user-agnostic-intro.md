@@ -7,7 +7,7 @@ Welcome to the Satellite documentation. This page will give you a very brief ide
 The details can wait. What matters first is whether this is something you actually need. 
 The easiest way to figure that out is through a few situations you might recognize.
 
-- You love to write and have a habit of taking notes, putting down thoughts, errands, audacious yealy goals and what not, in simple text files on your computer. But you've always struggled when you had to choose the right platform to store these files persistently and securely. A platform that values your privacy, not by choice, but by design. 
+- You love to write and have a habit of taking notes, putting down thoughts, errands, audacious yealy goals and what not, in simple text files on your computer. But you've always struggled when you had to choose the right platform to store these files persistently and securely. A platform that values your privacy — not by choice, but by design. 
 
 - You were recently part of an incident-resolution huddle on slack where a lot of context and ideas was shared through a flurry of messages across multiple threads. Later it struck you that all those messages and insights will be lost unless an RCA is conducted and everything is documented. 
 
