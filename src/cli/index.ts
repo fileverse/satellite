@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { fetchApiKeyData } from './fetch-api-key.js';
-import { validateRedisConnection } from './validate-redis.js';
 import { scaffoldConfig, configExists } from './scaffold-config.js';
 import {
   startAll,
@@ -19,7 +18,6 @@ const program = new Command()
   .option('--pimlicoApiKey <key>', 'Pimlico API key for account abstraction')
   .option('--rpcUrl <url>', 'RPC URL for blockchain connection')
   .option('--port <port>', 'Port to run the server on', '8001')
-  .option('--redis <uri>', 'Redis URI', 'redis://localhost:6379')
   .option('--db <path>', 'Database path')
   .option('--skip-fetch', 'Skip fetching API key data (use existing config)')
   .action(async (options) => {
@@ -38,10 +36,6 @@ const program = new Command()
         console.log('');
       }
 
-      console.log('Validating Redis connection...');
-      await validateRedisConnection(options.redis);
-      console.log('✓ Redis connection validated\n');
-
       if (!options.skipFetch) {
         console.log('Fetching API key data from server...');
         const data = await fetchApiKeyData(options.apiKey);
@@ -50,7 +44,6 @@ const program = new Command()
         console.log('Setting up configuration...');
         const envPath = scaffoldConfig({
           dbPath: options.db,
-          redisUri: options.redis,
           port: options.port,
           apiKey: options.apiKey,
           pimlicoApiKey: options.pimlicoApiKey,

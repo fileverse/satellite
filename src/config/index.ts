@@ -27,7 +27,6 @@ export function getRuntimeConfig() {
     get PIMLICO_API_KEY() { return process.env.PIMLICO_API_KEY; },
     get RPC_URL() { return process.env.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL; },
     get DB_PATH() { return process.env.DB_PATH; },
-    get REDIS_URI() { return process.env.REDIS_URL || process.env.REDIS_URI || STATIC_CONFIG.DEFAULT_REDIS_URI; },
     get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
     get NODE_ENV() { return process.env.NODE_ENV || 'production'; },
   };
@@ -60,7 +59,6 @@ const config: Record<string, string | undefined> = {
   get PIMLICO_API_KEY() { return process.env.PIMLICO_API_KEY; },
   get RPC_URL() { return process.env.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL; },
   get DB_PATH() { return process.env.DB_PATH; },
-  get REDIS_URI() { return process.env.REDIS_URI || STATIC_CONFIG.DEFAULT_REDIS_URI; },
   get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
   get NODE_ENV() { return process.env.NODE_ENV || 'production'; },
   get IP() { return process.env.IP || '0.0.0.0'; },

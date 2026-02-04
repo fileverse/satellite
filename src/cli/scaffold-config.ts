@@ -6,7 +6,6 @@ import { STATIC_CONFIG } from './constants';
 export interface ConfigOptions {
   apiKey?: string;
   dbPath?: string;
-  redisUri?: string;
   port?: string;
   rpcUrl?: string;
   pimlicoApiKey?: string;
@@ -42,7 +41,6 @@ export function scaffoldConfig(options: ConfigOptions = {}): string {
 PIMLICO_API_KEY=${options.pimlicoApiKey}
 RPC_URL=${options.rpcUrl || STATIC_CONFIG.DEFAULT_RPC_URL}
 DB_PATH=${dbPath}
-REDIS_URI=${options.redisUri || STATIC_CONFIG.DEFAULT_REDIS_URI}
 PORT=${options.port || STATIC_CONFIG.DEFAULT_PORT}
 `;
 

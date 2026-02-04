@@ -3,7 +3,6 @@ export const STATIC_CONFIG = {
     SERVER_DID: 'did:key:z6MkrrWQ11DoCzkLzoDuDnCszbwZZra3PmF62joDeMbpgCFD',
     NETWORK_NAME: 'sepolia',
     DEFAULT_PORT: '8001',
-    DEFAULT_REDIS_URI: 'redis://localhost:6379',
     DEFAULT_RPC_URL: 'https://rpc.sepolia.org',
     SERVICE_NAME: 'satellite',
     LOG_LEVEL: 'info',
