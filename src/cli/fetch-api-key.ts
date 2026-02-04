@@ -1,6 +1,8 @@
 import axios from 'axios';
-import { fromUint8Array, toUint8Array } from 'js-base64';
+import { toUint8Array } from 'js-base64';
 import { sha256 } from 'viem';
+import { BASE_CONFIG } from './constants';
+
 
 export interface PortalData {
   portalAddress: string;
@@ -40,18 +42,18 @@ export interface ApiKeyMaterialResponse {
   id: string;
 }
 
-const DEFAULT_API_URL = 'https://sepolia-dsheet-storage-fc05499ecd15.herokuapp.com/api-access';
+
 
 const bytestToJSON = (bytes: Uint8Array) => {
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyMaterialResponse> {
-  const apiUrl = process.env.SATELLITE_API_URL || DEFAULT_API_URL;
+
 
   try {
     const keyHash = sha256(toUint8Array(apiKey))
-    const fullUrl = apiUrl + `/${keyHash}`
+    const fullUrl = BASE_CONFIG.API_URL + 'api-access' + `/${keyHash}`
     const response = await axios.get<ApiKeyResponse>(fullUrl);
 
 
@@ -71,7 +73,7 @@ export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyMaterialRes
         throw new Error('API key not found');
       }
       if (error.code === 'ECONNREFUSED') {
-        throw new Error(`Cannot connect to server at ${apiUrl}`);
+        throw new Error(`Cannot connect to server at ${BASE_CONFIG.API_URL}`);
       }
       throw new Error(
         `Server error: ${error.response?.data?.message || error.message}`

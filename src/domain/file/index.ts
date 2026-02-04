@@ -57,7 +57,7 @@ async function createFile(input: CreateFileInput): Promise<File> {
     type: 'create',
     metadata: {
       localVersion: file.localVersion,
-    },
+    }
   };
 
   await fileEventsQueue.addJob(createFileEvent);

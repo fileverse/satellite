@@ -1,4 +1,4 @@
-import { config } from './config';
+import { config, validateDbPath } from './config';
 import { logger } from './infra';
 import { runMigrations } from './infra/database/migrations';
 import { closeQueue } from './infra/queue';
@@ -6,6 +6,7 @@ import { closeDatabase } from './infra/database';
 import app from './app';
 import localtunnel from 'localtunnel';
 
+validateDbPath();
 runMigrations();
 
 const port = parseInt(config.PORT || '8001', 10);

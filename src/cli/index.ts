@@ -9,6 +9,7 @@ import {
   waitForProcesses,
 } from './process-manager.js';
 import { promptForConfig, needsPrompting } from './prompts.js';
+import { loadConfig } from '../config/index.js';
 
 const program = new Command()
   .name('satellite')
@@ -55,6 +56,7 @@ const program = new Command()
           pimlicoApiKey: options.pimlicoApiKey,
           rpcUrl: options.rpcUrl,
         });
+        loadConfig();
         console.log(`✓ Configuration saved to ${envPath}\n`);
 
         await initializeDatabase(data);

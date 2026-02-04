@@ -1,32 +1,60 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'node:url';
+import os from 'os';
+import { STATIC_CONFIG } from '../cli/constants.js';
 
-// Load .env from config/ directory (relative to project root)
-// Works in both dev (src/config) and prod (dist/config)
-const envPath = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../config/.env'
-);
-dotenv.config({ path: envPath });
+const envPath = path.join(os.homedir(), '.satellite', '.env');
 
-const config = process.env;
-
-config.SERVICE_NAME = config.SERVICE_NAME || 'satellite';
-
-if (!config.DB_PATH) {
-  console.error('Error: DB_PATH environment variable is required');
-  console.error(
-    'Please set DB_PATH in your .env file (config/.env) or environment variables'
-  );
-  process.exit(1);
+export function loadConfig(override = true): void {
+  dotenv.config({ path: envPath, override });
 }
 
-const dbPath = config.DB_PATH.trim();
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+loadConfig(false);
+
+export function getRuntimeConfig() {
+  return {
+    get API_KEY() { return process.env.API_KEY; },
+    get PIMLICO_API_KEY() { return process.env.PIMLICO_API_KEY; },
+    get RPC_URL() { return process.env.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL; },
+    get DB_PATH() { return process.env.DB_PATH; },
+    get REDIS_URI() { return process.env.REDIS_URI || STATIC_CONFIG.DEFAULT_REDIS_URI; },
+    get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
+    get NODE_ENV() { return process.env.NODE_ENV || 'production'; },
+  };
 }
+
+export function validateDbPath(): void {
+  const dbPath = process.env.DB_PATH;
+  if (!dbPath) {
+    console.error('Error: DB_PATH environment variable is required');
+    console.error(
+      'Please set DB_PATH in your .env file (~/.satellite/.env) or environment variables'
+    );
+    process.exit(1);
+  }
+
+  const dbDir = path.dirname(dbPath.trim());
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+}
+
+const config: Record<string, string | undefined> = {
+  ...STATIC_CONFIG,
+  get SERVICE_NAME() { return STATIC_CONFIG.SERVICE_NAME; },
+  get LOG_LEVEL() { return STATIC_CONFIG.LOG_LEVEL; },
+  get NETWORK_NAME() { return STATIC_CONFIG.NETWORK_NAME; },
+  get UPLOAD_SERVER_URL() { return STATIC_CONFIG.API_URL; },
+  get UPLOAD_SERVER_DID() { return STATIC_CONFIG.SERVER_DID; },
+  get API_KEY() { return process.env.API_KEY; },
+  get PIMLICO_API_KEY() { return process.env.PIMLICO_API_KEY; },
+  get RPC_URL() { return process.env.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL; },
+  get DB_PATH() { return process.env.DB_PATH; },
+  get REDIS_URI() { return process.env.REDIS_URI || STATIC_CONFIG.DEFAULT_REDIS_URI; },
+  get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
+  get NODE_ENV() { return process.env.NODE_ENV || 'production'; },
+  get IP() { return process.env.IP || '127.0.0.1'; },
+};
 
 export { config };

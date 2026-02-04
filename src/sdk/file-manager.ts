@@ -13,7 +13,7 @@ import {
 } from './file-utils';
 import { AgentClient } from './smart-agent';
 import { generateAESKey, exportAESKey } from "@fileverse/crypto/webcrypto"
-import { config } from '../config';
+import { STATIC_CONFIG } from '../cli/constants';
 import { ADDED_FILE_EVENT_ABI, EDITED_FILE_EVENT_ABI } from '../constants';
 import { markdownToYjs } from '@fileverse/content-processor'
 import { logger } from '../infra';
@@ -42,7 +42,7 @@ export class FileManager {
 
     private async getAuthParams(): Promise<UploadFileAuthParams> {
         return {
-            token: await this.keyStore.getAuthToken(config.UPLOAD_SERVER_DID as string),
+            token: await this.keyStore.getAuthToken(STATIC_CONFIG.SERVER_DID),
             contractAddress: this.keyStore.getPortalAddress(),
             invoker: this.agentClient.getAgentAddress(),
         };

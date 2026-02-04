@@ -1,7 +1,6 @@
 import prompts from 'prompts';
-import { config } from '../config';
-
-const DEFAULT_RPC_URL = config.RPC_URL as string || 'https://rpc.sepolia.org';
+import { STATIC_CONFIG } from './constants';
+import { getRuntimeConfig } from '../config/index.js';
 
 export interface PromptedConfig {
   apiKey: string;
@@ -14,6 +13,7 @@ export async function promptForConfig(existingOptions: {
   pimlicoApiKey?: string;
   rpcUrl?: string;
 } = {}): Promise<PromptedConfig> {
+  const savedConfig = getRuntimeConfig();
   const questions: prompts.PromptObject[] = [];
 
   if (!existingOptions.apiKey) {
@@ -22,6 +22,7 @@ export async function promptForConfig(existingOptions: {
       name: 'apiKey',
       message: 'Enter your API Key:',
       validate: (value: string) => value.length > 0 || 'API Key is required',
+      initial: savedConfig.API_KEY || '',
     });
   }
 
@@ -31,6 +32,7 @@ export async function promptForConfig(existingOptions: {
       name: 'pimlicoApiKey',
       message: 'Enter your Pimlico API Key:',
       validate: (value: string) => value.length > 0 || 'Pimlico API Key is required',
+      initial: savedConfig.PIMLICO_API_KEY || '',
     });
   }
 
@@ -39,7 +41,7 @@ export async function promptForConfig(existingOptions: {
       type: 'text',
       name: 'rpcUrl',
       message: 'Enter RPC URL (press Enter for default):',
-      initial: DEFAULT_RPC_URL,
+      initial: savedConfig.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL,
     });
   }
 
@@ -47,7 +49,7 @@ export async function promptForConfig(existingOptions: {
     return {
       apiKey: existingOptions.apiKey!,
       pimlicoApiKey: existingOptions.pimlicoApiKey!,
-      rpcUrl: existingOptions.rpcUrl || DEFAULT_RPC_URL,
+      rpcUrl: existingOptions.rpcUrl || STATIC_CONFIG.DEFAULT_RPC_URL,
     };
   }
 
@@ -61,7 +63,7 @@ export async function promptForConfig(existingOptions: {
   return {
     apiKey: existingOptions.apiKey || response.apiKey,
     pimlicoApiKey: existingOptions.pimlicoApiKey || response.pimlicoApiKey,
-    rpcUrl: existingOptions.rpcUrl || response.rpcUrl || DEFAULT_RPC_URL,
+    rpcUrl: existingOptions.rpcUrl || response.rpcUrl || STATIC_CONFIG.DEFAULT_RPC_URL,
   };
 }
 

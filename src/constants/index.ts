@@ -1,10 +1,14 @@
-import { config } from "../config";
+import { STATIC_CONFIG } from '../cli/constants';
+import { getRuntimeConfig } from '../config';
 import { gnosis, sepolia } from 'viem/chains';
 
-export const RPC_URL = config.RPC_URL as string;
-export const NETWORK_NAME = config.NETWORK_NAME as string;
-export const UPLOAD_SERVER_URL = config.UPLOAD_SERVER_URL as string;
-const PIMLICO_API_KEY = config.PIMLICO_API_KEY as string;
+export const NETWORK_NAME = STATIC_CONFIG.NETWORK_NAME;
+export const UPLOAD_SERVER_URL = STATIC_CONFIG.API_URL;
+
+export const getRpcUrl = () => getRuntimeConfig().RPC_URL;
+export const getPimlicoApiKey = () => getRuntimeConfig().PIMLICO_API_KEY;
+export const getPimlicoUrl = () => 
+    `https://api.pimlico.io/v2/${NETWORK_NAME}/rpc?apikey=${getPimlicoApiKey()}`;
 
 const CHAIN_MAP = {
     gnosis: gnosis,
@@ -12,8 +16,6 @@ const CHAIN_MAP = {
 } as const;
 
 export const CHAIN = CHAIN_MAP[NETWORK_NAME as keyof typeof CHAIN_MAP];
-
-export const PIMLICO_URL = `https://api.pimlico.io/v2/${NETWORK_NAME}/rpc?apikey=${PIMLICO_API_KEY}` as const;
 
 
 export const ADD_FILE_ABI = [{

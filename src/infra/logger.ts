@@ -1,9 +1,9 @@
 import pino, { Logger as PinoLogger, Level } from 'pino';
-import { config } from '../config';
+import { STATIC_CONFIG } from '../cli/constants';
 
 const pinoInstance = pino({
-  name: config.SERVICE_NAME as string,
-  level: (config.LOG_LEVEL as string) || 'info',
+  name: STATIC_CONFIG.SERVICE_NAME,
+  level: STATIC_CONFIG.LOG_LEVEL,
   formatters: {
     bindings: (bindings) => ({ name: bindings.name }),
     level: (label) => ({ level: label }),

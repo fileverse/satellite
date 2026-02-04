@@ -256,7 +256,7 @@ export const uploadFileToIPFS = async (
     body.append('appFileId', appFileId);
 
     body.append('sourceApp', 'ddoc');
-    const uploadEndpoint = UPLOAD_SERVER_URL + '/upload';
+    const uploadEndpoint = UPLOAD_SERVER_URL + 'upload';
     const response = await axios.post(
         uploadEndpoint,
         body,

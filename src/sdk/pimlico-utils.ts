@@ -16,7 +16,7 @@ import { createPimlicoClient } from 'permissionless/clients/pimlico';
 import { createSmartAccountClient, type SmartAccountClient } from 'permissionless';
 import { toSafeSmartAccount } from 'permissionless/accounts';
 import { entryPoint07Address, type SmartAccount } from 'viem/account-abstraction';
-import { CHAIN, PIMLICO_URL, RPC_URL } from '../constants';
+import { CHAIN, getRpcUrl, getPimlicoUrl } from '../constants';
 import { generatePrivateKey } from "viem/accounts"
 
 export type TSmartAccountClient = SmartAccountClient<
@@ -27,25 +27,25 @@ export type TSmartAccountClient = SmartAccountClient<
     RpcSchema
 >;
 
-export const publicClient = createPublicClient({
-    transport: http(RPC_URL),
+export const getPublicClient = () => createPublicClient({
+    transport: http(getRpcUrl()),
     chain: CHAIN
-})
+});
 
-export const pimlicoClient = createPimlicoClient({
-    transport: http(PIMLICO_URL),
+export const getPimlicoClient = () => createPimlicoClient({
+    transport: http(getPimlicoUrl()),
     entryPoint: {
         address: entryPoint07Address,
         version: "0.7"
     }
-})
+});
 
 export const signerToSmartAccount = async (
     signer: PrivateKeyAccount,
     smartAccountAddress?: Hex
 ) =>
     await toSafeSmartAccount({
-        client: publicClient,
+        client: getPublicClient(),
         owners: [signer],
         address: smartAccountAddress,
         entryPoint: {
@@ -60,12 +60,13 @@ export const getSmartAccountClient = async (
     smartAccountAddress?: Hex
 ): Promise<TSmartAccountClient> => {
     const smartAccount = await signerToSmartAccount(signer, smartAccountAddress);
+    const pimlicoClient = getPimlicoClient();
 
     return createSmartAccountClient({
         account: smartAccount,
         chain: CHAIN,
         paymaster: pimlicoClient,
-        bundlerTransport: http(PIMLICO_URL),
+        bundlerTransport: http(getPimlicoUrl()),
         userOperation: {
             estimateFeesPerGas: async () =>
                 (await pimlicoClient.getUserOperationGasPrice()).fast,
@@ -84,6 +85,7 @@ export const waitForUserOpReceipt = async (
     hash: Hex,
     timeout = 120000
 ) => {
+    const pimlicoClient = getPimlicoClient();
     const receipt = await pimlicoClient.waitForUserOperationReceipt({
         hash,
         timeout,
