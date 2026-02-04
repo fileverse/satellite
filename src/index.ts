@@ -1,16 +1,14 @@
 import { config, validateDbPath } from './config';
 import { logger } from './infra';
 import { runMigrations } from './infra/database/migrations';
-import { closeWorker } from './infra/worker';
+import { closeWorker, startWorker } from './infra/worker';
 import { closeDatabase } from './infra/database';
 import { initializeFromApiKey } from './init';
 import app from './app';
-import localtunnel from 'localtunnel';
 
 const port = parseInt(config.PORT || '8001', 10);
 const ip = config.IP || '0.0.0.0';
 
-let tunnel: Awaited<ReturnType<typeof localtunnel>> | undefined;
 let server: ReturnType<typeof app.listen>;
 
 async function startServer() {
@@ -26,6 +24,12 @@ async function startServer() {
   logger.info('Initializing server with API key...');
   await initializeFromApiKey(apiKey);
   logger.info('Server initialization complete');
+
+  if (process.env.INLINE_WORKER === 'true') {
+    const pollIntervalMs = parseInt(process.env.WORKER_POLL_INTERVAL_MS || '2000', 10);
+    startWorker(pollIntervalMs);
+    logger.info('Inline worker started');
+  }
 
   server = app.listen(port, ip, async () => {
     logger.info(`🚀 Server ready at http://${ip}:${port}`);
@@ -49,13 +53,6 @@ const shutdown = async () => {
     } catch (error) {
       logger.error('Error closing HTTP server:', error);
     }
-  }
-
-  try {
-    tunnel?.close();
-    logger.info('Tunnel closed');
-  } catch (error) {
-    logger.error('Error closing tunnel:', error);
   }
 
   try {
