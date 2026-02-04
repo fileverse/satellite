@@ -1,7 +1,6 @@
 import { generate } from 'short-uuid';
 
-import { FilesModel, type File } from '../../infra/database/models';
-import { fileEventsQueue, type FileEvent } from '../../infra/queue';
+import { EventsModel, FilesModel, type File } from '../../infra/database/models';
 import { DEFAULT_LIST_LIMIT } from './constants';
 
 import type {
@@ -52,15 +51,7 @@ async function createFile(input: CreateFileInput): Promise<File> {
     portalAddress: input.portalAddress,
   });
 
-  const createFileEvent: FileEvent = {
-    fileId: file._id,
-    type: 'create',
-    metadata: {
-      localVersion: file.localVersion,
-    }
-  };
-
-  await fileEventsQueue.addJob(createFileEvent);
+  EventsModel.create({ type: 'create', fileId: file._id });
   return file;
 }
 
@@ -91,15 +82,7 @@ async function updateFile(
   };
   const updatedFile = FilesModel.update(existingFile._id, updatePayload, portalAddress);
 
-  const editFileEvent: FileEvent = {
-    fileId: updatedFile._id,
-    type: 'update',
-    metadata: {
-      localVersion: updatedFile.localVersion,
-    },
-  };
-
-  await fileEventsQueue.addJob(editFileEvent);
+  EventsModel.create({ type: 'update', fileId: updatedFile._id });
   return updatedFile;
 }
 
@@ -115,13 +98,7 @@ async function deleteFile(ddocId: string, portalAddress: string): Promise<File> 
 
   const deletedFile = FilesModel.softDelete(existingFile._id);
 
-  const deleteFileEvent: FileEvent = {
-    fileId: deletedFile._id,
-    type: 'delete',
-    metadata: {},
-  };
-
-  await fileEventsQueue.addJob(deleteFileEvent);
+  EventsModel.create({ type: 'delete', fileId: deletedFile._id });
   return deletedFile;
 }
 

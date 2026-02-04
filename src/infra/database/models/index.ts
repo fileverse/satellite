@@ -7,8 +7,9 @@ import {
   type FolderListResponse,
   FoldersModel,
 } from './folders.model';
+import { EventsModel, type Event, type EventType, type EventStatus } from './events.model';
 
-export { FilesModel, PortalsModel, ApiKeysModel, FoldersModel };
+export { FilesModel, PortalsModel, ApiKeysModel, FoldersModel, EventsModel };
 export type {
   File,
   FileListResponse,
@@ -17,4 +18,7 @@ export type {
   Folder,
   FolderWithDDocs,
   FolderListResponse,
+  Event,
+  EventType,
+  EventStatus,
 };

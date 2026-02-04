@@ -17,7 +17,7 @@ import { updateCommand } from './updateCommand';
 import { deleteCommand } from './deleteCommand';
 import { downloadCommand } from './downloadCommand';
 import { viewCommand } from './viewCommand';
-import { closeQueue, closeDatabase } from '../infra';
+import { closeWorker, closeDatabase } from '../infra';
 
 export const program = new Command()
   .name('ddctl')
@@ -39,7 +39,7 @@ program
   .parseAsync()
   .then(async () => {
     try {
-      await closeQueue();
+      await closeWorker();
       await closeDatabase();
     } catch (error) {
       // Ignore errors during cleanup

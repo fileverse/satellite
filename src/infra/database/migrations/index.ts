@@ -112,6 +112,24 @@ const migrations: MigrationFile[] = [
       ALTER TABLE files DROP COLUMN linkKeyNonce;
     `,
   },
+  {
+    timestamp: '20260204120000',
+    name: 'add_events_table',
+    up: `
+      CREATE TABLE IF NOT EXISTS events (
+        _id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
+        timestamp INTEGER NOT NULL,
+        fileId TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'processed'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_events_status_timestamp ON events(status, timestamp);
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_events_status_timestamp;
+      DROP TABLE IF EXISTS events;
+    `,
+  },
 ];
 
 export function runMigrations(): void {

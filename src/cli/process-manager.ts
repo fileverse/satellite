@@ -11,7 +11,7 @@ const managedProcesses: ManagedProcess[] = [];
 
 function getDistDir(): string {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  return path.resolve(__dirname, '..');
+  return path.resolve(__dirname, '..', '..', 'dist');
 }
 
 function prefixOutput(name: string, data: Buffer): void {
