@@ -1,6 +1,6 @@
 # Ddocs API Reference
 
-The **Ddocs API** manages decentralized documents (ddocs) — files stored and synced per portal. All endpoints are scoped by portal via the `x-portal-address` header.
+The **Ddocs API** manages decentralized documents (ddocs) — files stored and synced.
 
 **Base path:** `/api/ddocs`
 
@@ -11,7 +11,6 @@ The **Ddocs API** manages decentralized documents (ddocs) — files stored and s
 - [Expectations & scope](#expectations--scope)
 - [Overview](#overview)
 - [Request & Response Format](#request--response-format)
-- [Required Headers](#required-headers)
 - [Endpoints](#endpoints)
   - [Create document](#create-document)
   - [List documents](#list-documents)
@@ -33,7 +32,7 @@ This section helps you see **where Satellite fits** in your workflow — what th
 | What you get | How it helps |
 | ------------ | ------------ |
 | **REST API for documents** | Any LLM, agent, or tool (Claude Code, Cursor, ChatGPT, GLM, custom scripts, MCP servers you build, etc.) can **create, list, get, update, and delete** documents over HTTP. No vendor lock-in. |
-| **Persistent docs per portal** | Documents are stored and **listed by portal**. Agents can treat them as a **stable source of truth** — e.g. “go-to” markdown files that persist across sessions so the LLM knows what exists when it comes back. |
+| **Persistent docs** | Documents are stored and listed. Agents can treat them as a **stable source of truth** — e.g. “go-to” markdown files that persist across sessions so the LLM knows what exists when it comes back. |
 | **Self-hosted** | You run the Satellite server yourself. Your docs and traffic stay on your infrastructure; you control privacy and data. |
 | **API-first** | No built-in UI. You (or the community) can build **editors, MCP servers, CLIs, or integrations** on top of this API. “Having access via API” is the primary interface. |
 | **Title + content (e.g. markdown)** | Each doc has a title and body. Ideal for markdown as agent context, notes, or verifiable reference — with on-chain sync planned for later. |
@@ -48,7 +47,7 @@ This section helps you see **where Satellite fits** in your workflow — what th
 | **Real-time subscribe / multiplayer** (live presence, typing, subscriptions) | **Not in this API.** Updates are request/response. Real-time could be a future layer. |
 | **Auth** (e.g. “run an auth script or give a browser link”, “avoid config”) | **Not covered in this doc.** Auth may live in another layer or product; this doc describes the ddocs API only. |
 | **MCP server or official CLI** for Cursor/agents | **Not part of this API doc.** The repo may include a CLI (`ddctl`); MCP or first-party CLI tooling may be added later. |
-| **Zero config** | **Not guaranteed.** You need to run the server and pass the right headers (e.g. `x-portal-address`). We keep the surface small but some config is required. |
+| **Zero config** | **Not guaranteed.** You need to run the server. We keep the surface small but some config is required. |
 | **Verifiable / on-chain context** | **Planned.** Documents are queued for on-chain sync (“on-chain publishing is pending”); full verifiable context is a future capability. |
 
 If your main expectation is a **ready-made, beautiful, multiplayer markdown editor** out of the box — that is **not** what this API delivers today. It delivers the **backend** so you or others can build that on top.
@@ -114,17 +113,6 @@ Errors return:
 
 ---
 
-## Required Headers
-
-| Header             | Required | Description |
-| ------------------ | -------- | ----------- |
-| `x-portal-address` | **Yes**  | Portal identifier; all operations are scoped to this portal. |
-| `Content-Type`    | For POST/PUT | `application/json` or `multipart/form-data` when sending a body. |
-
-Missing or invalid `x-portal-address` results in **400 Bad Request**.
-
----
-
 ## Endpoints
 
 ### Create document
@@ -135,7 +123,6 @@ Creates a new document. On success it is stored locally and queued for on-chain 
 
 - **Method:** `POST`
 - **Path:** `/api/ddocs`
-- **Headers:** `x-portal-address` (required)
 
 **Body (choose one):**
 
@@ -170,7 +157,6 @@ Creates a new document. On success it is stored locally and queued for on-chain 
     "ddocId": "abc123short",
     "title": "My document",
     "content": "Full text or markdown content.",
-    "portalAddress": "portal-addr",
     "localVersion": 1,
     "onchainVersion": 0,
     "syncStatus": "pending",
@@ -185,19 +171,18 @@ Creates a new document. On success it is stored locally and queued for on-chain 
 
 | Status | Condition |
 |--------|-----------|
-| 400    | Missing `x-portal-address`, missing `title`, or empty content |
+| 400    | Missing `title` or empty content |
 
 ---
 
 ### List documents
 
-Returns a paginated list of documents for the given portal.
+Returns a paginated list of documents.
 
 **Request**
 
 - **Method:** `GET`
 - **Path:** `/api/ddocs`
-- **Headers:** `x-portal-address` (required)
 
 **Query parameters**
 
@@ -219,7 +204,6 @@ Returns a paginated list of documents for the given portal.
         "ddocId": "abc123short",
         "title": "My document",
         "content": "...",
-        "portalAddress": "portal-addr",
         "localVersion": 1,
         "onchainVersion": 0,
         "syncStatus": "pending",
@@ -238,8 +222,6 @@ Returns a paginated list of documents for the given portal.
 
 | Status | Condition |
 |--------|-----------|
-| 400    | Missing `x-portal-address` |
-
 ---
 
 ### Get document
@@ -250,7 +232,6 @@ Returns a single document by its public `ddocId`.
 
 - **Method:** `GET`
 - **Path:** `/api/ddocs/:ddocId`
-- **Headers:** `x-portal-address` (required)
 
 **Path parameters**
 
@@ -269,7 +250,6 @@ Returns a single document by its public `ddocId`.
     "ddocId": "abc123short",
     "title": "My document",
     "content": "Full text or markdown content.",
-    "portalAddress": "portal-addr",
     "localVersion": 1,
     "onchainVersion": 0,
     "syncStatus": "pending",
@@ -284,8 +264,8 @@ Returns a single document by its public `ddocId`.
 
 | Status | Condition |
 |--------|-----------|
-| 400    | Missing `ddocId` or `x-portal-address` |
-| 404    | No document found for the given `ddocId` and portal |
+| 400    | Missing `ddocId` |
+| 404    | No document found for the given `ddocId` |
 
 ---
 
@@ -297,7 +277,6 @@ Updates an existing document by `ddocId`. Supports partial updates (only send fi
 
 - **Method:** `PUT`
 - **Path:** `/api/ddocs/:ddocId`
-- **Headers:** `x-portal-address` (required)
 
 **Path parameters**
 
@@ -336,7 +315,6 @@ Updates an existing document by `ddocId`. Supports partial updates (only send fi
     "ddocId": "abc123short",
     "title": "Updated title",
     "content": "Updated content.",
-    "portalAddress": "portal-addr",
     "localVersion": 2,
     "onchainVersion": 0,
     "syncStatus": "pending",
@@ -351,8 +329,8 @@ Updates an existing document by `ddocId`. Supports partial updates (only send fi
 
 | Status | Condition |
 |--------|-----------|
-| 400    | Missing `x-portal-address` or empty `title` when provided |
-| 404    | No document found for the given `ddocId` and portal |
+| 400    | Empty `title` when provided |
+| 404    | No document found for the given `ddocId` |
 
 ---
 
@@ -364,7 +342,6 @@ Soft-deletes a document. The document is removed from normal listing and get; a 
 
 - **Method:** `DELETE`
 - **Path:** `/api/ddocs/:ddocId`
-- **Headers:** `x-portal-address` (required)
 
 **Path parameters**
 
@@ -387,8 +364,8 @@ No `data` field is returned.
 
 | Status | Condition |
 |--------|-----------|
-| 400    | Missing `ddocId` or `x-portal-address` |
-| 404    | No document found for the given `ddocId` and portal |
+| 400    | Missing `ddocId` |
+| 404    | No document found for the given `ddocId` |
 
 ---
 
@@ -402,7 +379,6 @@ No `data` field is returned.
 | `ddocId`        | string | Short public ID used in URLs and by clients. |
 | `title`         | string | Document title. |
 | `content`       | string | Full document body (e.g. markdown or plain text). |
-| `portalAddress` | string | Portal this document belongs to. |
 | `localVersion`  | number | Increments on each update. |
 | `onchainVersion` | number | Version reflected on-chain (may lag). |
 | `syncStatus`    | string | e.g. `pending`; indicates sync state. |
@@ -415,7 +391,7 @@ No `data` field is returned.
 | Field   | Type     | Description |
 | ------- | -------- | ----------- |
 | `files` | object[] | Array of document objects. |
-| `total` | number   | Total count of documents (for the portal). |
+| `total` | number   | Total count of documents. |
 | `hasNext` | boolean | Whether more pages exist after this one. |
 
 ---
@@ -424,8 +400,8 @@ No `data` field is returned.
 
 | HTTP Status | Error type   | When |
 | ----------- | ------------ | ----- |
-| 400         | Bad Request  | Missing/invalid `x-portal-address`, missing/empty `title` or content, invalid body. |
-| 404         | Not Found    | No document for the given `ddocId` and portal. |
+| 400         | Bad Request  | Missing/empty `title` or content, invalid body. |
+| 404         | Not Found    | No document for the given `ddocId`. |
 | 5xx         | Server Error | Unexpected server failure (see `errorMsg` and optional `error`). |
 
 ---
@@ -436,7 +412,6 @@ No `data` field is returned.
 
 ```bash
 curl -X POST 'http://localhost:3000/api/ddocs' \
-  -H 'x-portal-address: my-portal' \
   -H 'Content-Type: application/json' \
   -d '{"title": "Hello", "content": "# Hello\n\nWorld."}'
 ```
@@ -445,29 +420,25 @@ curl -X POST 'http://localhost:3000/api/ddocs' \
 
 ```bash
 curl -X POST 'http://localhost:3000/api/ddocs' \
-  -H 'x-portal-address: my-portal' \
   -F 'file=@./README.md'
 ```
 
 ### List with pagination
 
 ```bash
-curl -X GET 'http://localhost:3000/api/ddocs?skip=0&limit=10' \
-  -H 'x-portal-address: my-portal'
+curl -X GET 'http://localhost:3000/api/ddocs?skip=0&limit=10'
 ```
 
 ### Get one document
 
 ```bash
-curl -X GET 'http://localhost:3000/api/ddocs/abc123short' \
-  -H 'x-portal-address: my-portal'
+curl -X GET 'http://localhost:3000/api/ddocs/abc123short'
 ```
 
 ### Update (partial JSON)
 
 ```bash
 curl -X PUT 'http://localhost:3000/api/ddocs/abc123short' \
-  -H 'x-portal-address: my-portal' \
   -H 'Content-Type: application/json' \
   -d '{"title": "New title"}'
 ```
@@ -475,8 +446,7 @@ curl -X PUT 'http://localhost:3000/api/ddocs/abc123short' \
 ### Delete
 
 ```bash
-curl -X DELETE 'http://localhost:3000/api/ddocs/abc123short' \
-  -H 'x-portal-address: my-portal'
+curl -X DELETE 'http://localhost:3000/api/ddocs/abc123short'
 ```
 
 ---
