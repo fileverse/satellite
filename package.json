@@ -1,6 +1,6 @@
 {
   "name": "@fileverse/satellite",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "Satellite",
   "type": "module",
   "main": "dist/index.js",
@@ -19,7 +19,8 @@
   },
   "files": [
     "dist",
-    "config/.env.example"
+    "config/.env.example",
+    "public"
   ],
   "scripts": {
     "build": "tsup",

@@ -2,11 +2,26 @@
 
 > Satellite is a document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.
 
-## Before You Begin
+**Skill Name**: satellite
 
-Ask the user for:
-1. **Server URL**: Their Satellite server address (e.g., http://localhost:8001)
-2. **API Key**: Their Satellite API key
+## Server URL
+
+If you fetched this document from a URL (e.g., http://localhost:8001/llm.txt):
+- Your server URL is that URL without the /llm.txt suffix
+- Example: http://localhost:8001/llm.txt → Server URL is http://localhost:8001
+
+If this document was provided another way, ask the user for their server URL.
+
+## API Key Configuration
+
+Before starting, check for stored credentials:
+
+1. Look for config file at: ~/.satelliterc
+2. If found with valid apiKey, use it automatically
+3. If not found or missing apiKey:
+   - Ask user for their Satellite API key
+   - Offer to save it: "Would you like me to save this API key for future sessions?"
+   - If yes, create/update ~/.satelliterc with JSON: {"apiKey": "...", "serverUrl": "..."}
 
 ## Connection Strategy
 
@@ -25,10 +40,6 @@ When switching to CLI mode, inform the user:
 
 Use this when you cannot reach the user's server (localhost, firewall, etc.).
 You generate commands, user runs them and shares output with you.
-
-## Required Information
-
-Ask user for their Satellite API key (needed for some operations).
 
 ## Installation
 
@@ -118,12 +129,6 @@ ddctl get <ddocId>
 # API MODE (Primary - when server is reachable)
 
 Use this when GET /ping succeeds. You make HTTP requests directly to the server.
-
-## Required Information
-
-Ask user for:
-1. **Server URL**: The Satellite server address (e.g., https://my-satellite.example.com)
-2. **API Key**: Their Satellite API key
 
 ## Authentication
 
