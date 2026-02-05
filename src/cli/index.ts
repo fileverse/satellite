@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { fetchApiKeyData } from './fetch-api-key.js';
+import { AppKeyMaterial, fetchApiKeyData, KeyMaterial } from './fetch-api-key.js';
 import { scaffoldConfig, configExists } from './scaffold-config.js';
 import {
   startAll,
@@ -9,7 +9,7 @@ import {
 } from './process-manager.js';
 import { promptForConfig, needsPrompting } from './prompts.js';
 import { loadConfig } from '../config/index.js';
-import { initializeWithData } from '../init/index.js';
+import { decryptSavedData, initializeWithData } from '../init/index.js';
 
 const program = new Command()
   .name('satellite')
@@ -34,7 +34,6 @@ const program = new Command()
         options.apiKey = prompted.apiKey;
         options.pimlicoApiKey = prompted.pimlicoApiKey;
         options.rpcUrl = prompted.rpcUrl;
-        console.log('');
       }
 
       if (!options.skipFetch) {
@@ -42,6 +41,8 @@ const program = new Command()
         const data = await fetchApiKeyData(options.apiKey);
         console.log('✓ API key data retrieved\n');
 
+        const keyMaterial = await decryptSavedData<KeyMaterial>(options.apiKey, data.encryptedKeyMaterial);
+        const appMaterial = await decryptSavedData<AppKeyMaterial>(options.apiKey, data.encryptedAppMaterial);
         console.log('Setting up configuration...');
         const envPath = scaffoldConfig({
           dbPath: options.db,
@@ -57,7 +58,7 @@ const program = new Command()
         runMigrations();
         console.log('✓ Database migrations complete');
 
-        const result = initializeWithData(data);
+        const result = initializeWithData({ keyMaterial, appMaterial, id: data.id });
         console.log('✓ Portal saved');
         if (result.apiKeySaved) {
           console.log('✓ API key saved');

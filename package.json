@@ -1,17 +1,21 @@
 {
   "name": "@fileverse/satellite",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Satellite",
   "type": "module",
   "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": "./dist/index.js",
     "./server": "./dist/index.js",
     "./worker": "./dist/worker.js"
   },
   "bin": {
-    "fileverse-satellite": "./dist/cli/index.js",
-    "ddctl": "./dist/commands/index.js"
+    "satellite": "dist/cli/index.js",
+    "fileverse-satellite": "dist/cli/index.js",
+    "ddctl": "dist/commands/index.js"
   },
   "files": [
     "dist",

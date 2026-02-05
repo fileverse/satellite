@@ -1,4 +1,4 @@
-import { ApiKeysModel, FilesModel } from '../../infra/database/models';
+import { FilesModel } from '../../infra/database/models';
 import { PortalsModel } from '../../infra/database/models';
 import { logger } from '../../infra';
 import { AuthTokenProvider, KeyStore } from '../../sdk/key-store';
@@ -9,6 +9,7 @@ import { generateKeyPairFromSeed } from '@stablelib/ed25519';
 import * as ucans from '@ucans/ucans';
 import { AgentClient } from '../../sdk/smart-agent';
 import { FileManager } from '../../sdk/file-manager';
+import { getRuntimeConfig } from '../../config';
 
 export interface PublishResult {
   success: boolean;
@@ -22,7 +23,7 @@ export interface PublishResult {
 interface PortalData {
   file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>;
   portalDetails: NonNullable<ReturnType<typeof PortalsModel.findByPortalAddress>>;
-  apiKeyData: NonNullable<ReturnType<typeof ApiKeysModel.findByPortalAddress>>;
+  apiKey: string;
 }
 
 function getPortalData(fileId: string): PortalData {
@@ -36,13 +37,12 @@ function getPortalData(fileId: string): PortalData {
     throw new Error(`Portal with address ${file.portalAddress} not found`);
   }
 
-  const portalAddress = portalDetails.portalAddress as Hex;
-  const apiKeyData = ApiKeysModel.findByPortalAddress(portalAddress);
-  if (!apiKeyData) {
-    throw new Error(`API key with portal address ${portalAddress} not found`);
+  const apiKey = getRuntimeConfig().API_KEY;
+  if (!apiKey) {
+    throw new Error('API key is not set');
   }
 
-  return { file, portalDetails, apiKeyData };
+  return { file, portalDetails, apiKey };
 }
 
 function deriveCollaboratorKeys(apiKeySeed: Uint8Array) {
@@ -87,7 +87,7 @@ async function createFileManager(
 async function executeOperation(
   fileManager: FileManager,
   file: any,
-  operation: 'add' | 'update'
+  operation: 'add' | 'update' | 'delete'
 ): Promise<PublishResult> {
   if (operation === 'add') {
     const result = await fileManager.addFile(file);
@@ -99,14 +99,19 @@ async function executeOperation(
     return { success: true, ...result };
   }
 
+  if (operation === 'delete') {
+    const result = await fileManager.deleteFile(file);
+    return { success: true, ...result };
+  }
+
   throw new Error(`Invalid operation: ${operation}`);
 }
 
-export async function publishFile(fileId: string, operation: 'add' | 'update'): Promise<PublishResult> {
+export async function publishFile(fileId: string, operation: 'add' | 'update' | 'delete'): Promise<PublishResult> {
   try {
-    const { file, portalDetails, apiKeyData } = getPortalData(fileId);
+    const { file, portalDetails, apiKey } = getPortalData(fileId);
 
-    const apiKeySeed = toUint8Array(apiKeyData.apiKeySeed);
+    const apiKeySeed = toUint8Array(apiKey);
     const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
 
     const fileManager = await createFileManager(

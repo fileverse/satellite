@@ -7,7 +7,7 @@ export const UPLOAD_SERVER_URL = STATIC_CONFIG.API_URL;
 
 export const getRpcUrl = () => getRuntimeConfig().RPC_URL;
 export const getPimlicoApiKey = () => getRuntimeConfig().PIMLICO_API_KEY;
-export const getPimlicoUrl = () => 
+export const getPimlicoUrl = () =>
     `https://api.pimlico.io/v2/${NETWORK_NAME}/rpc?apikey=${getPimlicoApiKey()}`;
 
 const CHAIN_MAP = {
@@ -211,5 +211,46 @@ export const EDITED_FILE_EVENT_ABI = [{
         },
     ],
     name: 'EditedFile',
+    type: 'event',
+}] as const;
+
+
+export const DELETED_FILE_ABI = [{
+    inputs: [
+        {
+            internalType: 'uint256',
+            name: 'fileId',
+            type: 'uint256',
+        },
+    ],
+    name: 'deleteFile',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+}] as const;
+
+export const DELETED_FILE_EVENT_ABI = [{
+    anonymous: false,
+    inputs: [
+        {
+            indexed: true,
+            internalType: 'uint256',
+            name: 'fileId',
+            type: 'uint256',
+        },
+        {
+            indexed: false,
+            internalType: 'string',
+            name: 'appFileId',
+            type: 'string',
+        },
+        {
+            indexed: true,
+            internalType: 'address',
+            name: 'by',
+            type: 'address',
+        },
+    ],
+    name: 'DeletedFile',
     type: 'event',
 }] as const;

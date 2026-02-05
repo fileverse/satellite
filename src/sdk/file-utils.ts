@@ -12,7 +12,7 @@ import { fromUint8Array, toUint8Array } from 'js-base64';
 import { gcmEncrypt } from './file-encryption';
 import { toAESKey, aesEncrypt } from '@fileverse/crypto/webcrypto';
 import axios from 'axios';
-import { ADD_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from '../constants';
+import { ADD_FILE_ABI, DELETED_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from '../constants';
 import { encodeFunctionData, Hex, parseEventLogs, Abi } from 'viem';
 
 
@@ -327,6 +327,14 @@ export const prepareCallData = (args: {
     }
     return getAddFileTrxCalldata(args);
 
+}
+
+export const prepareDeleteFileCallData = (args: { onChainFileId: number }) => {
+    return encodeFunctionData({
+        abi: DELETED_FILE_ABI,
+        functionName: 'deleteFile',
+        args: [BigInt(args.onChainFileId)]
+    })
 }
 
 export const createEncryptedContentFile = async (content: any) => {

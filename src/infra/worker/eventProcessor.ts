@@ -43,6 +43,11 @@ async function processCreateEvent(event: Event): Promise<void> {
     throw new Error(`File ${fileId} not found`);
   }
 
+  if (file.isDeleted === 1) {
+    logger.info(`File ${fileId} is deleted, skipping create event`);
+    return;
+  }
+
   const result = await publishFile(fileId, 'add');
   if (!result.success) {
     throw new Error(`Publish failed for file ${fileId}`);
@@ -69,7 +74,7 @@ async function processCreateEvent(event: Event): Promise<void> {
 async function processUpdateEvent(event: Event): Promise<void> {
   const { fileId } = event;
 
-  const file = FilesModel.findByIdIncludingDeleted(fileId);
+  const file = FilesModel.findByIdExcludingDeleted(fileId);
   if (!file) {
     return;
   }
@@ -103,6 +108,28 @@ async function processDeleteEvent(event: Event): Promise<void> {
     return;
   }
 
-  FilesModel.update(fileId, { syncStatus: 'synced' }, file.portalAddress);
+  if (file.isDeleted === 1 && file.syncStatus === 'synced') {
+    logger.info(`File ${fileId} deletion already synced, skipping`);
+    return;
+  }
+
+  const payload: UpdateFilePayload = {
+    syncStatus: 'synced',
+    isDeleted: 1,
+  }
+
+  if (file.onChainFileId !== null || file.onChainFileId !== undefined) {
+    const result = await publishFile(fileId, 'delete');
+    if (!result.success) {
+      throw new Error(`Publish failed for file ${fileId}`);
+    }
+
+    payload.onchainVersion = file.localVersion;
+    payload.metadata = result.metadata;
+    payload.isDeleted = 1;
+  }
+
+  FilesModel.update(fileId, payload, file.portalAddress);
+
   logger.info(`File ${fileId} delete event processed (syncStatus set to synced)`);
 }

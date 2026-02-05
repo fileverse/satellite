@@ -44,11 +44,9 @@ export interface ApiKeyMaterialResponse {
 
 
 
-const bytestToJSON = (bytes: Uint8Array) => {
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
 
-export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyMaterialResponse> {
+
+export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyResponse> {
 
 
   try {
@@ -59,11 +57,9 @@ export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyMaterialRes
 
     const { encryptedKeyMaterial, encryptedAppMaterial, id } = response.data;
 
-    const keyMaterial = bytestToJSON(toUint8Array(encryptedKeyMaterial)) as KeyMaterial;
 
-    const appMaterial = bytestToJSON(toUint8Array(encryptedAppMaterial)) as AppKeyMaterial;
 
-    return { keyMaterial, appMaterial, id };
+    return { encryptedKeyMaterial, encryptedAppMaterial, id };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {

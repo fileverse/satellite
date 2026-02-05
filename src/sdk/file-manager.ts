@@ -10,11 +10,12 @@ import {
     parseFileEventLog,
     uploadAllFilesToIPFS,
     UploadFileAuthParams,
+    prepareDeleteFileCallData,
 } from './file-utils';
 import { AgentClient } from './smart-agent';
 import { generateAESKey, exportAESKey } from "@fileverse/crypto/webcrypto"
 import { STATIC_CONFIG } from '../cli/constants';
-import { ADDED_FILE_EVENT_ABI, EDITED_FILE_EVENT_ABI } from '../constants';
+import { ADDED_FILE_EVENT_ABI, DELETED_FILE_EVENT_ABI, EDITED_FILE_EVENT_ABI } from '../constants';
 import { markdownToYjs } from '@fileverse/content-processor'
 import { logger } from '../infra';
 
@@ -158,5 +159,16 @@ export class FileManager {
         const onChainFileId = parseFileEventLog(logs, 'EditedFile', EDITED_FILE_EVENT_ABI);
 
         return { onChainFileId, metadata };
+    }
+
+    async deleteFile(file: any) {
+        logger.info(`Deleting file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
+        const callData = prepareDeleteFileCallData({ onChainFileId: file.onChainFileId });
+        logger.info(`Prepared call data for deleting file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
+
+        const { logs } = await this.executeFileOperation(callData);
+        parseFileEventLog(logs, 'DeletedFile', DELETED_FILE_EVENT_ABI);
+        logger.info(`Executed file operation for deleting file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
+        return { fileId: file.id, onChainFileId: file.onChainFileId, metadata: file.metadata };
     }
 }

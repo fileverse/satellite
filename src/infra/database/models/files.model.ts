@@ -114,6 +114,16 @@ export class FilesModel {
     return result ? this.parseFile(result) : undefined;
   }
 
+  static findByIdExcludingDeleted(_id: string): File | undefined {
+    const sql = `
+      SELECT *
+      FROM ${this.TABLE} 
+      WHERE _id = ? AND isDeleted = 0
+    `;
+    const result = QueryBuilder.selectOne<any>(sql, [_id]);
+    return result ? this.parseFile(result) : undefined;
+  }
+
   static findByDDocId(ddocId: string, portalAddress: string): File | undefined {
     const sql = `
       SELECT *
