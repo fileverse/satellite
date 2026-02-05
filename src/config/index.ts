@@ -29,7 +29,7 @@ export function getRuntimeConfig() {
     get DB_PATH() { return process.env.DB_PATH; },
     get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
     get NODE_ENV() { return process.env.NODE_ENV || 'production'; },
-    get FRONTEND_URL() { return process.env.FRONTEND_URL; },
+    get FRONTEND_URL() { return process.env.FRONTEND_URL || STATIC_CONFIG.FRONTEND_URL; },
   };
 }
 
@@ -63,7 +63,7 @@ const config: Record<string, string | undefined> = {
   get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
   get NODE_ENV() { return process.env.NODE_ENV || 'production'; },
   get IP() { return process.env.IP || '0.0.0.0'; },
-  get FRONTEND_URL() { return process.env.FRONTEND_URL; },
+  get FRONTEND_URL() { return process.env.FRONTEND_URL || STATIC_CONFIG.FRONTEND_URL; },
 };
 
 export { config };

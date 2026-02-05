@@ -1,4 +1,4 @@
-import { config } from '../../config';
+import { getRuntimeConfig } from '../../config';
 import { publishFile } from '../../domain/portal';
 import { FilesModel } from '../database/models';
 import type { Event } from '../database/models';
@@ -53,6 +53,7 @@ async function processCreateEvent(event: Event): Promise<void> {
     throw new Error(`Publish failed for file ${fileId}`);
   }
 
+  const frontendUrl = getRuntimeConfig().FRONTEND_URL;
   const payload: UpdateFilePayload = {
     onchainVersion: file.localVersion,
     onChainFileId: result.onChainFileId,
@@ -60,7 +61,7 @@ async function processCreateEvent(event: Event): Promise<void> {
     linkKeyNonce: result.linkKeyNonce,
     commentKey: result.commentKey,
     metadata: result.metadata,
-    link: `${config.FRONTEND_URL}/${file.portalAddress}/${result.onChainFileId}#key=${result.linkKey}`,
+    link: `${frontendUrl}/${file.portalAddress}/${result.onChainFileId}#key=${result.linkKey}`,
   };
   const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
