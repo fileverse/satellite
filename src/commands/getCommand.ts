@@ -70,6 +70,9 @@ export const getCommand = new Command()
 
       console.log('\nDdoc details:\n');
       console.log(table.toString());
+      if (file.link) {
+        console.log(`\nLink: ${file.link}\n`);
+      }
     } catch (error: any) {
       console.error('Error getting ddoc:', error.message);
       throw error;
