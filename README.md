@@ -2,11 +2,11 @@
 
 ## Quick Start
 
-The fastest way to get started is using the `my-satellite` CLI:
+The fastest way to get started is using the `@fileverse/satellite` CLI:
 
 ```bash
-npm install
-npx my-satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+npm install @fileverse/satellite
+npx @fileverse/satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
 ```
 
 This will prompt for any missing values, set up configuration, run migrations, and start the server.

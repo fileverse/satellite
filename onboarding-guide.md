@@ -4,7 +4,7 @@
 
 **Satellite** is a document management system that stores and syncs documents (called "ddocs") between a local SQLite database and a blockchain. It provides a REST API and two CLI tools:
 
-- **`my-satellite`**: Setup and run the Satellite server (API + worker)
+- **`fileverse-satellite`**: Setup and run the Satellite server (API + worker)
 - **`ddctl`**: Manage ddocs from the command line
 
 ### Key Concepts
@@ -40,7 +40,7 @@ The system follows a clean architecture pattern:
 1. **API Server**: Express.js REST API for managing ddocs
 2. **Worker**: Background event processor that publishes changes to blockchain
 3. **CLI Tools**:
-   - `my-satellite`: Setup and run the server
+   - `fileverse-satellite`: Setup and run the server
    - `ddctl`: Manage ddocs from command line
 4. **Database**: SQLite database storing ddocs, events, folders, and configuration
 
@@ -137,12 +137,12 @@ npm run dev:cli <command>
 # Uses ts-node - no build needed
 ```
 
-### Quick Start with `my-satellite`
+### Quick Start with `fileverse-satellite`
 
-The `my-satellite` CLI provides an all-in-one setup and run experience:
+The `fileverse-satellite` CLI provides an all-in-one setup and run experience:
 
 ```bash
-my-satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+fileverse-satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
 ```
 
 This command will:
@@ -463,7 +463,7 @@ src/
 ├── app.ts                 # Express app setup
 ├── index.ts               # API server entry point
 ├── worker.ts              # Worker entry point
-├── cli/                   # Satellite CLI (my-satellite)
+├── cli/                   # Satellite CLI (fileverse-satellite)
 │   ├── index.ts           # CLI entry point
 │   ├── fetch-api-key.ts   # API key fetching
 │   ├── process-manager.ts # Process management
@@ -516,7 +516,7 @@ src/
 - **`src/infra/worker/worker.ts`**: Event-based worker that processes sync jobs
 - **`src/infra/worker/eventProcessor.ts`**: Processes individual events and publishes to blockchain
 - **`src/domain/portal/publish.ts`**: Blockchain publishing logic
-- **`src/cli/index.ts`**: Satellite CLI entry point (my-satellite)
+- **`src/cli/index.ts`**: Satellite CLI entry point (fileverse-satellite)
 
 ## Database Schema
 
@@ -654,7 +654,7 @@ npm run migrate:create <migration-name>
 
 ### Worker not processing events
 
-- Ensure worker is running (`npm run start:worker` or via `my-satellite`)
+- Ensure worker is running (`npm run start:worker` or via `fileverse-satellite`)
 - Check for failed events in the `events` table
 - Review worker logs for error messages
 - Verify `WORKER_CONCURRENCY` setting is appropriate

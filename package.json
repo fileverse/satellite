@@ -1,6 +1,6 @@
 {
-  "name": "my-satellite",
-  "version": "0.0.14",
+  "name": "@fileverse/satellite",
+  "version": "0.0.1",
   "description": "Satellite",
   "type": "module",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "./worker": "./dist/worker.js"
   },
   "bin": {
-    "my-satellite": "./dist/cli/index.js",
+    "fileverse-satellite": "./dist/cli/index.js",
     "ddctl": "./dist/commands/index.js"
   },
   "files": [
