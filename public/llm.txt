@@ -130,10 +130,29 @@ ddctl get <ddocId>
 
 Use this when GET /ping succeeds. You make HTTP requests directly to the server.
 
-## Authentication
+## Authentication & URL Construction
 
-All /api/* endpoints require the apiKey query parameter:
-?apiKey={API_KEY}
+CRITICAL: The apiKey is a query parameter that goes at the END of the URL, after the complete path.
+
+URL Structure: {SERVER_URL}{PATH}?apiKey={API_KEY}&{OTHER_PARAMS}
+
+Step-by-step URL construction:
+1. Start with the server URL: http://localhost:8001
+2. Add the complete path: /api/ddocs/abc123
+3. Add ? and the apiKey: ?apiKey=your-key
+4. Add any other params with &: &limit=10
+
+CORRECT examples:
+- GET http://localhost:8001/api/ddocs?apiKey=xxx
+- GET http://localhost:8001/api/ddocs/abc123?apiKey=xxx
+- PUT http://localhost:8001/api/ddocs/abc123?apiKey=xxx
+- GET http://localhost:8001/api/ddocs?apiKey=xxx&limit=10&skip=0
+
+WRONG (do NOT do this):
+- GET http://localhost:8001/api/ddocs?apiKey=xxx/abc123  ← WRONG: path after query param
+- GET http://localhost:8001/api?apiKey=xxx/ddocs/abc123  ← WRONG: path after query param
+
+The query string (?apiKey=...) must ALWAYS come after the full path is complete.
 
 ## Important: Sync Status Polling
 
