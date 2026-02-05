@@ -50,6 +50,8 @@ npm run clean && npm run build
 npm run start:api
 ```
 
+**Note:** All `/api/*` endpoints require authentication via `?apiKey=<key>` query parameter. The API key is the same key provided during setup.
+
 ### Worker (for processing sync jobs)
 
 ```bash

@@ -293,6 +293,16 @@ ddctl delete <ddocId1> <ddocId2> <ddocId3>
 
 Base URL: `http://127.0.0.1:8001`
 
+### Authentication
+
+All `/api/*` endpoints require API key authentication via query parameter:
+
+```
+?apiKey=<your-api-key>
+```
+
+The API key is the same key you provided during `fileverse-satellite` setup. Requests without a valid API key will receive a `401 Unauthorized` response.
+
 ### Health Check
 
 ```http
@@ -301,12 +311,14 @@ GET /ping
 
 **Response:** `pong`
 
+**Note:** The `/ping` endpoint does not require authentication.
+
 ### Ddocs Endpoints
 
 #### List Ddocs
 
 ```http
-GET /api/ddocs?limit=10&skip=0
+GET /api/ddocs?apiKey=<key>&limit=10&skip=0
 ```
 
 **Response:**
@@ -322,7 +334,7 @@ GET /api/ddocs?limit=10&skip=0
 #### Get Ddoc
 
 ```http
-GET /api/ddocs/:ddocId
+GET /api/ddocs/:ddocId?apiKey=<key>
 ```
 
 **Response:**
@@ -346,7 +358,7 @@ GET /api/ddocs/:ddocId
 **Option 1: File Upload**
 
 ```http
-POST /api/ddocs
+POST /api/ddocs?apiKey=<key>
 Content-Type: multipart/form-data
 
 file: <file>
@@ -355,7 +367,7 @@ file: <file>
 **Option 2: JSON**
 
 ```http
-POST /api/ddocs
+POST /api/ddocs?apiKey=<key>
 Content-Type: application/json
 
 {
@@ -378,7 +390,7 @@ Content-Type: application/json
 **Option 1: File Upload**
 
 ```http
-PUT /api/ddocs/:ddocId
+PUT /api/ddocs/:ddocId?apiKey=<key>
 Content-Type: multipart/form-data
 
 file: <file>
@@ -387,7 +399,7 @@ file: <file>
 **Option 2: JSON**
 
 ```http
-PUT /api/ddocs/:ddocId
+PUT /api/ddocs/:ddocId?apiKey=<key>
 Content-Type: application/json
 
 {
@@ -401,7 +413,7 @@ Content-Type: application/json
 #### Delete Ddoc
 
 ```http
-DELETE /api/ddocs/:ddocId
+DELETE /api/ddocs/:ddocId?apiKey=<key>
 ```
 
 **Response:**
@@ -418,13 +430,13 @@ DELETE /api/ddocs/:ddocId
 #### List Folders
 
 ```http
-GET /api/folders?limit=10&skip=0
+GET /api/folders?apiKey=<key>&limit=10&skip=0
 ```
 
 #### Create Folder
 
 ```http
-POST /api/folders
+POST /api/folders?apiKey=<key>
 Content-Type: application/json
 
 {
@@ -435,7 +447,7 @@ Content-Type: application/json
 #### Get Folder
 
 ```http
-GET /api/folders/:folderRef/:folderId
+GET /api/folders/:folderRef/:folderId?apiKey=<key>
 ```
 
 ### Search Endpoints
@@ -443,7 +455,7 @@ GET /api/folders/:folderRef/:folderId
 #### Search Nodes
 
 ```http
-GET /api/search?q=<query>&limit=10&skip=0
+GET /api/search?apiKey=<key>&q=<query>&limit=10&skip=0
 ```
 
 **Response:**

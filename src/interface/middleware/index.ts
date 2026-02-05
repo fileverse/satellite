@@ -1,3 +1,4 @@
 import { expressErrorHandler } from './errorHandler';
+import { apiKeyAuth } from './apiKeyAuth';
 
-export { expressErrorHandler };
+export { expressErrorHandler, apiKeyAuth };

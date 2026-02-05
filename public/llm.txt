@@ -1,0 +1,255 @@
+# Satellite - AI Agent Guide
+
+> Satellite is a document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.
+
+## Before You Begin
+
+Ask the user for:
+1. **Server URL**: Their Satellite server address (e.g., http://localhost:8001)
+2. **API Key**: Their Satellite API key
+
+## Connection Strategy
+
+After getting the server URL:
+
+1. **Try API first**: Attempt GET {SERVER_URL}/ping
+2. **If successful** (response: {"reply":"pong"}) → Use API Mode
+3. **If connection fails** (timeout, refused, unreachable) → Switch to CLI Mode
+
+When switching to CLI mode, inform the user:
+"I can't reach your server directly (localhost isn't accessible from here). I'll help you using CLI commands instead - just run them and share the output with me."
+
+---
+
+# CLI MODE (Fallback when server unreachable)
+
+Use this when you cannot reach the user's server (localhost, firewall, etc.).
+You generate commands, user runs them and shares output with you.
+
+## Required Information
+
+Ask user for their Satellite API key (needed for some operations).
+
+## Installation
+
+If user needs to set up Satellite:
+
+```bash
+npm install -g @fileverse/satellite
+npx @fileverse/satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+```
+
+## CLI Commands Reference
+
+### List Documents
+```bash
+ddctl list
+ddctl list --limit 10 --skip 20
+```
+
+### Get Document Details
+```bash
+ddctl get <ddocId>
+```
+Shows metadata including the link (if synced to blockchain).
+
+### View Document Content
+```bash
+ddctl view <ddocId>
+ddctl view <ddocId> --lines 20
+```
+
+### Create Document
+```bash
+ddctl create <filepath>
+```
+Creates document from file (title = filename).
+
+### Update Document
+```bash
+ddctl update <ddocId> --file <filepath>
+ddctl update <ddocId>  # Opens in editor
+```
+
+### Download Document
+```bash
+ddctl download <ddocId>
+ddctl download <ddocId> --output myfile.md
+```
+
+### Delete Document
+```bash
+ddctl delete <ddocId>
+ddctl delete <id1> <id2> <id3>  # Multiple
+```
+
+## CLI Workflow Examples
+
+### Create and Check Sync Status
+```bash
+# 1. Create the document
+ddctl create mydocument.md
+
+# 2. Note the ddocId from output
+
+# 3. Check sync status (repeat until synced)
+ddctl get <ddocId>
+
+# 4. When syncStatus is "synced", the link field shows the public URL
+```
+
+### Search and Update
+```bash
+# 1. List documents to find one
+ddctl list
+
+# 2. View content
+ddctl view <ddocId>
+
+# 3. Update with new content
+ddctl update <ddocId> --file updated.md
+
+# 4. Check sync status
+ddctl get <ddocId>
+```
+
+---
+
+# API MODE (Primary - when server is reachable)
+
+Use this when GET /ping succeeds. You make HTTP requests directly to the server.
+
+## Required Information
+
+Ask user for:
+1. **Server URL**: The Satellite server address (e.g., https://my-satellite.example.com)
+2. **API Key**: Their Satellite API key
+
+## Authentication
+
+All /api/* endpoints require the apiKey query parameter:
+?apiKey={API_KEY}
+
+## Important: Sync Status Polling
+
+When you create or update a document, it syncs to blockchain asynchronously:
+
+- **pending**: Saved locally, blockchain sync in progress
+- **synced**: Published to blockchain (link field available)
+- **failed**: Sync failed
+
+After CREATE or UPDATE, poll until syncStatus is "synced":
+
+```
+1. POST /api/ddocs or PUT /api/ddocs/{id}
+2. Note the ddocId from response
+3. Poll: GET /api/ddocs/{ddocId}?apiKey={API_KEY}
+4. If "pending", wait 5 seconds and poll again
+5. If "synced":
+   - Extract the "link" field from response
+   - Show the link to user as clickable: [View Document](link)
+6. If "failed", inform user of sync failure
+```
+
+Typical sync time: 5-30 seconds.
+
+## API Reference
+
+Base: {SERVER_URL}
+
+### Health Check (No Auth)
+GET /ping
+Response: {"reply":"pong"}
+
+### List Documents
+GET /api/ddocs?apiKey={API_KEY}&limit=10&skip=0
+
+Response:
+{
+  "ddocs": [...],
+  "total": 100,
+  "hasNext": true
+}
+
+### Get Document
+GET /api/ddocs/{ddocId}?apiKey={API_KEY}
+
+Response:
+{
+  "ddocId": "...",
+  "title": "...",
+  "content": "...",
+  "syncStatus": "pending|synced|failed",
+  "link": "https://...",  // Available when synced
+  ...
+}
+
+### Create Document
+POST /api/ddocs?apiKey={API_KEY}
+Content-Type: application/json
+
+{
+  "title": "Document Title",
+  "fileContent": "Document content..."
+}
+
+IMPORTANT: Poll GET /api/ddocs/{ddocId} until syncStatus is "synced", then show the link.
+
+### Update Document
+PUT /api/ddocs/{ddocId}?apiKey={API_KEY}
+Content-Type: application/json
+
+{
+  "title": "Updated Title",
+  "fileContent": "Updated content..."
+}
+
+At least one of title or fileContent required.
+IMPORTANT: Poll until synced, then show the link.
+
+### Delete Document
+DELETE /api/ddocs/{ddocId}?apiKey={API_KEY}
+
+### List Folders
+GET /api/folders?apiKey={API_KEY}&limit=10&skip=0
+
+### Create Folder
+POST /api/folders?apiKey={API_KEY}
+Content-Type: application/json
+
+{"name": "Folder Name"}
+
+### Get Folder
+GET /api/folders/{folderRef}/{folderId}?apiKey={API_KEY}
+
+### Search Documents
+GET /api/search?apiKey={API_KEY}&q={query}&limit=10&skip=0
+
+## API Workflow Examples
+
+### Create Document and Show Link
+
+1. POST /api/ddocs?apiKey={API_KEY} with title and fileContent
+2. Extract ddocId from response
+3. Poll loop:
+   - GET /api/ddocs/{ddocId}?apiKey={API_KEY}
+   - If syncStatus is "pending", wait 5 seconds, repeat
+   - If syncStatus is "synced":
+     * Show user: "Document published! [View Document](link)"
+   - If "failed": "Document saved but blockchain sync failed"
+
+---
+
+# Key Concepts
+
+- **DDoc**: A document with unique ddocId
+- **syncStatus**: pending → synced (success) or failed
+- **link**: Public URL to view document (only available when synced)
+- **localVersion**: Increments on each edit
+- **onchainVersion**: Version on blockchain
+
+# Error Handling
+
+**401 Unauthorized**: Invalid or missing API key
+**404 Not Found**: Resource doesn't exist
+**500 Server Error**: Internal error, retry or inform user

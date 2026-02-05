@@ -2,6 +2,8 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import router from './interface';
 import { expressErrorHandler } from './interface/middleware';
 
@@ -30,6 +32,12 @@ app.use(
 app.use('/ping', function (req, res) {
   res.json({ reply: 'pong' });
   res.end();
+});
+
+app.get('/llm.txt', (req, res) => {
+  const filePath = join(__dirname, '../public/llm.txt');
+  const content = readFileSync(filePath, 'utf-8');
+  res.type('text/plain').send(content);
 });
 
 app.use('/', router);
