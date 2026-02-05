@@ -26,8 +26,8 @@ async function startServer() {
   logger.info('Server initialization complete');
 
   if (process.env.INLINE_WORKER === 'true') {
-    const pollIntervalMs = parseInt(process.env.WORKER_POLL_INTERVAL_MS || '2000', 10);
-    startWorker(pollIntervalMs);
+    const concurrency = parseInt(process.env.WORKER_CONCURRENCY || '5', 10);
+    startWorker(concurrency);
     logger.info('Inline worker started');
   }
 
