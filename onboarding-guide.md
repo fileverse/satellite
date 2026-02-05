@@ -2,7 +2,10 @@
 
 ## Overview
 
-**Satellite** is a document management system that stores and syncs documents (called "ddocs") between a local SQLite database and a blockchain. It provides both a REST API and a CLI tool (`ddctl`) for managing ddocs.
+**Satellite** is a document management system that stores and syncs documents (called "ddocs") between a local SQLite database and a blockchain. It provides a REST API and two CLI tools:
+
+- **`my-satellite`**: Setup and run the Satellite server (API + worker)
+- **`ddctl`**: Manage ddocs from the command line
 
 ### Key Concepts
 
@@ -35,15 +38,16 @@ The system follows a clean architecture pattern:
 ### Components
 
 1. **API Server**: Express.js REST API for managing ddocs
-2. **Worker**: Background worker that processes sync jobs (publishes to blockchain)
-3. **CLI Tool**: Command-line interface (`ddctl`) for managing ddocs
-4. **Database**: SQLite database storing ddocs locally
-5. **Queue**: BullMQ (Redis-based) for async job processing
+2. **Worker**: Background event processor that publishes changes to blockchain
+3. **CLI Tools**:
+   - `my-satellite`: Setup and run the server
+   - `ddctl`: Manage ddocs from command line
+4. **Database**: SQLite database storing ddocs, events, folders, and configuration
 
 ### Data Flow
 
-1. **Create/Update/Delete** → Domain layer saves to SQLite → Event added to queue
-2. **Worker** processes queue → Publishes to blockchain → Updates sync status
+1. **Create/Update/Delete** → Domain layer saves to SQLite → Event record created
+2. **Worker** polls events table → Publishes to blockchain → Updates sync status
 
 ## Setup
 
@@ -51,7 +55,6 @@ The system follows a clean architecture pattern:
 
 - Node.js (v18+)
 - npm or yarn
-- Redis (for queue processing)
 
 ### Installation
 
@@ -74,18 +77,19 @@ cp config/.env.example config/.env
 ```env
 PORT=8001
 IP=127.0.0.1
-REDIS_URI=redis://localhost:6379
 NODE_ENV=development
-SYNC_WORKER_CONCURRENCY=5
-SYNC_WORKER_MAX_JOBS=10
-DB_PATH=/absolute/path/to/sqlite_db_name.db  # REQUIRED: Must be absolute path
+DB_PATH=/absolute/path/to/sqlite_db_name.db
+WORKER_CONCURRENCY=5
+LOG_LEVEL=info
+SERVICE_NAME=satellite
 ```
 
 **Important Notes:**
 
 - `DB_PATH` is **required** and must be an **absolute path**
 - The directory will be created automatically if it doesn't exist
-- Example: `DB_PATH=/absolute/path/to/your/sqlite_db_name.db`
+- `WORKER_CONCURRENCY` controls how many events are processed in parallel (default: 5)
+- `LOG_LEVEL` can be: `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 
 ## Building & Running
 
@@ -132,6 +136,32 @@ npm run dev:cli <command>
 # Example: npm run dev:cli list
 # Uses ts-node - no build needed
 ```
+
+### Quick Start with `my-satellite`
+
+The `my-satellite` CLI provides an all-in-one setup and run experience:
+
+```bash
+my-satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+```
+
+This command will:
+1. Prompt for any missing configuration values
+2. Fetch API key data from the server
+3. Create/update the config file
+4. Run database migrations
+5. Start both the API server and worker
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--apiKey <key>` | API key for authentication |
+| `--pimlicoApiKey <key>` | Pimlico API key for account abstraction |
+| `--rpcUrl <url>` | RPC URL for blockchain connection |
+| `--port <port>` | Port to run the server on (default: 8001) |
+| `--db <path>` | Database path |
+| `--skip-fetch` | Skip fetching API key data (use existing config) |
 
 ### Production Mode
 
@@ -215,7 +245,7 @@ ddctl list --limit 10 --skip 20
 
 ```bash
 ddctl get <ddocId>
-# Shows metadata table
+# Shows metadata table including link (if synced)
 ```
 
 #### View ddoc content
@@ -238,6 +268,9 @@ ddctl create <filepath>
 ```bash
 ddctl update <ddocId> --file <filepath>
 # Updates ddoc from file
+
+ddctl update <ddocId>
+# Opens content in editor ($EDITOR or vi)
 ```
 
 #### Download ddoc
@@ -258,9 +291,17 @@ ddctl delete <ddocId1> <ddocId2> <ddocId3>
 
 ## REST API
 
-Base URL: `http://127.0.0.1:8001/api/ddocs`
+Base URL: `http://127.0.0.1:8001`
 
-### Endpoints
+### Health Check
+
+```http
+GET /ping
+```
+
+**Response:** `pong`
+
+### Ddocs Endpoints
 
 #### List Ddocs
 
@@ -372,6 +413,49 @@ DELETE /api/ddocs/:ddocId
 }
 ```
 
+### Folders Endpoints
+
+#### List Folders
+
+```http
+GET /api/folders?limit=10&skip=0
+```
+
+#### Create Folder
+
+```http
+POST /api/folders
+Content-Type: application/json
+
+{
+  "name": "My Folder"
+}
+```
+
+#### Get Folder
+
+```http
+GET /api/folders/:folderRef/:folderId
+```
+
+### Search Endpoints
+
+#### Search Nodes
+
+```http
+GET /api/search?q=<query>&limit=10&skip=0
+```
+
+**Response:**
+
+```json
+{
+  "results": [...],
+  "total": 50,
+  "hasNext": true
+}
+```
+
 ## Project Structure
 
 ```
@@ -379,7 +463,13 @@ src/
 ├── app.ts                 # Express app setup
 ├── index.ts               # API server entry point
 ├── worker.ts              # Worker entry point
-├── commands/              # CLI commands
+├── cli/                   # Satellite CLI (my-satellite)
+│   ├── index.ts           # CLI entry point
+│   ├── fetch-api-key.ts   # API key fetching
+│   ├── process-manager.ts # Process management
+│   ├── prompts.ts         # Interactive prompts
+│   └── scaffold-config.ts # Config scaffolding
+├── commands/              # Ddocs CLI (ddctl)
 │   ├── index.ts           # CLI entry point
 │   ├── listCommand.ts
 │   ├── getCommand.ts
@@ -387,36 +477,46 @@ src/
 │   ├── updateCommand.ts
 │   ├── deleteCommand.ts
 │   ├── downloadCommand.ts
-│   └── viewCommand.ts
+│   ├── viewCommand.ts
+│   └── utils/
+├── config/                # Configuration loader
+├── constants/             # Application constants
+├── init/                  # Initialization logic
 ├── domain/                # Business logic
 │   ├── file/              # File/DDoc domain
-│   ├── folder/            # Folder domain (not covered)
+│   ├── folder/            # Folder domain
 │   ├── portal/            # Blockchain publishing
 │   └── search/            # Search functionality
 ├── infra/                 # Infrastructure
 │   ├── database/          # SQLite database
 │   │   ├── connection.ts  # DB connection manager
 │   │   ├── migrations/    # Database migrations
-│   │   └── models/        # Data models
-│   ├── queue/             # BullMQ queue
-│   │   ├── connection.ts  # Redis connection
-│   │   ├── queueManager.ts
-│   │   └── workerManager.ts
-│   ├── cache/             # Redis cache
-│   └── logger.ts          # Logging
-└── interface/             # API layer
-    ├── api/
-    │   ├── handlers/      # Request handlers
-    │   └── router/        # Express routes
-    └── middleware/        # Express middleware
+│   │   └── models/        # Data models (files, folders, events, apikeys, portals)
+│   ├── worker/            # Event-based worker
+│   │   ├── worker.ts      # Worker implementation
+│   │   ├── eventProcessor.ts
+│   │   └── workerSignal.ts
+│   └── logger.ts          # Pino logging
+├── interface/             # API layer
+│   ├── api/
+│   │   ├── handlers/      # Request handlers (ddocs)
+│   │   └── router/        # Express routes (ddocs, folders, search)
+│   └── middleware/        # Express middleware
+└── sdk/                   # SDK utilities
+    ├── file-encryption.ts
+    ├── file-manager.ts
+    ├── pimlico-utils.ts   # Account abstraction
+    └── smart-agent.ts
 ```
 
 ## Key Files
 
-- **`src/infra/database/connection.ts`**: Database connection manager (handles CLI vs API paths)
+- **`src/infra/database/connection.ts`**: Database connection manager
 - **`src/domain/file/index.ts`**: Core file operations (create, update, delete, list)
-- **`src/infra/queue/workerManager.ts`**: Processes sync jobs and publishes to blockchain
+- **`src/infra/worker/worker.ts`**: Event-based worker that processes sync jobs
+- **`src/infra/worker/eventProcessor.ts`**: Processes individual events and publishes to blockchain
 - **`src/domain/portal/publish.ts`**: Blockchain publishing logic
+- **`src/cli/index.ts`**: Satellite CLI entry point (my-satellite)
 
 ## Database Schema
 
@@ -437,13 +537,65 @@ CREATE TABLE files (
 );
 ```
 
+### Events Table
+
+Stores pending sync events for the worker to process:
+
+```sql
+CREATE TABLE events (
+  _id TEXT PRIMARY KEY,
+  fileId TEXT NOT NULL,
+  type TEXT NOT NULL,           -- 'create', 'update', 'delete'
+  status TEXT DEFAULT 'pending', -- 'pending', 'processing', 'processed', 'failed'
+  retryCount INTEGER DEFAULT 0,
+  error TEXT,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  processedAt DATETIME
+);
+```
+
+### Folders Table
+
+```sql
+CREATE TABLE folders (
+  _id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Portals Table
+
+Stores blockchain portal configuration:
+
+```sql
+CREATE TABLE portals (
+  _id TEXT PRIMARY KEY,
+  address TEXT NOT NULL,
+  chainId INTEGER NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### API Keys Table
+
+```sql
+CREATE TABLE apikeys (
+  _id TEXT PRIMARY KEY,
+  key TEXT NOT NULL,
+  portalId TEXT NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ## Sync Process
 
 1. **Create/Update/Delete** operation happens in local DB
-2. **FileEvent** added to BullMQ queue with type (`create`, `update`, `delete`)
-3. **Worker** picks up event and calls `publishFile()`
-4. **On success**: Updates `onchainVersion` and sets `syncStatus` to `synced`
-5. **On failure**: `syncStatus` remains `pending` (will retry)
+2. **Event record** created in `events` table with type (`create`, `update`, `delete`)
+3. **Worker** polls for pending events and processes them concurrently
+4. **On success**: Updates `onchainVersion`, sets `syncStatus` to `synced`, marks event as `processed`
+5. **On failure**: Event marked for retry (up to 3 attempts), then marked as `failed`
 
 ## Type System
 
@@ -500,11 +652,12 @@ npm run migrate:create <migration-name>
 - Solution: `npm run clean && npm run build`
 - This ensures compiled code matches source code
 
-### Worker not processing jobs
+### Worker not processing events
 
-- Verify Redis is running: `redis-cli ping`
-- Check `REDIS_URI` in config
-- Check worker logs for errors
+- Ensure worker is running (`npm run start:worker` or via `my-satellite`)
+- Check for failed events in the `events` table
+- Review worker logs for error messages
+- Verify `WORKER_CONCURRENCY` setting is appropriate
 
 ### Database errors
 

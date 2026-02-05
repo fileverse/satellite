@@ -1,6 +1,17 @@
 # satellite
 
-## Setup
+## Quick Start
+
+The fastest way to get started is using the `my-satellite` CLI:
+
+```bash
+npm install
+npx my-satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+```
+
+This will prompt for any missing values, set up configuration, run migrations, and start the server.
+
+## Manual Setup
 
 ```bash
 git clone <your-repo-url>
@@ -116,7 +127,8 @@ Create a `.env` file in the `config/` directory with the following variables:
 - `PORT`: Server port (default: 8001)
 - `IP`: Server IP (default: 127.0.0.1)
 - `NODE_ENV`: Environment (development, production, etc.)
-- `SYNC_WORKER_CONCURRENCY`: Number of concurrent sync jobs to process (default: 5)
-- `SYNC_WORKER_MAX_JOBS`: Maximum jobs per second (default: 10)
+- `WORKER_CONCURRENCY`: Number of concurrent events to process (default: 5)
+- `LOG_LEVEL`: Logging level - trace, debug, info, warn, error, fatal (default: info)
+- `SERVICE_NAME`: Service name for logging (default: satellite)
 
 **Note:** The application will not start if `DB_PATH` is not set. Both the API server and CLI tool use the same database location specified by `DB_PATH`.
