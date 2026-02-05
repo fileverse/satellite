@@ -8,8 +8,9 @@ import {
   FoldersModel,
 } from './folders.model';
 import { EventsModel, type Event, type EventType, type EventStatus } from './events.model';
+import { ActivityModel, type Activity, type ActivityType, type ActivityListResult } from './activity.model';
 
-export { FilesModel, PortalsModel, ApiKeysModel, FoldersModel, EventsModel };
+export { FilesModel, PortalsModel, ApiKeysModel, FoldersModel, EventsModel, ActivityModel };
 export type {
   File,
   FileListResponse,
@@ -21,4 +22,7 @@ export type {
   Event,
   EventType,
   EventStatus,
+  Activity,
+  ActivityType,
+  ActivityListResult,
 };

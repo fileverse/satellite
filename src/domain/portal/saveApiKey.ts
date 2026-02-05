@@ -1,4 +1,5 @@
 import {
+  ActivityModel,
   ApiKeysModel,
   PortalsModel,
   type ApiKey,
@@ -30,5 +31,11 @@ export function addApiKey(input: AddApiKeyInput): ApiKey {
     );
   }
 
-  return ApiKeysModel.create(input);
+  const apiKey = ApiKeysModel.create(input);
+  ActivityModel.create({
+    type: 'create-key',
+    apiKeyName: input.name,
+    portalAddress: input.portalAddress,
+  });
+  return apiKey;
 }

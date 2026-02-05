@@ -106,6 +106,7 @@ const createHandler = async (req: Request, res: Response) => {
       title: title,
       content: fileContent,
       portalAddress,
+      apiKeyName: apiKeyInfo.name,
     };
 
     const file = await createFile(payload);
@@ -157,7 +158,12 @@ const updateHandler = async (req: Request, res: Response) => {
 
     const portalAddress = apiKeyInfo.portalAddress;
 
-    const result = await updateFile(ddocId, domainPayload, portalAddress);
+    const result = await updateFile(
+      ddocId,
+      domainPayload,
+      portalAddress,
+      apiKeyInfo.name
+    );
     res.status(200).json({
       message: 'File updated successfully',
       data: { ...result },
@@ -191,7 +197,7 @@ const deleteHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required header: x-portal-address is required' });
     }
 
-    const result = await deleteFile(ddocId, portalAddress);
+    const result = await deleteFile(ddocId, portalAddress, apiKeyInfo.name);
     res.status(200).json({
       message: 'File deleted successfully',
       data: { ...result },

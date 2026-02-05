@@ -18,6 +18,8 @@ export interface CreateFileInput {
   title: string;
   content: string;
   portalAddress: string;
+  /** Optional: used to record activity (e.g. "[apiKeyName] has created document [title]") */
+  apiKeyName?: string;
 }
 
 export interface UpdateFileInput {

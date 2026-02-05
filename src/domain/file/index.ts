@@ -1,6 +1,11 @@
 import { generate } from 'short-uuid';
 
-import { EventsModel, FilesModel, type File } from '../../infra/database/models';
+import {
+  ActivityModel,
+  EventsModel,
+  FilesModel,
+  type File,
+} from '../../infra/database/models';
 import { DEFAULT_LIST_LIMIT } from './constants';
 
 import type {
@@ -95,6 +100,15 @@ async function createFile(input: CreateFileInput): Promise<File> {
   });
 
   EventsModel.create({ type: 'create', fileId: file._id });
+  if (input.apiKeyName) {
+    ActivityModel.create({
+      type: 'add-file',
+      apiKeyName: input.apiKeyName,
+      portalAddress: input.portalAddress,
+      fileId: file._id,
+      documentTitle: file.title,
+    });
+  }
   return file;
 }
 
@@ -102,6 +116,7 @@ async function updateFile(
   ddocId: string,
   payload: UpdateFileInput,
   portalAddress: string,
+  apiKeyName?: string
 ): Promise<Partial<File>> {
   if (!ddocId) {
     throw new Error('ddocId is required');
@@ -126,6 +141,15 @@ async function updateFile(
   const updatedFile = FilesModel.update(existingFile._id, updatePayload, portalAddress);
 
   EventsModel.create({ type: 'update', fileId: updatedFile._id });
+  if (apiKeyName) {
+    ActivityModel.create({
+      type: 'edit-file',
+      apiKeyName,
+      portalAddress,
+      fileId: updatedFile._id,
+      documentTitle: updatedFile.title,
+    });
+  }
   return {
     ddocId: updatedFile.ddocId,
     link: updatedFile.link,
@@ -140,7 +164,11 @@ async function updateFile(
   };
 }
 
-async function deleteFile(ddocId: string, portalAddress: string): Promise<File> {
+async function deleteFile(
+  ddocId: string,
+  portalAddress: string,
+  apiKeyName?: string
+): Promise<File> {
   if (!ddocId) {
     throw new Error('ddocId is required');
   }
@@ -153,6 +181,15 @@ async function deleteFile(ddocId: string, portalAddress: string): Promise<File> 
   const deletedFile = FilesModel.softDelete(existingFile._id);
 
   EventsModel.create({ type: 'delete', fileId: deletedFile._id });
+  if (apiKeyName) {
+    ActivityModel.create({
+      type: 'delete-file',
+      apiKeyName,
+      portalAddress,
+      fileId: deletedFile._id,
+      documentTitle: deletedFile.title,
+    });
+  }
   return deletedFile;
 }
 

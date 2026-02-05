@@ -200,6 +200,26 @@ const migrations: MigrationFile[] = [
     up: `ALTER TABLE files ADD COLUMN link TEXT;`,
     down: `ALTER TABLE files DROP COLUMN link;`,
   },
+  {
+    timestamp: '20260205150000',
+    name: 'add_activity_table',
+    up: `
+      CREATE TABLE IF NOT EXISTS activity (
+        _id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK (type IN ('add-file', 'edit-file', 'delete-file', 'create-key', 'remove-key')),
+        apiKeyName TEXT NOT NULL,
+        portalAddress TEXT NOT NULL,
+        fileId TEXT,
+        documentTitle TEXT,
+        timestamp INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_activity_portal_timestamp ON activity(portalAddress, timestamp DESC);
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_activity_portal_timestamp;
+      DROP TABLE IF EXISTS activity;
+    `,
+  },
 ];
 
 export function runMigrations(): void {
