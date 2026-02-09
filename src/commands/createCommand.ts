@@ -29,7 +29,8 @@ export const createCommand = new Command()
 
       const content = fs.readFileSync(filepath, "utf-8");
       if (!content || content.trim().length === 0) {
-        throw new Error("File content cannot be empty");
+        console.error('Error creating ddoc: File content cannot be empty. Add some content to the file and try again.');
+        process.exit(1);
       }
 
       const title = path.basename(filepath);
@@ -72,6 +73,6 @@ export const createCommand = new Command()
       console.log(table.toString());
     } catch (error: any) {
       console.error("Error creating ddoc:", error.message);
-      throw error;
+      process.exit(1);
     }
   });
