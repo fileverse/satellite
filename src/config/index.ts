@@ -24,7 +24,6 @@ loadConfig(false);
 export function getRuntimeConfig() {
   return {
     get API_KEY() { return process.env.API_KEY; },
-    get PIMLICO_API_KEY() { return process.env.PIMLICO_API_KEY; },
     get RPC_URL() { return process.env.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL; },
     get DB_PATH() { return process.env.DB_PATH; },
     get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },
@@ -57,7 +56,6 @@ const config: Record<string, string | undefined> = {
   get UPLOAD_SERVER_URL() { return STATIC_CONFIG.API_URL; },
   get UPLOAD_SERVER_DID() { return STATIC_CONFIG.SERVER_DID; },
   get API_KEY() { return process.env.API_KEY; },
-  get PIMLICO_API_KEY() { return process.env.PIMLICO_API_KEY; },
   get RPC_URL() { return process.env.RPC_URL || STATIC_CONFIG.DEFAULT_RPC_URL; },
   get DB_PATH() { return process.env.DB_PATH; },
   get PORT() { return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT; },

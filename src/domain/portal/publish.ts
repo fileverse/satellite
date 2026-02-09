@@ -1,7 +1,8 @@
 import { FilesModel } from '../../infra/database/models';
 import { PortalsModel } from '../../infra/database/models';
 import { logger } from '../../infra';
-import { AuthTokenProvider, KeyStore } from '../../sdk/key-store';
+import { KeyStore } from '../../sdk/key-store';
+import { AuthTokenProvider } from '../../sdk/auth-token-provider';
 import { fromUint8Array, toUint8Array } from 'js-base64';
 import { Hex, stringToBytes } from 'viem';
 import { deriveHKDFKey } from '@fileverse/crypto/kdf';
@@ -78,7 +79,7 @@ async function createFileManager(
   const authTokenProvider = new AuthTokenProvider(keyPair, portalAddress);
   const keyStore = new KeyStore(toUint8Array(portalSeed), portalAddress, authTokenProvider);
 
-  const agentClient = new AgentClient();
+  const agentClient = new AgentClient(authTokenProvider);
   await agentClient.initializeAgentClient(privateAccountKey);
 
   return new FileManager(keyStore, agentClient);

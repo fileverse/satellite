@@ -6,7 +6,7 @@ The fastest way to get started is using the `@fileverse/satellite` CLI:
 
 ```bash
 npm install @fileverse/satellite
-npx @fileverse/satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+npx @fileverse/satellite --apiKey <key> --rpcUrl <url>
 ```
 
 This will prompt for any missing values, set up configuration, run migrations, and start the server.

@@ -47,7 +47,7 @@ If user needs to set up Satellite:
 
 ```bash
 npm install -g @fileverse/satellite
-npx @fileverse/satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+npx @fileverse/satellite --apiKey <key> --rpcUrl <url>
 ```
 
 ## CLI Commands Reference

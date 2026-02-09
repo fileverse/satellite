@@ -26,11 +26,14 @@ Both files share the same structure:
   "NETWORK_NAME": "sepolia",
   "DEFAULT_PORT": "8001",
   "DEFAULT_RPC_URL": "https://rpc.sepolia.org",
+  "PIMLICO_PROXY_URL": "https://pimlico-proxy.fileverse.io",
   "SERVICE_NAME": "satellite",
   "LOG_LEVEL": "info",
   "FRONTEND_URL": "https://..."
 }
 ```
+
+`PIMLICO_PROXY_URL` is the Pimlico proxy service that authenticates with Satellite API keys and forwards bundler/paymaster requests to Pimlico. For local dev, use `http://localhost:8002` if running the proxy locally.
 
 ## Constants Generation
 
@@ -127,7 +130,7 @@ End users configure the API via environment variables. The CLI scaffolds `~/.sat
 
 **Optional:**
 
-- `PORT`, `RPC_URL`, `PIMLICO_API_KEY`, etc.
+- `PORT`, `RPC_URL`, etc.
 
 ## First-Time Setup
 

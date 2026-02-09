@@ -16,7 +16,6 @@ const program = new Command()
   .description('Run the Satellite server for Fileverse')
   .version('0.0.1')
   .option('--apiKey <key>', 'API key for authentication')
-  .option('--pimlicoApiKey <key>', 'Pimlico API key for account abstraction')
   .option('--rpcUrl <url>', 'RPC URL for blockchain connection')
   .option('--port <port>', 'Port to run the server on', '8001')
   .option('--db <path>', 'Database path')
@@ -28,11 +27,9 @@ const program = new Command()
       if (needsPrompting(options)) {
         const prompted = await promptForConfig({
           apiKey: options.apiKey,
-          pimlicoApiKey: options.pimlicoApiKey,
           rpcUrl: options.rpcUrl,
         });
         options.apiKey = prompted.apiKey;
-        options.pimlicoApiKey = prompted.pimlicoApiKey;
         options.rpcUrl = prompted.rpcUrl;
       }
 
@@ -48,7 +45,6 @@ const program = new Command()
           dbPath: options.db,
           port: options.port,
           apiKey: options.apiKey,
-          pimlicoApiKey: options.pimlicoApiKey,
           rpcUrl: options.rpcUrl,
         });
         loadConfig();

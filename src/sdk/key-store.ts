@@ -4,38 +4,9 @@ import {
   eciesEncrypt,
   generateECKeyPair,
 } from '@fileverse/crypto/ecies';
-import * as ucans from '@ucans/ucans';
+import { AuthTokenProvider } from './auth-token-provider';
 
 
-export class AuthTokenProvider {
-
-  private keyPair: ucans.EdKeypair;
-  private portalAddress: Hex;
-  constructor(keyPair: ucans.EdKeypair, portalAddress: Hex) {
-    this.keyPair = keyPair;
-    this.portalAddress = portalAddress;
-  }
-
-  async getAuthToken(audienceDid: string,) {
-
-    const ucan = await ucans.build({
-      audience: audienceDid,
-      issuer: this.keyPair,
-      lifetimeInSeconds: 7 * 86400,
-      capabilities: [
-        {
-          with: {
-            scheme: 'storage',
-            hierPart: this.portalAddress.toLocaleLowerCase(),
-          },
-          can: { namespace: 'file', segments: ['CREATE'] },
-        },
-      ],
-    });
-
-    return ucans.encode(ucan);
-  }
-}
 
 export class KeyStore {
   private portalKeySeed: Uint8Array | undefined;

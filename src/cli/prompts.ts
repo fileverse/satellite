@@ -4,13 +4,11 @@ import { getRuntimeConfig } from '../config/index.js';
 
 export interface PromptedConfig {
   apiKey: string;
-  pimlicoApiKey: string;
   rpcUrl: string;
 }
 
 export async function promptForConfig(existingOptions: {
   apiKey?: string;
-  pimlicoApiKey?: string;
   rpcUrl?: string;
 } = {}): Promise<PromptedConfig> {
   const savedConfig = getRuntimeConfig();
@@ -26,16 +24,6 @@ export async function promptForConfig(existingOptions: {
     });
   }
 
-  if (!existingOptions.pimlicoApiKey) {
-    questions.push({
-      type: 'text',
-      name: 'pimlicoApiKey',
-      message: 'Enter your Pimlico API Key:',
-      validate: (value: string) => value.length > 0 || 'Pimlico API Key is required',
-      initial: savedConfig.PIMLICO_API_KEY || '',
-    });
-  }
-
   if (!existingOptions.rpcUrl) {
     questions.push({
       type: 'text',
@@ -48,7 +36,6 @@ export async function promptForConfig(existingOptions: {
   if (questions.length === 0) {
     return {
       apiKey: existingOptions.apiKey!,
-      pimlicoApiKey: existingOptions.pimlicoApiKey!,
       rpcUrl: existingOptions.rpcUrl || STATIC_CONFIG.DEFAULT_RPC_URL,
     };
   }
@@ -62,14 +49,10 @@ export async function promptForConfig(existingOptions: {
 
   return {
     apiKey: existingOptions.apiKey || response.apiKey,
-    pimlicoApiKey: existingOptions.pimlicoApiKey || response.pimlicoApiKey,
     rpcUrl: existingOptions.rpcUrl || response.rpcUrl || STATIC_CONFIG.DEFAULT_RPC_URL,
   };
 }
 
-export function needsPrompting(options: {
-  apiKey?: string;
-  pimlicoApiKey?: string;
-}): boolean {
-  return !options.apiKey || !options.pimlicoApiKey;
+export function needsPrompting(options: { apiKey?: string }): boolean {
+  return !options.apiKey;
 }

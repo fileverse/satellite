@@ -13,7 +13,7 @@ import { gcmEncrypt } from './file-encryption';
 import { toAESKey, aesEncrypt } from '@fileverse/crypto/webcrypto';
 import axios from 'axios';
 import { ADD_FILE_ABI, DELETED_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from '../constants';
-import { encodeFunctionData, Hex, parseEventLogs, Abi } from 'viem';
+import { encodeFunctionData, type Hex, parseEventLogs, type Abi } from 'viem';
 
 
 interface LinkKeyMaterialParams {

@@ -4,9 +4,11 @@ const path = require('path');
 const REQUIRED_KEYS = [
   'API_URL',
   'SERVER_DID',
+  'PROXY_SERVER_DID',
   'NETWORK_NAME',
   'DEFAULT_PORT',
   'DEFAULT_RPC_URL',
+  'PIMLICO_PROXY_URL',
   'SERVICE_NAME',
   'LOG_LEVEL',
   'FRONTEND_URL',

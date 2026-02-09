@@ -144,7 +144,7 @@ npm run dev:cli <command>
 The `fileverse-satellite` CLI provides an all-in-one setup and run experience:
 
 ```bash
-fileverse-satellite --apiKey <key> --pimlicoApiKey <key> --rpcUrl <url>
+fileverse-satellite --apiKey <key> --rpcUrl <url>
 ```
 
 This command will:
@@ -159,7 +159,6 @@ This command will:
 | Option | Description |
 |--------|-------------|
 | `--apiKey <key>` | API key for authentication |
-| `--pimlicoApiKey <key>` | Pimlico API key for account abstraction |
 | `--rpcUrl <url>` | RPC URL for blockchain connection |
 | `--port <port>` | Port to run the server on (default: 8001) |
 | `--db <path>` | Database path |

@@ -1,13 +1,13 @@
 import { EncodeDeployDataReturnType, Hex, toHex, } from 'viem';
-import { Account, privateKeyToAccount } from 'viem/accounts';
+import { privateKeyToAccount } from 'viem/accounts';
 import {
     getSmartAccountClient,
     getNonce,
     waitForUserOpReceipt,
     type TSmartAccountClient,
 } from './pimlico-utils';
-
-import { WaitForUserOperationReceiptReturnType } from 'viem/account-abstraction';
+import { AuthTokenProvider } from './auth-token-provider';
+import { STATIC_CONFIG } from '../cli/constants';
 
 export interface IExecuteUserOperationRequest {
     contractAddress: Hex;
@@ -19,6 +19,12 @@ export interface IExecuteUserOperationRequest {
 export class AgentClient {
     private smartAccountAgent: TSmartAccountClient | null = null;
     private readonly MAX_CALL_GAS_LIMIT = 500000;
+    private readonly authOptions: { namespace: string, segment: string, scheme: string } = { namespace: 'proxy', segment: 'ACCESS', scheme: 'pimlico' };
+
+    constructor(private readonly authTokenProvider: AuthTokenProvider) {
+        this.authTokenProvider = authTokenProvider;
+    }
+
 
 
     async initializeAgentClient(
@@ -26,8 +32,10 @@ export class AgentClient {
         smartAccountAddress?: Hex
     ) {
         const agentAccount = privateKeyToAccount(toHex(keyMaterial));
+        const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
         const smartAccountClient = await getSmartAccountClient(
             agentAccount,
+            authToken,
             smartAccountAddress
         );
         this.smartAccountAgent = smartAccountClient;
@@ -106,7 +114,8 @@ export class AgentClient {
         customGasLimit?: number
     ) {
         const userOpHash = await this.sendUserOperation(request, customGasLimit);
-        return await waitForUserOpReceipt(userOpHash, timeout);
+        const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
+        return await waitForUserOpReceipt(userOpHash, authToken, timeout);
     }
 
 
