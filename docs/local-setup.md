@@ -24,15 +24,26 @@ Run the following command to install the package globally on your system.
 npm install -g @fileverse/satellite
 ```
 
-This makes the `satellite` command available on your system.  
-  
-To verify the installation run
+This makes two commands available on your system:
+- `satellite` — Start and run the Satellite server
+- `ddctl` — CLI tool to manage documents from the command line
+
+To verify the installation, run:
 
 ```bash
 satellite --help # or -h
+ddctl --help
 ```
 
-If the installation was successful, you should see the Satellite help output with a list of available commands and options.
+If the installation was successful, you should see help output for both commands with a list of available options.
+
+### Available tools
+
+When you install `@fileverse/satellite`, you get access to two command-line tools:
+
+1. **`satellite`** — Starts and runs the Satellite server (API + worker). This is the main server that handles document management via REST API.
+
+2. **`ddctl`** — A CLI tool for managing documents directly from your terminal. Use `ddctl` to create, list, view, update, and delete documents without making HTTP requests. Run `ddctl --help` to see all available commands.
 
 ### Running the server
 
