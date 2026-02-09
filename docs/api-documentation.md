@@ -11,7 +11,6 @@ This document explains the Documents API exposed by the Satellite server and pro
 
 * [Overview](#overview)
 * [Authentication](#authentication)
-* [Request & Response Format](#request--response-format)
 * [Endpoints](#endpoints)
     
     * [Create document](#create-document)
@@ -40,11 +39,17 @@ Create and update support both JSON and multipart/form-data (file upload). File 
 
 ## Authentication
 
-All document API requests must be authenticated using an **API key**.
+All document API requests must be authenticated using an **API key** passed as a query parameter.
 
 You can generate API keys from the **Developer mode** section of the settings modal in your ddoc account. For full details, follow our step-by-step guide [here](#).
 
-When you start the Satellite server, you’ll be prompted to enter the API key you generated, along with few other variables. Once provided, this key will be used automatically to authenticate all subsequent API requests.
+When you start the Satellite server, you’ll be prompted to enter the API key you generated, along with few other variables. This API key must be included in every API request as a query parameter: `?apiKey=<YOUR_API_KEY>`.
+
+**Example:**
+```plaintext
+GET /api/ddocs?apiKey=your-api-key-here
+POST /api/ddocs?apiKey=your-api-key-here
+```
 
 * * *
 
@@ -57,7 +62,7 @@ Creates a new document. It is stored locally and queued for on-chain publishing 
 **Request**
 
 * **Method:** `POST`
-* **Path:** `/api/ddocs`
+* **Path:** `/api/ddocs?apiKey=<YOUR_API_KEY>`
 
 **Body** (choose one):
 
@@ -111,7 +116,8 @@ Creates a new document. It is stored locally and queued for on-chain publishing 
 
 | Status | Condition                                                              |
 | ------ | ---------------------------------------------------------------------- |
-| 400    | Missing `title` or content; invalid API key; or other validation error |
+| 400    | Missing `title` or content; or other validation error                  |
+| 401    | Invalid or missing API key                                             |
 
 * * *
 
@@ -122,10 +128,11 @@ Returns a paginated list of documents for the portal associated with the API key
 **Request**
 
 * **Method:** `GET`
-* **Path:** `/api/ddocs`
+* **Path:** `/api/ddocs?apiKey=<YOUR_API_KEY>`
 
 | Parameter | Type   | Default | Description                            |
 | --------- | ------ | ------- | -------------------------------------- |
+| `apiKey`  | string | —       | **Required.** Your API key for authentication. |
 | `skip`    | number | —       | Number of documents to skip (offset).  |
 | `limit`   | number | `10`    | Maximum number of documents to return. |
 
@@ -163,7 +170,7 @@ Returns a single document by its public `ddocId`.
 **Request**
 
 * **Method:** `GET`
-* **Path:** `/api/ddocs/:ddocId`
+* **Path:** `/api/ddocs/:ddocId?apiKey=<YOUR_API_KEY>`
 
 | Path param | Type   | Description                              |
 | ---------- | ------ | ---------------------------------------- |
@@ -193,6 +200,7 @@ Returns a single document by its public `ddocId`.
 | Status | Condition                                                                  |
 | ------ | -------------------------------------------------------------------------- |
 | 400    | Missing `ddocId`                                                           |
+| 401    | Invalid or missing API key                                                |
 | 404    | No document found for the given `ddocId` (`{ "error": "DDoc not found" }`) |
 
 * * *
@@ -204,7 +212,7 @@ Updates an existing document by `ddocId`. Supports partial updates (send only th
 **Request**
 
 * **Method:** `PUT`
-* **Path:** `/api/ddocs/:ddocId`
+* **Path:** `/api/ddocs/:ddocId?apiKey=<YOUR_API_KEY>`
 
 | Path param | Type   | Description                              |
 | ---------- | ------ | ---------------------------------------- |
@@ -251,7 +259,8 @@ You may update the title, the content, or both, as needed. Omit any fields you d
 
 | Status | Condition                                                                      |
 | ------ | ------------------------------------------------------------------------------ |
-| 400    | Neither title nor content provided; invalid API key; or other validation error |
+| 400    | Neither title nor content provided; or other validation error                 |
+| 401    | Invalid or missing API key                                                    |
 | 404    | No document found for the given `ddocId`                                       |
 
 * * *
@@ -263,7 +272,7 @@ Soft-deletes a document. It is removed from normal list/get; a background job is
 **Request**
 
 * **Method:** `DELETE`
-* **Path:** `/api/ddocs/:ddocId`
+* **Path:** `/api/ddocs/:ddocId?apiKey=<YOUR_API_KEY>`
 
 | Path param | Type   | Description                              |
 | ---------- | ------ | ---------------------------------------- |
@@ -319,7 +328,8 @@ Soft-deletes a document. It is removed from normal list/get; a background job is
 
 | Status | Condition                                |
 | ------ | ---------------------------------------- |
-| 400    | Missing `ddocId` or invalid API key      |
+| 400    | Missing `ddocId`                         |
+| 401    | Invalid or missing API key                |
 | 404    | No document found for the given `ddocId` |
 
 * * *
