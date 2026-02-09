@@ -1,7 +1,7 @@
 {
   "API_URL": "",
   "SERVER_DID": "",
-  "PROXY_SERVER_DID": "did:pimlico:server",
+  "PROXY_SERVER_DID": "did:proxy:server",
   "NETWORK_NAME": "sepolia",
   "DEFAULT_PORT": "8001",
   "DEFAULT_RPC_URL": "",
