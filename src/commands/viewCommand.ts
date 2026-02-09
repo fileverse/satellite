@@ -10,8 +10,8 @@ export const viewCommand = new Command()
   .option("-n, --lines <number>", "Number of lines to preview (default: 10)", "10")
   .action(async (ddocId: string, options: { lines?: string }) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
       if (!apiKey) throw new Error("API key is required");
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");

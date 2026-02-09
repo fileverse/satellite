@@ -54,8 +54,8 @@ export const updateCommand = new Command()
   .option("-f, --file <file_path>", "path to file to update ddoc from")
   .action(async (ddocId: string, options: { file?: string }) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
       if (!apiKey) throw new Error("API key is required");
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");

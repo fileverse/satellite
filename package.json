@@ -30,7 +30,7 @@
     "prepublishOnly": "npm run typecheck && npm run clean && npm run build",
     "dev": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx watch src/index.ts",
     "dev:worker": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx watch src/worker.ts",
-    "dev:cli": "tsx watch src/commands/index.ts",
+    "dev:cli": "tsx src/commands/index.ts",
     "dev:satellite": "tsx src/cli/index.ts",
     "start:api": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/worker.js",

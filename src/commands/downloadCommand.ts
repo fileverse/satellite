@@ -11,8 +11,8 @@ export const downloadCommand = new Command()
   .option("-o, --output <filename>", "Output filename (only supports markdown)")
   .action(async (ddocId: string, options: { output?: string }) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
       if (!apiKey) throw new Error("API key is required");
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");

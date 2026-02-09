@@ -11,8 +11,9 @@ export const getCommand = new Command()
   .argument("<ddocId>", "The ddoc ID to retrieve")
   .action(async (ddocId: string) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
+
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
       if (!apiKey) throw new Error("API key is required");
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
