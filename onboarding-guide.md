@@ -148,6 +148,7 @@ fileverse-satellite --apiKey <key> --rpcUrl <url>
 ```
 
 This command will:
+
 1. Prompt for any missing configuration values
 2. Fetch API key data from the server
 3. Create/update the config file
@@ -156,13 +157,13 @@ This command will:
 
 **Options:**
 
-| Option | Description |
-|--------|-------------|
-| `--apiKey <key>` | API key for authentication |
-| `--rpcUrl <url>` | RPC URL for blockchain connection |
-| `--port <port>` | Port to run the server on (default: 8001) |
-| `--db <path>` | Database path |
-| `--skip-fetch` | Skip fetching API key data (use existing config) |
+| Option           | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `--apiKey <key>` | API key for authentication                       |
+| `--rpcUrl <url>` | RPC URL for blockchain connection                |
+| `--port <port>`  | Port to run the server on (default: 8001)        |
+| `--db <path>`    | Database path                                    |
+| `--skip-fetch`   | Skip fetching API key data (use existing config) |
 
 ### Production Mode
 
@@ -342,15 +343,15 @@ GET /api/ddocs/:ddocId?apiKey=<key>
 
 ```json
 {
- "_id": "...",
- "ddocId": "...",
- "title": "...",
- "content": "...",
- "localVersion": 1,
- "onchainVersion": 0,
- "syncStatus": "pending",
- "createdAt": "...",
- "updatedAt": "..."
+  "_id": "...",
+  "ddocId": "...",
+  "title": "...",
+  "content": "...",
+  "localVersion": 1,
+  "onchainVersion": 0,
+  "syncStatus": "pending",
+  "createdAt": "...",
+  "updatedAt": "..."
 }
 ```
 

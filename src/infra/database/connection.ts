@@ -1,8 +1,8 @@
-import Database from 'better-sqlite3';
-import { config } from '../../config';
-import { logger } from '../index';
-import path from 'path';
-import fs from 'fs';
+import Database from "better-sqlite3";
+import { config } from "../../config";
+import { logger } from "../index";
+import path from "path";
+import fs from "fs";
 
 /**
  * Database connection manager - Singleton pattern
@@ -28,20 +28,17 @@ class DatabaseConnectionManager {
 
       // Create database instance
       this.db = new Database(dbPath, {
-        verbose:
-          config.NODE_ENV === 'development'
-            ? (msg: unknown) => logger.debug(String(msg))
-            : undefined,
+        verbose: config.NODE_ENV === "development" ? (msg: unknown) => logger.debug(String(msg)) : undefined,
       });
 
       // Enable WAL mode for better concurrency
-      this.db.pragma('journal_mode = WAL');
+      this.db.pragma("journal_mode = WAL");
 
       // Enable foreign keys
-      this.db.pragma('foreign_keys = ON');
+      this.db.pragma("foreign_keys = ON");
 
       // Connection health check
-      this.db.prepare('SELECT 1').get();
+      this.db.prepare("SELECT 1").get();
 
       logger.info(`SQLite database connected: ${dbPath}`);
     }
@@ -53,7 +50,7 @@ class DatabaseConnectionManager {
     if (this.db) {
       this.db.close();
       this.db = null;
-      logger.info('Database connection closed');
+      logger.info("Database connection closed");
     }
   }
 
@@ -62,5 +59,4 @@ class DatabaseConnectionManager {
   }
 }
 
-export const databaseConnectionManager =
-  DatabaseConnectionManager.getInstance();
+export const databaseConnectionManager = DatabaseConnectionManager.getInstance();

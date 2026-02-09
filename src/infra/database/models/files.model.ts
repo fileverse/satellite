@@ -1,6 +1,6 @@
-import { QueryBuilder } from '../index';
-import { uuidv7 } from 'uuidv7';
-import type { UpdateFilePayload } from './files/types';
+import { QueryBuilder } from "../index";
+import { uuidv7 } from "uuidv7";
+import type { UpdateFilePayload } from "./files/types";
 
 export interface File {
   _id: string;
@@ -9,7 +9,7 @@ export interface File {
   ddocId: string;
   localVersion: number;
   onchainVersion: number;
-  syncStatus: 'pending' | 'synced' | 'failed';
+  syncStatus: "pending" | "synced" | "failed";
   isDeleted: number;
   onChainFileId: number | null;
   portalAddress: string;
@@ -29,15 +29,13 @@ export interface FileListResponse {
 }
 
 export class FilesModel {
-  private static readonly TABLE = 'files';
+  private static readonly TABLE = "files";
 
   private static parseFile(fileRaw: any): File {
     let metadata: Record<string, unknown> = {};
     try {
       if (fileRaw.metadata) {
-        metadata = typeof fileRaw.metadata === 'string'
-          ? JSON.parse(fileRaw.metadata)
-          : fileRaw.metadata;
+        metadata = typeof fileRaw.metadata === "string" ? JSON.parse(fileRaw.metadata) : fileRaw.metadata;
       }
     } catch (e) {
       // If parsing fails, use empty object
@@ -65,8 +63,12 @@ export class FilesModel {
     };
   }
 
-  static findAll(portalAddress: string, limit?: number, skip?: number): { files: File[]; total: number; hasNext: boolean } {
-    const whereClause = 'isDeleted = 0 AND portalAddress = ?';
+  static findAll(
+    portalAddress: string,
+    limit?: number,
+    skip?: number,
+  ): { files: File[]; total: number; hasNext: boolean } {
+    const whereClause = "isDeleted = 0 AND portalAddress = ?";
     const params: any[] = [portalAddress];
 
     const countSql = `
@@ -84,13 +86,13 @@ export class FilesModel {
     const completeSql = QueryBuilder.paginate(sql, {
       limit,
       offset: skip,
-      orderBy: 'createdAt',
-      orderDirection: 'DESC'
+      orderBy: "createdAt",
+      orderDirection: "DESC",
     });
 
     const filesRaw = QueryBuilder.select<any>(completeSql, params);
     const files = filesRaw.map(this.parseFile);
-    const hasNext = skip !== undefined && limit !== undefined ? (skip + limit) < total : false;
+    const hasNext = skip !== undefined && limit !== undefined ? skip + limit < total : false;
     return { files, total, hasNext };
   }
 
@@ -143,19 +145,14 @@ export class FilesModel {
     const completeSql = QueryBuilder.paginate(sql, {
       limit,
       offset: skip,
-      orderBy: 'createdAt',
-      orderDirection: 'DESC'
+      orderBy: "createdAt",
+      orderDirection: "DESC",
     });
     const filesRaw = QueryBuilder.select<any>(completeSql, [`%${searchTerm}%`, portalAddress]);
     return filesRaw.map(this.parseFile);
   }
 
-  static create(input: {
-    title: string;
-    content: string;
-    ddocId: string;
-    portalAddress: string;
-  }): File {
+  static create(input: { title: string; content: string; ddocId: string; portalAddress: string }): File {
     const _id = uuidv7();
     const sql = `
       INSERT INTO ${this.TABLE} 
@@ -163,27 +160,17 @@ export class FilesModel {
       VALUES (?, ?, ?, ?, ?)
     `;
 
-    QueryBuilder.execute(sql, [
-      _id,
-      input.title,
-      input.content,
-      input.ddocId,
-      input.portalAddress,
-    ]);
+    QueryBuilder.execute(sql, [_id, input.title, input.content, input.ddocId, input.portalAddress]);
     // NOTE: default values while file creation: localVersion = 1, onchainVersion = 0, syncStatus = 'pending'
 
     const created = this.findById(_id, input.portalAddress);
     if (!created) {
-      throw new Error('Failed to create file');
+      throw new Error("Failed to create file");
     }
     return created;
   }
 
-  static update(
-    _id: string,
-    payload: UpdateFilePayload,
-    portalAddress: string,
-  ): File {
+  static update(_id: string, payload: UpdateFilePayload, portalAddress: string): File {
     const now = new Date().toISOString();
 
     const keys: string[] = [];
@@ -191,7 +178,7 @@ export class FilesModel {
     for (const [k, v] of Object.entries(payload)) {
       if (v !== undefined) {
         // Handle metadata specially - convert to JSON string
-        if (k === 'metadata' && typeof v === 'object') {
+        if (k === "metadata" && typeof v === "object") {
           keys.push(`${k} = ?`);
           values.push(JSON.stringify(v));
         } else {
@@ -202,17 +189,17 @@ export class FilesModel {
     }
 
     // Always add updatedAt
-    keys.push('updatedAt = ?');
+    keys.push("updatedAt = ?");
     values.push(now, _id, portalAddress);
 
-    const updateChain = keys.join(', ');
+    const updateChain = keys.join(", ");
     const sql = `UPDATE ${this.TABLE} SET ${updateChain} WHERE _id = ? AND portalAddress = ?`;
 
     QueryBuilder.execute(sql, values);
 
     const updated = this.findById(_id, portalAddress);
     if (!updated) {
-      throw new Error('Failed to update file');
+      throw new Error("Failed to update file");
     }
     return updated;
   }
@@ -230,7 +217,7 @@ export class FilesModel {
     // Use findByIdIncludingDeleted since the file is now marked as deleted
     const deleted = this.findByIdIncludingDeleted(_id);
     if (!deleted) {
-      throw new Error('Failed to delete file');
+      throw new Error("Failed to delete file");
     }
     return deleted;
   }

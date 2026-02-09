@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { STATIC_CONFIG } from './constants';
+import fs from "fs";
+import path from "path";
+import os from "os";
+import { STATIC_CONFIG } from "./constants";
 
 export interface ConfigOptions {
   apiKey?: string;
@@ -11,15 +11,15 @@ export interface ConfigOptions {
 }
 
 export function getSatelliteDir(): string {
-  return path.join(os.homedir(), '.satellite');
+  return path.join(os.homedir(), ".satellite");
 }
 
 function getDefaultDbPath(): string {
-  return path.join(getSatelliteDir(), 'satellite.db');
+  return path.join(getSatelliteDir(), "satellite.db");
 }
 
 export function getEnvPath(): string {
-  return path.join(getSatelliteDir(), '.env');
+  return path.join(getSatelliteDir(), ".env");
 }
 
 export function scaffoldConfig(options: ConfigOptions = {}): string {
@@ -42,7 +42,7 @@ DB_PATH=${dbPath}
 PORT=${options.port || STATIC_CONFIG.DEFAULT_PORT}
 `;
 
-  fs.writeFileSync(envPath, envContent, 'utf-8');
+  fs.writeFileSync(envPath, envContent, "utf-8");
 
   return envPath;
 }

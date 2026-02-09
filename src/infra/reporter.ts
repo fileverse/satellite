@@ -4,7 +4,7 @@
 class Reporter {
   async reportError(message: string): Promise<void> {
     // Implement your error reporting logic
-    console.error('Error reported:', message);
+    console.error("Error reported:", message);
   }
 }
 

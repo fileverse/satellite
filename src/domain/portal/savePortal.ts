@@ -1,4 +1,4 @@
-import { PortalsModel, type Portal } from '../../infra/database/models';
+import { PortalsModel, type Portal } from "../../infra/database/models";
 
 export interface SavePortalInput {
   portalAddress: string;
@@ -8,7 +8,7 @@ export interface SavePortalInput {
 
 export function savePortal(input: SavePortalInput): Portal {
   if (!input.portalAddress || !input.portalSeed || !input.ownerAddress) {
-    throw new Error('portalAddress, portalSeed, and ownerAddress are required');
+    throw new Error("portalAddress, portalSeed, and ownerAddress are required");
   }
 
   return PortalsModel.upsert(input);

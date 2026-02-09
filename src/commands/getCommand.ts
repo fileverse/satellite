@@ -1,29 +1,21 @@
-import { Command } from 'commander';
-import Table from 'cli-table3';
-import { getFile } from '../domain/file';
-import {
-  formatDate,
-  getElapsedTime,
-  columnNames,
-  columnWidth,
-} from './utils/util';
-import { getRuntimeConfig } from '../config';
-import { ApiKeysModel } from '../infra/database/models';
+import { Command } from "commander";
+import Table from "cli-table3";
+import { getFile } from "../domain/file";
+import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { getRuntimeConfig } from "../config";
+import { ApiKeysModel } from "../infra/database/models";
 
 export const getCommand = new Command()
-  .name('get')
-  .description('Get a ddoc by its ID')
-  .argument('<ddocId>', 'The ddoc ID to retrieve')
+  .name("get")
+  .description("Get a ddoc by its ID")
+  .argument("<ddocId>", "The ddoc ID to retrieve")
   .action(async (ddocId: string) => {
-
-
     try {
-
       const runtimConfig = getRuntimeConfig();
       const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error('API key is required');
+      if (!apiKey) throw new Error("API key is required");
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
-      if (!portalAddress) throw new Error('Portal address is required');
+      if (!portalAddress) throw new Error("Portal address is required");
       const file = getFile(ddocId, portalAddress);
       if (!file) {
         console.error(`Ddoc with ID "${ddocId}" not found.`);
@@ -54,27 +46,25 @@ export const getCommand = new Command()
         style: { head: [] },
       });
 
-      const fileDdocId = (file as any).ddocId || 'N/A';
+      const fileDdocId = (file as any).ddocId || "N/A";
       table.push([
         fileDdocId,
-        file.title.length > 23
-          ? file.title.substring(0, 20) + '...'
-          : file.title,
+        file.title.length > 23 ? file.title.substring(0, 20) + "..." : file.title,
         file.syncStatus,
         file.localVersion,
         file.onchainVersion,
-        file.isDeleted ? 'True' : 'False',
+        file.isDeleted ? "True" : "False",
         formatDate(file.createdAt),
         getElapsedTime(file.updatedAt),
       ]);
 
-      console.log('\nDdoc details:\n');
+      console.log("\nDdoc details:\n");
       console.log(table.toString());
       if (file.link) {
         console.log(`\nLink: ${file.link}\n`);
       }
     } catch (error: any) {
-      console.error('Error getting ddoc:', error.message);
+      console.error("Error getting ddoc:", error.message);
       throw error;
     }
   });

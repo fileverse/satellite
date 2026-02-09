@@ -1,6 +1,6 @@
-import { databaseConnectionManager } from './connection';
-import type { QueryOptions } from './types';
-import { DEFAULT_LIST_LIMIT } from '../../domain/file/constants';
+import { databaseConnectionManager } from "./connection";
+import type { QueryOptions } from "./types";
+import { DEFAULT_LIST_LIMIT } from "../../domain/file/constants";
 
 function getDb() {
   return databaseConnectionManager.getConnection();
@@ -19,7 +19,7 @@ export class QueryBuilder {
 
   static execute(
     sql: string,
-    params: any[] = []
+    params: any[] = [],
   ): {
     changes: number;
     lastInsertRowid: number | bigint;
@@ -40,7 +40,7 @@ export class QueryBuilder {
     let query = sql;
 
     if (options.orderBy) {
-      query += ` ORDER BY ${options.orderBy} ${options.orderDirection || 'ASC'}`;
+      query += ` ORDER BY ${options.orderBy} ${options.orderDirection || "ASC"}`;
     }
 
     const hasOffset = (options.offset ?? 0) > 0;

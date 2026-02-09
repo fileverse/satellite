@@ -1,5 +1,5 @@
-import { QueryBuilder } from '../index';
-import type { File } from './files.model';
+import { QueryBuilder } from "../index";
+import type { File } from "./files.model";
 
 export interface Folder {
   _id: string;
@@ -29,38 +29,31 @@ export interface FolderListResponse {
 }
 
 export class FoldersModel {
-  private static readonly TABLE = 'folders';
+  private static readonly TABLE = "folders";
 
   /**
    * List all folders with pagination
    */
-  static findAll(
-    limit?: number,
-    skip?: number
-  ): { folders: Folder[]; total: number; hasNext: boolean } {
+  static findAll(limit?: number, skip?: number): { folders: Folder[]; total: number; hasNext: boolean } {
     // Get total count
     const countSql = `SELECT COUNT(*) as count FROM ${this.TABLE} WHERE isDeleted = 0`;
     const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql);
     const total = totalResult?.count || 0;
 
     // Get paginated results
-    const sql = QueryBuilder.paginate(
-      `SELECT * FROM ${this.TABLE} WHERE isDeleted = 0`,
-      {
-        limit,
-        offset: skip,
-        orderBy: 'created_at',
-        orderDirection: 'DESC',
-      }
-    );
+    const sql = QueryBuilder.paginate(`SELECT * FROM ${this.TABLE} WHERE isDeleted = 0`, {
+      limit,
+      offset: skip,
+      orderBy: "created_at",
+      orderDirection: "DESC",
+    });
 
     const folders = QueryBuilder.select<any>(sql).map((folderRaw) => ({
       ...folderRaw,
       isDeleted: Boolean(folderRaw.isDeleted),
     }));
 
-    const hasNext =
-      skip !== undefined && limit !== undefined ? skip + limit < total : false;
+    const hasNext = skip !== undefined && limit !== undefined ? skip + limit < total : false;
 
     return { folders, total, hasNext };
   }
@@ -69,10 +62,7 @@ export class FoldersModel {
    * Get a single folder by folderRef and folderId
    * Includes ddocs array (as per API spec)
    */
-  static findByFolderRefAndId(
-    folderRef: string,
-    folderId: string
-  ): FolderWithDDocs | undefined {
+  static findByFolderRefAndId(folderRef: string, folderId: string): FolderWithDDocs | undefined {
     const sql = `SELECT * FROM ${this.TABLE} WHERE folderRef = ? AND folderId = ? AND isDeleted = 0`;
     const folderRaw = QueryBuilder.selectOne<any>(sql, [folderRef, folderId]);
 
@@ -116,20 +106,16 @@ export class FoldersModel {
   /**
    * Search folders by folderName (case-insensitive substring match)
    */
-  static searchByName(
-    searchTerm: string,
-    limit?: number,
-    skip?: number
-  ): Folder[] {
+  static searchByName(searchTerm: string, limit?: number, skip?: number): Folder[] {
     const sql = QueryBuilder.paginate(
       `SELECT * FROM ${this.TABLE} 
        WHERE isDeleted = 0 AND LOWER(folderName) LIKE LOWER(?)`,
       {
         limit,
         offset: skip,
-        orderBy: 'created_at',
-        orderDirection: 'DESC',
-      }
+        orderBy: "created_at",
+        orderDirection: "DESC",
+      },
     );
 
     const foldersRaw = QueryBuilder.select<any>(sql, [`%${searchTerm}%`]);
@@ -155,9 +141,7 @@ export class FoldersModel {
     lastTransactionBlockNumber: number;
     lastTransactionBlockTimestamp: number;
   }): Folder {
-    const _id =
-      input._id ||
-      `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const _id = input._id || `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
 
     const sql = `INSERT INTO ${this.TABLE} (
@@ -185,13 +169,10 @@ export class FoldersModel {
 
     // Fetch the created folder (without ddocs)
     const selectSql = `SELECT * FROM ${this.TABLE} WHERE folderRef = ? AND folderId = ? AND isDeleted = 0`;
-    const folderRaw = QueryBuilder.selectOne<any>(selectSql, [
-      input.folderRef,
-      input.folderId,
-    ]);
+    const folderRaw = QueryBuilder.selectOne<any>(selectSql, [input.folderRef, input.folderId]);
 
     if (!folderRaw) {
-      throw new Error('Failed to create folder');
+      throw new Error("Failed to create folder");
     }
 
     return {

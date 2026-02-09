@@ -8,7 +8,7 @@ export interface UpdateFilePayload {
   isDeleted?: number;
   localVersion?: number;
   onchainVersion?: number;
-  syncStatus?: 'pending' | 'synced' | 'failed';
+  syncStatus?: "pending" | "synced" | "failed";
   portalAddress?: string;
   metadata?: Record<string, unknown>;
   onChainFileId?: number;
@@ -17,4 +17,3 @@ export interface UpdateFilePayload {
   commentKey?: string;
   link?: string;
 }
-

@@ -1,15 +1,8 @@
-import { logger } from './logger';
-import { asyncHandler, asyncHandlerArray } from './asyncHandler';
-import { closeWorker } from './worker';
-import { closeDatabase } from './database';
+import { logger } from "./logger";
+import { asyncHandler, asyncHandlerArray } from "./asyncHandler";
+import { closeWorker } from "./worker";
+import { closeDatabase } from "./database";
 
-import reporter from './reporter';
+import reporter from "./reporter";
 
-export {
-  logger,
-  asyncHandler,
-  asyncHandlerArray,
-  reporter,
-  closeWorker,
-  closeDatabase,
-};
+export { logger, asyncHandler, asyncHandlerArray, reporter, closeWorker, closeDatabase };

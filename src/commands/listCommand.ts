@@ -1,29 +1,24 @@
-import { Command } from 'commander';
-import Table from 'cli-table3';
-import { listFiles } from '../domain/file';
-import type { File } from '../infra/database/models';
-import {
-  formatDate,
-  getElapsedTime,
-  columnNames,
-  columnWidth,
-} from './utils/util';
-import { getRuntimeConfig } from '../config';
-import { ApiKeysModel } from '../infra/database/models';
-import { GetFileResult } from '../domain/file/types';
+import { Command } from "commander";
+import Table from "cli-table3";
+import { listFiles } from "../domain/file";
+import type { File } from "../infra/database/models";
+import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { getRuntimeConfig } from "../config";
+import { ApiKeysModel } from "../infra/database/models";
+import { GetFileResult } from "../domain/file/types";
 
 export const listCommand = new Command()
-  .name('list')
-  .description('List all ddocs')
-  .option('-l, --limit <number>', 'Limit the number of results', parseInt)
-  .option('-s, --skip <number>', 'Skip the first N results', parseInt)
+  .name("list")
+  .description("List all ddocs")
+  .option("-l, --limit <number>", "Limit the number of results", parseInt)
+  .option("-s, --skip <number>", "Skip the first N results", parseInt)
   .action(async (options) => {
     try {
       const runtimConfig = getRuntimeConfig();
       const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error('API key is required');
+      if (!apiKey) throw new Error("API key is required");
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
-      if (!portalAddress) throw new Error('Portal address is required');
+      if (!portalAddress) throw new Error("Portal address is required");
       const params = {
         limit: options.limit,
         skip: options.skip,
@@ -32,7 +27,7 @@ export const listCommand = new Command()
 
       const result = listFiles(params);
       if (result.ddocs.length === 0) {
-        console.log('No ddocs found.');
+        console.log("No ddocs found.");
         return;
       }
 
@@ -61,13 +56,11 @@ export const listCommand = new Command()
       });
 
       result.ddocs.forEach((ddoc: GetFileResult, index: number) => {
-        const ddocId = (ddoc as any).ddocId || 'N/A';
+        const ddocId = (ddoc as any).ddocId || "N/A";
         table.push([
           index + 1,
           ddocId,
-          ddoc.title.length > 23
-            ? ddoc.title.substring(0, 20) + '...'
-            : ddoc.title,
+          ddoc.title.length > 23 ? ddoc.title.substring(0, 20) + "..." : ddoc.title,
           ddoc.syncStatus,
           ddoc.localVersion,
           ddoc.onchainVersion,
@@ -79,12 +72,10 @@ export const listCommand = new Command()
       console.log(`\nFound ${result.total} ddoc(s):\n`);
       console.log(table.toString());
       if (result.hasNext) {
-        console.log(
-          '\n(More results available. Use --skip and --limit for pagination)'
-        );
+        console.log("\n(More results available. Use --skip and --limit for pagination)");
       }
     } catch (error: any) {
-      console.error('Error listing ddocs:', error.message);
+      console.error("Error listing ddocs:", error.message);
       throw error;
     }
   });

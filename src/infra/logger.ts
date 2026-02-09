@@ -1,5 +1,5 @@
-import pino, { Logger as PinoLogger, Level } from 'pino';
-import { STATIC_CONFIG } from '../cli/constants';
+import pino, { Logger as PinoLogger, Level } from "pino";
+import { STATIC_CONFIG } from "../cli/constants";
 
 const pinoInstance = pino({
   name: STATIC_CONFIG.SERVICE_NAME,
@@ -8,19 +8,18 @@ const pinoInstance = pino({
     bindings: (bindings) => ({ name: bindings.name }),
     level: (label) => ({ level: label }),
   },
-  transport:
-    true
-      ? {
-        target: 'pino-pretty',
+  transport: true
+    ? {
+        target: "pino-pretty",
         options: {
           colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-          errorProps: '*',
-          errorLikeObjectKeys: ['err', 'error'],
+          translateTime: "SYS:standard",
+          ignore: "pid,hostname",
+          errorProps: "*",
+          errorLikeObjectKeys: ["err", "error"],
         },
       }
-      : undefined,
+    : undefined,
 });
 
 type LogFn = {
@@ -33,7 +32,7 @@ const createLogMethod = (level: Level): LogFn => {
     const [first, ...rest] = args;
     const log = pinoInstance[level].bind(pinoInstance) as (...a: unknown[]) => void;
 
-    if (typeof first === 'object' && first !== null && !(first instanceof Error)) {
+    if (typeof first === "object" && first !== null && !(first instanceof Error)) {
       log(first, ...rest);
       return;
     }
@@ -63,16 +62,16 @@ interface Logger {
   error: LogFn;
   fatal: LogFn;
   level: Level;
-  child: PinoLogger['child'];
+  child: PinoLogger["child"];
 }
 
 export const logger: Logger = {
-  trace: createLogMethod('trace'),
-  debug: createLogMethod('debug'),
-  info: createLogMethod('info'),
-  warn: createLogMethod('warn'),
-  error: createLogMethod('error'),
-  fatal: createLogMethod('fatal'),
+  trace: createLogMethod("trace"),
+  debug: createLogMethod("debug"),
+  info: createLogMethod("info"),
+  warn: createLogMethod("warn"),
+  error: createLogMethod("error"),
+  fatal: createLogMethod("fatal"),
   get level() {
     return pinoInstance.level as Level;
   },

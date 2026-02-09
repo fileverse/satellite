@@ -1,21 +1,16 @@
-import { Command } from 'commander';
-import { createFile } from '../domain/file';
-import * as fs from 'fs';
-import * as path from 'path';
-import Table from 'cli-table3';
-import {
-  formatDate,
-  getElapsedTime,
-  columnNames,
-  columnWidth,
-} from './utils/util';
-import { getRuntimeConfig } from '../config';
-import { ApiKeysModel } from '../infra/database/models';
+import { Command } from "commander";
+import { createFile } from "../domain/file";
+import * as fs from "fs";
+import * as path from "path";
+import Table from "cli-table3";
+import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { getRuntimeConfig } from "../config";
+import { ApiKeysModel } from "../infra/database/models";
 
 export const createCommand = new Command()
-  .name('create')
-  .description('Create a new ddoc from a file')
-  .argument('<filepath>', 'Path to the file to create ddoc from')
+  .name("create")
+  .description("Create a new ddoc from a file")
+  .argument("<filepath>", "Path to the file to create ddoc from")
   .action(async (filepath: string) => {
     try {
       if (!fs.existsSync(filepath)) {
@@ -26,21 +21,21 @@ export const createCommand = new Command()
 
       const apiKey = runtimConfig.API_KEY;
 
-      if (!apiKey) throw new Error('API key is required');
+      if (!apiKey) throw new Error("API key is required");
 
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
 
-      if (!portalAddress) throw new Error('Portal address is required');
+      if (!portalAddress) throw new Error("Portal address is required");
 
-      const content = fs.readFileSync(filepath, 'utf-8');
+      const content = fs.readFileSync(filepath, "utf-8");
       if (!content || content.trim().length === 0) {
-        throw new Error('File content cannot be empty');
+        throw new Error("File content cannot be empty");
       }
 
       const title = path.basename(filepath);
       const file = await createFile({ title, content, portalAddress });
 
-      console.log('\nDdoc created successfully!\n');
+      console.log("\nDdoc created successfully!\n");
       const table = new Table({
         head: [
           columnNames.ddocId,
@@ -63,12 +58,10 @@ export const createCommand = new Command()
         style: { head: [] },
       });
 
-      const ddocId = (file as any).ddocId || 'N/A';
+      const ddocId = (file as any).ddocId || "N/A";
       table.push([
         ddocId,
-        file.title.length > 23
-          ? file.title.substring(0, 20) + '...'
-          : file.title,
+        file.title.length > 23 ? file.title.substring(0, 20) + "..." : file.title,
         file.syncStatus,
         file.localVersion,
         file.onchainVersion,
@@ -78,7 +71,7 @@ export const createCommand = new Command()
 
       console.log(table.toString());
     } catch (error: any) {
-      console.error('Error creating ddoc:', error.message);
+      console.error("Error creating ddoc:", error.message);
       throw error;
     }
   });

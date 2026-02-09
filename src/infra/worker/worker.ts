@@ -1,8 +1,8 @@
-import { logger } from '../index';
-import { processEvent } from './eventProcessor';
-import { onNewEvent } from './workerSignal';
-import { EventsModel } from '../database/models';
-import type { Event } from '../database/models';
+import { logger } from "../index";
+import { processEvent } from "./eventProcessor";
+import { onNewEvent } from "./workerSignal";
+import { EventsModel } from "../database/models";
+import type { Event } from "../database/models";
 
 const DEFAULT_CONCURRENCY = 5;
 const STALE_THRESHOLD_MS = 5 * 60 * 1000;
@@ -26,7 +26,7 @@ export class FileEventsWorker {
 
   start(): void {
     if (this.isRunning) {
-      logger.warn('Worker is already running');
+      logger.warn("Worker is already running");
       return;
     }
     this.isRunning = true;
@@ -41,16 +41,14 @@ export class FileEventsWorker {
       this.wakeUp();
     });
 
-    logger.info(
-      `File events worker started (concurrency: ${this.concurrency})`
-    );
+    logger.info(`File events worker started (concurrency: ${this.concurrency})`);
     this.run();
   }
 
   private async run(): Promise<void> {
     while (this.isRunning) {
       const foundEvents = await this.fillSlots();
-      logger.info(`Found ${foundEvents ? 'events' : 'no events'} to process`);
+      logger.info(`Found ${foundEvents ? "events" : "no events"} to process`);
       if (this.activeProcessors.size === 0) {
         if (this.pendingSignal && !foundEvents) {
           this.pendingSignal = false;
@@ -104,14 +102,10 @@ export class FileEventsWorker {
     const errorMsg = error instanceof Error ? error.message : String(error);
     if (event.retryCount < MAX_RETRIES) {
       EventsModel.scheduleRetry(event._id, errorMsg);
-      logger.warn(
-        `Event ${event._id} failed (retry ${event.retryCount + 1}/${MAX_RETRIES}): ${errorMsg}`
-      );
+      logger.warn(`Event ${event._id} failed (retry ${event.retryCount + 1}/${MAX_RETRIES}): ${errorMsg}`);
     } else {
       EventsModel.markFailed(event._id, errorMsg);
-      logger.error(
-        `Event ${event._id} permanently failed after ${MAX_RETRIES} retries: ${errorMsg}`
-      );
+      logger.error(`Event ${event._id} permanently failed after ${MAX_RETRIES} retries: ${errorMsg}`);
     }
   }
 
@@ -149,7 +143,7 @@ export class FileEventsWorker {
     if (!this.isRunning) {
       return;
     }
-    logger.info('Closing worker gracefully...');
+    logger.info("Closing worker gracefully...");
     this.isRunning = false;
 
     if (this.signalCleanup) {
@@ -160,13 +154,11 @@ export class FileEventsWorker {
     this.wakeUp();
 
     if (this.activeProcessors.size > 0) {
-      logger.info(
-        `Waiting for ${this.activeProcessors.size} active processor(s) to complete...`
-      );
+      logger.info(`Waiting for ${this.activeProcessors.size} active processor(s) to complete...`);
       await Promise.all(this.activeProcessors.values());
     }
 
-    logger.info('Worker closed');
+    logger.info("Worker closed");
   }
 
   isActive(): boolean {

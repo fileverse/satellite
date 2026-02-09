@@ -1,4 +1,4 @@
-import { FoldersModel, type Folder } from '../../infra/database/models';
+import { FoldersModel, type Folder } from "../../infra/database/models";
 
 export interface CreateFolderInput {
   _id?: string;
@@ -21,25 +21,22 @@ export interface CreateFolderInput {
 export default function createFolder(input: CreateFolderInput): Folder {
   // Validate required fields
   if (!input.folderId) {
-    throw new Error('folderId is required');
+    throw new Error("folderId is required");
   }
   if (!input.folderRef) {
-    throw new Error('folderRef is required');
+    throw new Error("folderRef is required");
   }
   if (!input.folderName) {
-    throw new Error('folderName is required');
+    throw new Error("folderName is required");
   }
   if (!input.portalAddress) {
-    throw new Error('portalAddress is required');
+    throw new Error("portalAddress is required");
   }
 
   // Check if folderRef already exists
-  const existing = FoldersModel.findByFolderRefAndId(
-    input.folderRef,
-    input.folderId
-  );
+  const existing = FoldersModel.findByFolderRefAndId(input.folderRef, input.folderId);
   if (existing) {
-    throw new Error('Folder with this folderRef and folderId already exists');
+    throw new Error("Folder with this folderRef and folderId already exists");
   }
 
   return FoldersModel.create(input);

@@ -1,13 +1,13 @@
 export const columnNames = {
-  index: '#',
-  ddocId: 'DDoc ID',
-  title: 'Title',
-  status: 'Status',
-  local: 'Local version',
-  onchain: 'On-chain version',
-  deleted: 'Deleted',
-  created: 'Created',
-  lastModified: 'Last modified',
+  index: "#",
+  ddocId: "DDoc ID",
+  title: "Title",
+  status: "Status",
+  local: "Local version",
+  onchain: "On-chain version",
+  deleted: "Deleted",
+  created: "Created",
+  lastModified: "Last modified",
 } as const;
 
 export const columnWidth: Record<string, number> = {
@@ -23,20 +23,20 @@ export const columnWidth: Record<string, number> = {
 };
 
 export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const d = typeof date === "string" ? new Date(date) : date;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
   return `${day}-${month}-${year}`;
 }
 
 export function getElapsedTime(date: Date | string): string {
   const now = new Date();
-  const past = typeof date === 'string' ? new Date(date) : date;
+  const past = typeof date === "string" ? new Date(date) : date;
   const diffMs = now.getTime() - past.getTime();
 
   if (diffMs < 0) {
-    return 'just now';
+    return "just now";
   }
 
   const diffSeconds = Math.floor(diffMs / 1000);
@@ -48,13 +48,13 @@ export function getElapsedTime(date: Date | string): string {
   const diffYears = Math.floor(diffDays / 365);
 
   const units = [
-    { value: diffSeconds, max: 60, name: 'second' },
-    { value: diffMinutes, max: 60, name: 'minute' },
-    { value: diffHours, max: 24, name: 'hour' },
-    { value: diffDays, max: 7, name: 'day' },
-    { value: diffWeeks, max: 4, name: 'week' },
-    { value: diffMonths, max: 12, name: 'month' },
-    { value: diffYears, max: Infinity, name: 'year' },
+    { value: diffSeconds, max: 60, name: "second" },
+    { value: diffMinutes, max: 60, name: "minute" },
+    { value: diffHours, max: 24, name: "hour" },
+    { value: diffDays, max: 7, name: "day" },
+    { value: diffWeeks, max: 4, name: "week" },
+    { value: diffMonths, max: 12, name: "month" },
+    { value: diffYears, max: Infinity, name: "year" },
   ];
 
   const unit = units.find((u) => u.value < u.max);
@@ -63,5 +63,5 @@ export function getElapsedTime(date: Date | string): string {
     return `${unit.value} ${label} ago`;
   }
 
-  return 'just now';
+  return "just now";
 }

@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import multer from 'multer';
+import { Request, Response } from "express";
+import multer from "multer";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -9,18 +9,18 @@ const upload = multer({
 });
 
 export const createMiddleware = (req: Request, res: Response, next: any) => {
-  const contentType = req.headers['content-type'] || '';
-  if (contentType.includes('multipart/form-data')) {
-    upload.single('file')(req, res, next);
+  const contentType = req.headers["content-type"] || "";
+  if (contentType.includes("multipart/form-data")) {
+    upload.single("file")(req, res, next);
     return;
   }
   next();
 };
 
 export const updateMiddleware = (req: Request, res: Response, next: any) => {
-  const contentType = req.headers['content-type'] || '';
-  if (contentType.includes('multipart/form-data')) {
-    upload.single('file')(req, res, next);
+  const contentType = req.headers["content-type"] || "";
+  if (contentType.includes("multipart/form-data")) {
+    upload.single("file")(req, res, next);
     return;
   }
   next();

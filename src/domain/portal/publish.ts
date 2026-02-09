@@ -1,16 +1,16 @@
-import { FilesModel } from '../../infra/database/models';
-import { PortalsModel } from '../../infra/database/models';
-import { logger } from '../../infra';
-import { KeyStore } from '../../sdk/key-store';
-import { AuthTokenProvider } from '../../sdk/auth-token-provider';
-import { fromUint8Array, toUint8Array } from 'js-base64';
-import { Hex, stringToBytes } from 'viem';
-import { deriveHKDFKey } from '@fileverse/crypto/kdf';
-import { generateKeyPairFromSeed } from '@stablelib/ed25519';
-import * as ucans from '@ucans/ucans';
-import { AgentClient } from '../../sdk/smart-agent';
-import { FileManager } from '../../sdk/file-manager';
-import { getRuntimeConfig } from '../../config';
+import { FilesModel } from "../../infra/database/models";
+import { PortalsModel } from "../../infra/database/models";
+import { logger } from "../../infra";
+import { KeyStore } from "../../sdk/key-store";
+import { AuthTokenProvider } from "../../sdk/auth-token-provider";
+import { fromUint8Array, toUint8Array } from "js-base64";
+import { Hex, stringToBytes } from "viem";
+import { deriveHKDFKey } from "@fileverse/crypto/kdf";
+import { generateKeyPairFromSeed } from "@stablelib/ed25519";
+import * as ucans from "@ucans/ucans";
+import { AgentClient } from "../../sdk/smart-agent";
+import { FileManager } from "../../sdk/file-manager";
+import { getRuntimeConfig } from "../../config";
 
 export interface PublishResult {
   success: boolean;
@@ -40,7 +40,7 @@ function getPortalData(fileId: string): PortalData {
 
   const apiKey = getRuntimeConfig().API_KEY;
   if (!apiKey) {
-    throw new Error('API key is not set');
+    throw new Error("API key is not set");
   }
 
   return { file, portalDetails, apiKey };
@@ -49,17 +49,9 @@ function getPortalData(fileId: string): PortalData {
 function deriveCollaboratorKeys(apiKeySeed: Uint8Array) {
   const salt = new Uint8Array([0]);
 
-  const privateAccountKey = deriveHKDFKey(
-    apiKeySeed,
-    salt,
-    stringToBytes('COLLABORATOR_PRIVATE_KEY')
-  );
+  const privateAccountKey = deriveHKDFKey(apiKeySeed, salt, stringToBytes("COLLABORATOR_PRIVATE_KEY"));
 
-  const ucanDerivedSecret = deriveHKDFKey(
-    apiKeySeed,
-    salt,
-    stringToBytes('COLLABORATOR_UCAN_SECRET')
-  );
+  const ucanDerivedSecret = deriveHKDFKey(apiKeySeed, salt, stringToBytes("COLLABORATOR_UCAN_SECRET"));
 
   const { secretKey: ucanSecret } = generateKeyPairFromSeed(ucanDerivedSecret);
 
@@ -70,10 +62,10 @@ async function createFileManager(
   portalSeed: string,
   portalAddress: Hex,
   ucanSecret: Uint8Array,
-  privateAccountKey: Uint8Array
+  privateAccountKey: Uint8Array,
 ): Promise<FileManager> {
   const keyPair = ucans.EdKeypair.fromSecretKey(fromUint8Array(ucanSecret), {
-    exportable: true
+    exportable: true,
   });
 
   const authTokenProvider = new AuthTokenProvider(keyPair, portalAddress);
@@ -88,19 +80,19 @@ async function createFileManager(
 async function executeOperation(
   fileManager: FileManager,
   file: any,
-  operation: 'add' | 'update' | 'delete'
+  operation: "add" | "update" | "delete",
 ): Promise<PublishResult> {
-  if (operation === 'add') {
+  if (operation === "add") {
     const result = await fileManager.addFile(file);
     return { success: true, ...result };
   }
 
-  if (operation === 'update') {
+  if (operation === "update") {
     const result = await fileManager.updateFile(file);
     return { success: true, ...result };
   }
 
-  if (operation === 'delete') {
+  if (operation === "delete") {
     const result = await fileManager.deleteFile(file);
     return { success: true, ...result };
   }
@@ -108,7 +100,7 @@ async function executeOperation(
   throw new Error(`Invalid operation: ${operation}`);
 }
 
-export async function publishFile(fileId: string, operation: 'add' | 'update' | 'delete'): Promise<PublishResult> {
+export async function publishFile(fileId: string, operation: "add" | "update" | "delete"): Promise<PublishResult> {
   try {
     const { file, portalDetails, apiKey } = getPortalData(fileId);
 
@@ -119,7 +111,7 @@ export async function publishFile(fileId: string, operation: 'add' | 'update' | 
       portalDetails.portalSeed,
       portalDetails.portalAddress as Hex,
       ucanSecret,
-      privateAccountKey
+      privateAccountKey,
     );
 
     return executeOperation(fileManager, file, operation);

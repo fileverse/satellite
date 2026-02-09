@@ -1,11 +1,11 @@
-import express, { Express } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import router from './interface';
-import { expressErrorHandler } from './interface/middleware';
+import express, { Express } from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { readFileSync } from "fs";
+import { join } from "path";
+import router from "./interface";
+import { expressErrorHandler } from "./interface/middleware";
 
 const app: Express = express();
 
@@ -16,31 +16,31 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Use default logger for now
-app.use(morgan('combined'));
+app.use(morgan("combined"));
 app.use(
   cors({
-    origin: '*',
-  })
+    origin: "*",
+  }),
 );
 app.use(
   helmet({
     contentSecurityPolicy: false,
     frameguard: false,
-  })
+  }),
 );
 
-app.use('/ping', function (req, res) {
-  res.json({ reply: 'pong' });
+app.use("/ping", function (req, res) {
+  res.json({ reply: "pong" });
   res.end();
 });
 
-app.get('/llm.txt', (req, res) => {
-  const filePath = join(__dirname, '../public/llm.txt');
-  const content = readFileSync(filePath, 'utf-8');
-  res.type('text/plain').send(content);
+app.get("/llm.txt", (req, res) => {
+  const filePath = join(__dirname, "../public/llm.txt");
+  const content = readFileSync(filePath, "utf-8");
+  res.type("text/plain").send(content);
 });
 
-app.use('/', router);
+app.use("/", router);
 
 app.use(expressErrorHandler as express.ErrorRequestHandler);
 

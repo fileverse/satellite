@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { savePortal } from '../../../../domain/portal/savePortal';
-import { addApiKey } from '../../../../domain/portal/saveApiKey';
-import { removeApiKey } from '../../../../domain/portal/removeApiKey';
+import { Request, Response } from "express";
+import { savePortal } from "../../../../domain/portal/savePortal";
+import { addApiKey } from "../../../../domain/portal/saveApiKey";
+import { removeApiKey } from "../../../../domain/portal/removeApiKey";
 
 const addPortalHandler = async (req: Request, res: Response) => {
   try {
@@ -9,14 +9,13 @@ const addPortalHandler = async (req: Request, res: Response) => {
 
     if (!portalAddress || !portalSeed || !ownerAddress) {
       return res.status(400).json({
-        error:
-          'Missing required fields: portalAddress, portalSeed, and ownerAddress are required',
+        error: "Missing required fields: portalAddress, portalSeed, and ownerAddress are required",
       });
     }
 
     const portal = savePortal({ portalAddress, portalSeed, ownerAddress });
     res.status(200).json({
-      message: 'Portal saved successfully',
+      message: "Portal saved successfully",
       data: portal,
     });
   } catch (error: any) {
@@ -30,8 +29,7 @@ const addKeyHandler = async (req: Request, res: Response) => {
 
     if (!apiKeySeed || !name || !collaboratorAddress || !portalAddress) {
       return res.status(400).json({
-        error:
-          'Missing required fields: apiKeySeed, name, collaboratorAddress, and portalAddress are required',
+        error: "Missing required fields: apiKeySeed, name, collaboratorAddress, and portalAddress are required",
       });
     }
 
@@ -42,7 +40,7 @@ const addKeyHandler = async (req: Request, res: Response) => {
       portalAddress,
     });
     res.status(201).json({
-      message: 'API key added successfully',
+      message: "API key added successfully",
       data: apiKey,
     });
   } catch (error: any) {
@@ -56,13 +54,13 @@ const removeKeyHandler = async (req: Request, res: Response) => {
 
     if (!collaboratorAddress) {
       return res.status(400).json({
-        error: 'API key ID is required',
+        error: "API key ID is required",
       });
     }
 
     const deletedApiKey = removeApiKey(collaboratorAddress);
     res.status(200).json({
-      message: 'API key removed successfully',
+      message: "API key removed successfully",
       data: deletedApiKey,
     });
   } catch (error: any) {

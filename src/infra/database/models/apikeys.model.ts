@@ -1,5 +1,5 @@
-import { QueryBuilder } from '../index';
-import { uuidv7 } from 'uuidv7';
+import { QueryBuilder } from "../index";
+import { uuidv7 } from "uuidv7";
 
 export interface ApiKey {
   _id: string;
@@ -12,7 +12,7 @@ export interface ApiKey {
 }
 
 export class ApiKeysModel {
-  private static readonly TABLE = 'api_keys';
+  private static readonly TABLE = "api_keys";
 
   static create(input: {
     apiKeySeed: string;
@@ -35,12 +35,12 @@ export class ApiKeysModel {
     ]);
 
     if (result.changes === 0) {
-      throw new Error('Failed to create API key');
+      throw new Error("Failed to create API key");
     }
 
     const created = this.findById(_id);
     if (!created) {
-      throw new Error('Failed to create API key');
+      throw new Error("Failed to create API key");
     }
     return created;
   }

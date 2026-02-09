@@ -1,9 +1,9 @@
-import { QueryBuilder } from '../index';
-import { uuidv7 } from 'uuidv7';
-import { notifyNewEvent } from '../../worker/workerSignal';
+import { QueryBuilder } from "../index";
+import { uuidv7 } from "uuidv7";
+import { notifyNewEvent } from "../../worker/workerSignal";
 
-export type EventType = 'create' | 'update' | 'delete';
-export type EventStatus = 'pending' | 'processing' | 'processed' | 'failed';
+export type EventType = "create" | "update" | "delete";
+export type EventStatus = "pending" | "processing" | "processed" | "failed";
 
 export interface Event {
   _id: string;
@@ -32,12 +32,12 @@ interface EventRow {
 }
 
 export class EventsModel {
-  private static readonly TABLE = 'events';
+  private static readonly TABLE = "events";
 
   static create(input: { type: EventType; fileId: string }): Event {
     const _id = uuidv7();
     const timestamp = Date.now();
-    const status: EventStatus = 'pending';
+    const status: EventStatus = "pending";
 
     const sql = `
       INSERT INTO ${this.TABLE} 
@@ -83,9 +83,7 @@ export class EventsModel {
     const now = Date.now();
 
     const exclusionClause =
-      lockedFileIds.length > 0
-        ? `AND e1.fileId NOT IN (${lockedFileIds.map(() => '?').join(', ')})`
-        : '';
+      lockedFileIds.length > 0 ? `AND e1.fileId NOT IN (${lockedFileIds.map(() => "?").join(", ")})` : "";
 
     const sql = `
       SELECT e1.* FROM ${this.TABLE} e1
@@ -131,8 +129,7 @@ export class EventsModel {
     const event = this.findById(_id);
     if (!event) return;
 
-    const delay =
-      RETRY_DELAYS_MS[Math.min(event.retryCount, RETRY_DELAYS_MS.length - 1)];
+    const delay = RETRY_DELAYS_MS[Math.min(event.retryCount, RETRY_DELAYS_MS.length - 1)];
     const nextRetryAt = Date.now() + delay;
 
     const sql = `

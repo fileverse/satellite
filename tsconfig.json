@@ -25,11 +25,5 @@
     "verbose": false
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "coverage"
-  ]
+  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts", "coverage"]
 }

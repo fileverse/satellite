@@ -1,4 +1,4 @@
-import type { File } from '../../infra/database/models';
+import type { File } from "../../infra/database/models";
 
 export interface ListFilesParams {
   limit?: number;
@@ -6,7 +6,7 @@ export interface ListFilesParams {
   portalAddress: string;
 }
 
-export type GetFileResult = Omit<File, 'metadata' | 'linkKey' | 'linkKeyNonce' | 'commentKey' | 'meatadata' | '_id'>;
+export type GetFileResult = Omit<File, "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "meatadata" | "_id">;
 
 export interface ListFilesResult {
   ddocs: GetFileResult[];

@@ -9,5 +9,5 @@ export interface QueryOptions {
   limit?: number;
   offset?: number;
   orderBy?: string;
-  orderDirection?: 'ASC' | 'DESC';
+  orderDirection?: "ASC" | "DESC";
 }

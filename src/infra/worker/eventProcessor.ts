@@ -1,9 +1,9 @@
-import { getRuntimeConfig } from '../../config';
-import { publishFile } from '../../domain/portal';
-import { FilesModel } from '../database/models';
-import type { Event } from '../database/models';
-import type { UpdateFilePayload } from '../database/models/files/types';
-import { logger } from '../index';
+import { getRuntimeConfig } from "../../config";
+import { publishFile } from "../../domain/portal";
+import { FilesModel } from "../database/models";
+import type { Event } from "../database/models";
+import type { UpdateFilePayload } from "../database/models/files/types";
+import { logger } from "../index";
 
 export interface ProcessResult {
   success: boolean;
@@ -15,13 +15,13 @@ export async function processEvent(event: Event): Promise<ProcessResult> {
 
   try {
     switch (type) {
-      case 'create':
+      case "create":
         await processCreateEvent(event);
         break;
-      case 'update':
+      case "update":
         await processUpdateEvent(event);
         break;
-      case 'delete':
+      case "delete":
         await processDeleteEvent(event);
         break;
       default:
@@ -48,7 +48,7 @@ async function processCreateEvent(event: Event): Promise<void> {
     return;
   }
 
-  const result = await publishFile(fileId, 'add');
+  const result = await publishFile(fileId, "add");
   if (!result.success) {
     throw new Error(`Publish failed for file ${fileId}`);
   }
@@ -66,7 +66,7 @@ async function processCreateEvent(event: Event): Promise<void> {
   const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
   if (updatedFile.localVersion === updatedFile.onchainVersion) {
-    FilesModel.update(fileId, { syncStatus: 'synced' }, file.portalAddress);
+    FilesModel.update(fileId, { syncStatus: "synced" }, file.portalAddress);
   }
 
   logger.info(`File ${file.ddocId} created and published successfully`);
@@ -84,7 +84,7 @@ async function processUpdateEvent(event: Event): Promise<void> {
     return;
   }
 
-  const result = await publishFile(fileId, 'update');
+  const result = await publishFile(fileId, "update");
   if (!result.success) {
     throw new Error(`Publish failed for file ${fileId}`);
   }
@@ -96,7 +96,7 @@ async function processUpdateEvent(event: Event): Promise<void> {
   const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
 
   if (updatedFile.localVersion === updatedFile.onchainVersion) {
-    FilesModel.update(fileId, { syncStatus: 'synced' }, file.portalAddress);
+    FilesModel.update(fileId, { syncStatus: "synced" }, file.portalAddress);
   }
   logger.info(`File ${file.ddocId} updated and published successfully`);
 }
@@ -109,18 +109,18 @@ async function processDeleteEvent(event: Event): Promise<void> {
     return;
   }
 
-  if (file.isDeleted === 1 && file.syncStatus === 'synced') {
+  if (file.isDeleted === 1 && file.syncStatus === "synced") {
     logger.info(`File ${fileId} deletion already synced, skipping`);
     return;
   }
 
   const payload: UpdateFilePayload = {
-    syncStatus: 'synced',
+    syncStatus: "synced",
     isDeleted: 1,
-  }
+  };
 
   if (file.onChainFileId !== null || file.onChainFileId !== undefined) {
-    const result = await publishFile(fileId, 'delete');
+    const result = await publishFile(fileId, "delete");
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }

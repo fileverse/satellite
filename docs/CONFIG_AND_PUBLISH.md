@@ -11,11 +11,11 @@ Satellite uses two types of configuration:
 
 ## Config Files
 
-| File | Purpose |
-|------|---------|
-| `config/network.config.json` | Production network config. Used when building for publish. |
-| `config/dev.network.config.json` | Development network config (gitignored). Used when running `dev` or `dev:worker`. |
-| `config/dev.network.config.json.example` | Template for dev config. Copy to `dev.network.config.json` and customize. |
+| File                                     | Purpose                                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------- |
+| `config/network.config.json`             | Production network config. Used when building for publish.                        |
+| `config/dev.network.config.json`         | Development network config (gitignored). Used when running `dev` or `dev:worker`. |
+| `config/dev.network.config.json.example` | Template for dev config. Copy to `dev.network.config.json` and customize.         |
 
 Both files share the same structure:
 
@@ -94,14 +94,14 @@ npm packs (dist, public, package.json, README only)
 
 ## NPM Scripts
 
-| Script | Description |
-|--------|-------------|
+| Script               | Description                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `generate:constants` | Generate constants (pass config path as arg: `npm run generate:constants -- config/network.config.json`) |
-| `prebuild` | Runs before `build`. Generates from `network.config.json`. |
-| `prepublishOnly` | Runs before `npm publish`. Generates prod config, typechecks, cleans, builds. |
-| `dev` | Generates from `dev.network.config.json`, then starts API server with tsx watch. |
-| `dev:worker` | Generates from `dev.network.config.json`, then starts worker with tsx watch. |
-| `build` | Runs `prebuild` first, then tsup. |
+| `prebuild`           | Runs before `build`. Generates from `network.config.json`.                                               |
+| `prepublishOnly`     | Runs before `npm publish`. Generates prod config, typechecks, cleans, builds.                            |
+| `dev`                | Generates from `dev.network.config.json`, then starts API server with tsx watch.                         |
+| `dev:worker`         | Generates from `dev.network.config.json`, then starts worker with tsx watch.                             |
+| `build`              | Runs `prebuild` first, then tsup.                                                                        |
 
 ## Published Package Contents
 

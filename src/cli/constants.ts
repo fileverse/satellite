@@ -1,1 +1,1 @@
-export { STATIC_CONFIG, BASE_CONFIG } from './constants.generated.js';
+export { STATIC_CONFIG, BASE_CONFIG } from "./constants.generated.js";

@@ -1,5 +1,5 @@
-import { databaseConnectionManager } from './connection';
-import { QueryBuilder } from './query-builder';
+import { databaseConnectionManager } from "./connection";
+import { QueryBuilder } from "./query-builder";
 
 function getDb() {
   return databaseConnectionManager.getConnection();

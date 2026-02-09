@@ -1,4 +1,4 @@
-import { FoldersModel, type Folder } from '../../infra/database/models';
+import { FoldersModel, type Folder } from "../../infra/database/models";
 
 export interface ListFoldersParams {
   limit?: number;
@@ -15,9 +15,7 @@ export interface ListFoldersResult {
  * Domain function to list all folders
  * Business logic layer - handles folder listing operations
  */
-export default function listFolders(
-  params: ListFoldersParams
-): ListFoldersResult {
+export default function listFolders(params: ListFoldersParams): ListFoldersResult {
   const { limit, skip } = params;
 
   const result = FoldersModel.findAll(limit, skip);

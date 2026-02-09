@@ -1,5 +1,5 @@
-import getDb from '../index';
-import { logger } from '../../';
+import getDb from "../index";
+import { logger } from "../../";
 
 interface MigrationFile {
   timestamp: string;
@@ -10,8 +10,8 @@ interface MigrationFile {
 
 const migrations: MigrationFile[] = [
   {
-    timestamp: '20240101120000',
-    name: 'initial_schema',
+    timestamp: "20240101120000",
+    name: "initial_schema",
     up: `
       CREATE TABLE IF NOT EXISTS schema_migrations (
         timestamp TEXT PRIMARY KEY,
@@ -40,14 +40,14 @@ const migrations: MigrationFile[] = [
     `,
   },
   {
-    timestamp: '20251217122141',
-    name: 'add_is_deleted_to_files',
+    timestamp: "20251217122141",
+    name: "add_is_deleted_to_files",
     up: `ALTER TABLE files ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;`,
     down: `ALTER TABLE files DROP COLUMN isDeleted;`,
   },
   {
-    timestamp: '20260127180254',
-    name: 'add_portals_table',
+    timestamp: "20260127180254",
+    name: "add_portals_table",
     up: `
       CREATE TABLE IF NOT EXISTS portals(
         _id TEXT PRIMARY KEY,
@@ -61,8 +61,8 @@ const migrations: MigrationFile[] = [
     down: `DROP TABLE IF EXISTS portals;`,
   },
   {
-    timestamp: '20260127181448',
-    name: 'add_api_keys_table',
+    timestamp: "20260127181448",
+    name: "add_api_keys_table",
     up: `
       CREATE TABLE IF NOT EXISTS api_keys (
         _id TEXT PRIMARY KEY,
@@ -76,14 +76,14 @@ const migrations: MigrationFile[] = [
     down: `DROP TABLE IF EXISTS api_keys;`,
   },
   {
-    timestamp: '20260127223128',
-    name: 'add_is_deleted_to_api_keys',
+    timestamp: "20260127223128",
+    name: "add_is_deleted_to_api_keys",
     up: `ALTER TABLE api_keys ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;`,
     down: `ALTER TABLE api_keys DROP COLUMN isDeleted;`,
   },
   {
-    timestamp: '20260128141543',
-    name: 'add_portal_fields_to_files',
+    timestamp: "20260128141543",
+    name: "add_portal_fields_to_files",
     up: `
       ALTER TABLE files ADD COLUMN portalAddress TEXT NOT NULL;
       ALTER TABLE files ADD COLUMN metadata TEXT DEFAULT '{}';
@@ -99,8 +99,8 @@ const migrations: MigrationFile[] = [
     `,
   },
   {
-    timestamp: '20260203023154',
-    name: 'add_file_fields',
+    timestamp: "20260203023154",
+    name: "add_file_fields",
     up: `
       ALTER TABLE files ADD COLUMN commentKey TEXT;
       ALTER TABLE files ADD COLUMN linkKey TEXT;
@@ -113,8 +113,8 @@ const migrations: MigrationFile[] = [
     `,
   },
   {
-    timestamp: '20260204120000',
-    name: 'add_events_table',
+    timestamp: "20260204120000",
+    name: "add_events_table",
     up: `
       CREATE TABLE IF NOT EXISTS events (
         _id TEXT PRIMARY KEY,
@@ -131,8 +131,8 @@ const migrations: MigrationFile[] = [
     `,
   },
   {
-    timestamp: '20260205100000',
-    name: 'add_events_retry_and_backoff',
+    timestamp: "20260205100000",
+    name: "add_events_retry_and_backoff",
     up: `
       -- SQLite doesn't allow modifying CHECK constraints, so we recreate the table
       DROP INDEX IF EXISTS idx_events_status_timestamp;
@@ -195,8 +195,8 @@ const migrations: MigrationFile[] = [
     `,
   },
   {
-    timestamp: '20260205140000',
-    name: 'add_link_to_files',
+    timestamp: "20260205140000",
+    name: "add_link_to_files",
     up: `ALTER TABLE files ADD COLUMN link TEXT;`,
     down: `ALTER TABLE files DROP COLUMN link;`,
   },
@@ -204,7 +204,7 @@ const migrations: MigrationFile[] = [
 
 export function runMigrations(): void {
   const db = getDb();
-  
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       timestamp TEXT PRIMARY KEY,
@@ -212,25 +212,15 @@ export function runMigrations(): void {
     );
   `);
 
-  const getAppliedMigrations = db.prepare(
-    'SELECT timestamp FROM schema_migrations'
-  );
-  const insertMigration = db.prepare(
-    'INSERT INTO schema_migrations (timestamp) VALUES (?)'
-  );
+  const getAppliedMigrations = db.prepare("SELECT timestamp FROM schema_migrations");
+  const insertMigration = db.prepare("INSERT INTO schema_migrations (timestamp) VALUES (?)");
 
-  const appliedMigrations = new Set(
-    (getAppliedMigrations.all() as { timestamp: string }[]).map(
-      (m) => m.timestamp
-    )
-  );
+  const appliedMigrations = new Set((getAppliedMigrations.all() as { timestamp: string }[]).map((m) => m.timestamp));
 
-  const pendingMigrations = migrations.filter(
-    (m) => !appliedMigrations.has(m.timestamp)
-  );
+  const pendingMigrations = migrations.filter((m) => !appliedMigrations.has(m.timestamp));
 
   if (pendingMigrations.length === 0) {
-    logger.info('Database is up to date');
+    logger.info("Database is up to date");
     return;
   }
 
@@ -246,9 +236,9 @@ export function runMigrations(): void {
 }
 
 export function rollbackMigrations(count: number = 1): void {
-  const nodeEnv = process.env.NODE_ENV || 'development';
-  if (nodeEnv === 'production') {
-    throw new Error('Migration rollback is not allowed in production environment');
+  const nodeEnv = process.env.NODE_ENV || "development";
+  if (nodeEnv === "production") {
+    throw new Error("Migration rollback is not allowed in production environment");
   }
 
   const db = getDb();
@@ -260,17 +250,15 @@ export function rollbackMigrations(count: number = 1): void {
     );
   `);
 
-  const getAppliedMigrations = db.prepare(
-    'SELECT timestamp FROM schema_migrations ORDER BY timestamp DESC'
-  );
-  const deleteMigration = db.prepare(
-    'DELETE FROM schema_migrations WHERE timestamp = ?'
-  );
+  const getAppliedMigrations = db.prepare("SELECT timestamp FROM schema_migrations ORDER BY timestamp DESC");
+  const deleteMigration = db.prepare("DELETE FROM schema_migrations WHERE timestamp = ?");
 
-  const appliedMigrations = getAppliedMigrations.all() as { timestamp: string }[];
+  const appliedMigrations = getAppliedMigrations.all() as {
+    timestamp: string;
+  }[];
 
   if (appliedMigrations.length === 0) {
-    logger.info('No migrations to rollback');
+    logger.info("No migrations to rollback");
     return;
   }
 
@@ -283,16 +271,14 @@ export function rollbackMigrations(count: number = 1): void {
 
       if (!migration) {
         logger.warn(
-          `Migration file not found for timestamp ${appliedMigration.timestamp}, removing from schema_migrations`
+          `Migration file not found for timestamp ${appliedMigration.timestamp}, removing from schema_migrations`,
         );
         deleteMigration.run(appliedMigration.timestamp);
         continue;
       }
 
       if (!migration.down) {
-        logger.warn(
-          `Migration ${migration.timestamp}_${migration.name} has no 'down' function, skipping rollback`
-        );
+        logger.warn(`Migration ${migration.timestamp}_${migration.name} has no 'down' function, skipping rollback`);
         deleteMigration.run(appliedMigration.timestamp);
         continue;
       }
