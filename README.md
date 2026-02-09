@@ -17,11 +17,9 @@ This will prompt for any missing values, set up configuration, run migrations, a
 git clone <your-repo-url>
 cd satellite
 npm install
-
-# Configure environment variables
-cp config/.env.example config/.env
-# Edit config/.env and set DB_PATH (see Environment Variables section)
 ```
+
+Configure runtime variables via `config/.env` or `~/.satellite/.env` (see Environment Variables). The CLI creates `~/.satellite/.env` when you run `fileverse-satellite` with your API key.
 
 ### Building the Project
 
@@ -32,6 +30,8 @@ cp config/.env.example config/.env
 npm run clean && npm run build
 ```
 
+`prebuild` runs automatically before `build` and generates constants from `config/network.config.json`.
+
 **Why clean before build?**
 
 - Ensures compiled code (`dist/`) matches your source code (`src/`)
@@ -41,6 +41,8 @@ npm run clean && npm run build
   - Pulling new changes
   - Making significant code changes
   - Seeing errors that don't match your source code
+
+For details on config flow and publishing, see [docs/CONFIG_AND_PUBLISH.md](docs/CONFIG_AND_PUBLISH.md).
 
 ## Run
 
@@ -61,12 +63,14 @@ npm run start:worker
 ### Development
 
 ```bash
-# Run API server
+# Run API server (uses config/dev.network.config.json)
 npm run dev
 
 # Run worker in another terminal
 npm run dev:worker
 ```
+
+`dev` and `dev:worker` generate constants from `config/dev.network.config.json` before starting.
 
 ## CLI Usage
 
@@ -110,7 +114,7 @@ ddctl list
 
 ## Environment Variables
 
-Create a `.env` file in the `config/` directory with the following variables:
+Create a `.env` file in `config/` or `~/.satellite/` with the following variables:
 
 **Required:**
 

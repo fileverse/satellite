@@ -66,13 +66,9 @@ npm install
 
 ### Configuration
 
-1. Copy environment template:
+Runtime config is loaded from `config/.env` or `~/.satellite/.env`. The CLI creates `~/.satellite/.env` when you run `fileverse-satellite` with your API key.
 
-```bash
-cp config/.env.example config/.env
-```
-
-2. Configure environment variables in `config/.env`:
+Create `config/.env` or `~/.satellite/.env` with:
 
 ```env
 PORT=8001
@@ -91,6 +87,8 @@ SERVICE_NAME=satellite
 - `WORKER_CONCURRENCY` controls how many events are processed in parallel (default: 5)
 - `LOG_LEVEL` can be: `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 
+Network config (API URL, RPC, etc.) is defined in `config/network.config.json` (production) and `config/dev.network.config.json` (development, gitignored). Copy `config/dev.network.config.json.example` to `dev.network.config.json` to customize; if absent, dev scripts fall back to `network.config.json`. See [docs/CONFIG_AND_PUBLISH.md](docs/CONFIG_AND_PUBLISH.md) for the full config and publish flow.
+
 ## Building & Running
 
 ### Building the Project
@@ -101,6 +99,8 @@ SERVICE_NAME=satellite
 # Clean old compiled code and rebuild
 npm run clean && npm run build
 ```
+
+`prebuild` runs before `build` and generates constants from `config/network.config.json`.
 
 **Why clean before build?**
 
@@ -113,20 +113,22 @@ npm run clean && npm run build
   - Making code changes
   - Seeing weird errors
 
+For the full config and publish flow, see [docs/CONFIG_AND_PUBLISH.md](docs/CONFIG_AND_PUBLISH.md).
+
 ### Development Mode
 
 **API Server:**
 
 ```bash
 npm run dev
-# Runs on http://127.0.0.1:8001
+# Generates constants from config/dev.network.config.json, then runs on http://127.0.0.1:8001
 ```
 
 **Worker (separate terminal):**
 
 ```bash
 npm run dev:worker
-# Processes sync jobs from queue
+# Generates constants from config/dev.network.config.json, then processes sync jobs from queue
 ```
 
 **CLI Tool:**
@@ -471,16 +473,26 @@ GET /api/search?apiKey=<key>&q=<query>&limit=10&skip=0
 ## Project Structure
 
 ```
+config/
+├── network.config.json           # Production network config (API URL, RPC, etc.)
+├── dev.network.config.json       # Dev config (gitignored, used by npm run dev)
+└── dev.network.config.json.example  # Template for dev config
+
+scripts/
+└── generate-constants.cjs   # Generates src/cli/constants.generated.ts from config JSON
+
 src/
-├── app.ts                 # Express app setup
-├── index.ts               # API server entry point
-├── worker.ts              # Worker entry point
-├── cli/                   # Satellite CLI (fileverse-satellite)
-│   ├── index.ts           # CLI entry point
-│   ├── fetch-api-key.ts   # API key fetching
-│   ├── process-manager.ts # Process management
-│   ├── prompts.ts         # Interactive prompts
-│   └── scaffold-config.ts # Config scaffolding
+├── app.ts                   # Express app setup
+├── index.ts                 # API server entry point
+├── worker.ts                # Worker entry point
+├── cli/                     # Satellite CLI (fileverse-satellite)
+│   ├── constants.ts         # Re-exports from constants.generated.ts
+│   ├── constants.generated.ts  # Generated (gitignored), do not edit
+│   ├── index.ts             # CLI entry point
+│   ├── fetch-api-key.ts     # API key fetching
+│   ├── process-manager.ts   # Process management
+│   ├── prompts.ts           # Interactive prompts
+│   └── scaffold-config.ts   # Config scaffolding
 ├── commands/              # Ddocs CLI (ddctl)
 │   ├── index.ts           # CLI entry point
 │   ├── listCommand.ts
@@ -648,7 +660,7 @@ npm run migrate:create <migration-name>
 
 ### CLI doesn't work from other directories
 
-- Ensure `DB_PATH` is set to an **absolute path** in `config/.env`
+- Ensure `DB_PATH` is set to an **absolute path** in `config/.env` or `~/.satellite/.env`
 - Check that migrations have run (they run automatically)
 - Verify the path is correct: check logs for "SQLite database connected: <path>"
 
@@ -689,5 +701,6 @@ npm run migrate:create <migration-name>
 ## Additional Resources
 
 - Check `README.md` for basic setup
+- See [docs/CONFIG_AND_PUBLISH.md](docs/CONFIG_AND_PUBLISH.md) for config flow and publish pipeline
 - Review migration files in `src/infra/database/migrations/`
 - Explore test files (if any) for usage examples

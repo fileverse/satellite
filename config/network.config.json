@@ -1,0 +1,10 @@
+{
+  "API_URL": "https://prod-apps-storage-5cdacc06ff79.herokuapp.com/",
+  "SERVER_DID": "did:key:z6Mkroj9bxTin6Z5S9qwx2G2b87NPrCX7S85FhCpmBGPcDCz",
+  "NETWORK_NAME": "gnosis",
+  "DEFAULT_PORT": "8001",
+  "DEFAULT_RPC_URL": "https://rpc.gnosischain.com",
+  "SERVICE_NAME": "satellite",
+  "LOG_LEVEL": "info",
+  "FRONTEND_URL": "https://docs.fileverse.io"
+}

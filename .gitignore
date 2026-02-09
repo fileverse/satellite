@@ -26,6 +26,12 @@ logs/
 *.pid.lock
 dev-journal.md
 
+# Generated constants
+src/cli/constants.generated.ts
+
+# Dev config (local overrides)
+config/dev.network.config.json
+
 # SQLite database files
 data/
 *.db
