@@ -11,8 +11,6 @@ const SIGNAL_RETRY_DELAY_MS = 50;
 const FALLBACK_POLL_MS = 30000;
 const MAX_RETRIES = 10;
 
-let instance: FileEventsWorker | null = null;
-
 export class FileEventsWorker {
   private isRunning = false;
   private concurrency: number;
@@ -42,14 +40,14 @@ export class FileEventsWorker {
       this.wakeUp();
     });
 
-    logger.info(`File events worker started (concurrency: ${this.concurrency})`);
+    logger.debug(`File events worker started (concurrency: ${this.concurrency})`);
     this.run();
   }
 
   private async run(): Promise<void> {
     while (this.isRunning) {
       const foundEvents = await this.fillSlots();
-      logger.info(`Found ${foundEvents ? "events" : "no events"} to process`);
+      logger.debug(`Found ${foundEvents ? "events" : "no events"} to process`);
       if (this.activeProcessors.size === 0) {
         if (this.pendingSignal && !foundEvents) {
           this.pendingSignal = false;
@@ -80,7 +78,7 @@ export class FileEventsWorker {
       this.activeProcessors.set(event.fileId, processor);
     }
 
-    logger.info(`Slots filled: ${this.activeProcessors.size}`);
+    logger.debug(`Slots filled: ${this.activeProcessors.size}`);
     return foundAny;
   }
 
@@ -159,6 +157,7 @@ export class FileEventsWorker {
     }
 
     this.wakeUp();
+    this.wakeResolver = null;
 
     if (this.activeProcessors.size > 0) {
       logger.info(`Waiting for ${this.activeProcessors.size} active processor(s) to complete...`);
@@ -177,25 +176,6 @@ export class FileEventsWorker {
   }
 }
 
-export function startWorker(concurrency: number = DEFAULT_CONCURRENCY): void {
-  if (instance && instance.isActive()) {
-    return;
-  }
-  instance = new FileEventsWorker(concurrency);
-  instance.start();
-}
-
-export const closeWorker = async (): Promise<void> => {
-  if (instance) {
-    await instance.close();
-    instance = null;
-  }
-};
-
-export function isWorkerActive(): boolean {
-  return instance !== null && instance.isActive();
-}
-
-export function getWorkerActiveCount(): number {
-  return instance ? instance.getActiveCount() : 0;
+export function createWorker(concurrency: number = DEFAULT_CONCURRENCY): FileEventsWorker {
+  return new FileEventsWorker(concurrency);
 }

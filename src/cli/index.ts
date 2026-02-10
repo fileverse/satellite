@@ -29,7 +29,6 @@ const program = new Command()
         options.rpcUrl = prompted.rpcUrl;
       }
 
-      console.log("Fetching API key data from server...");
       const data = await fetchApiKeyData(options.apiKey);
       console.log("✓ API key data retrieved\n");
 

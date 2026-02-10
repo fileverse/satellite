@@ -59,18 +59,18 @@ export const decryptSavedData = async <T>(apiKey: string, encryptedData: string)
 };
 
 export const initializeFromApiKey = async (apiKey: string): Promise<void> => {
-  logger.info("Fetching API key data from server...");
+  logger.debug("Fetching API key data from server...");
   const data = await fetchApiKeyData(apiKey);
-  logger.info("API key data retrieved");
+  logger.debug("API key data retrieved");
 
   const keyMaterial = await decryptSavedData<KeyMaterial>(apiKey, data.encryptedKeyMaterial);
   const appMaterial = await decryptSavedData<AppKeyMaterial>(apiKey, data.encryptedAppMaterial);
   const result = initializeWithData({ keyMaterial, appMaterial, id: data.id });
 
-  logger.info("Portal saved");
+  logger.debug("Portal saved");
   if (result.apiKeySaved) {
-    logger.info("API key saved");
+    logger.debug("API key saved");
   } else {
-    logger.info("API key already exists");
+    logger.debug("API key already exists");
   }
 };

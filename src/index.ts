@@ -1,7 +1,7 @@
 import { config, validateDbPath } from "./config";
 import { logger } from "./infra";
 import { runMigrations } from "./infra/database/migrations";
-import { closeWorker, startWorker } from "./infra/worker";
+import { closeWorker, startWorker } from "./appWorker";
 import { closeDatabase } from "./infra/database";
 import { initializeFromApiKey } from "./init";
 import app from "./app";
@@ -21,8 +21,10 @@ const startServer = async (): Promise<void> => {
     process.exit(1);
   }
 
-  logger.info("Initializing server with API key...");
-  await initializeFromApiKey(apiKey);
+  if (process.env.IS_CLI !== "1") {
+    logger.debug("Initializing server with API key...");
+    await initializeFromApiKey(apiKey);
+  }
   logger.info("Server initialization complete");
 
   if (process.env.INLINE_WORKER === "true") {

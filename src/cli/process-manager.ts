@@ -21,10 +21,10 @@ function prefixOutput(name: string, data: Buffer): void {
   }
 }
 
-function spawnProcess(name: string, scriptPath: string): ChildProcess {
+function spawnProcess(name: string, scriptPath: string, extraEnv?: Record<string, string>): ChildProcess {
   const child = spawn("node", [scriptPath], {
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "production" },
+    env: { ...process.env, NODE_ENV: "production", ...extraEnv },
     detached: false,
   });
 
@@ -50,7 +50,7 @@ function spawnProcess(name: string, scriptPath: string): ChildProcess {
 export function startApiServer(): ChildProcess {
   const distDir = getDistDir();
   const apiPath = path.join(distDir, "index.js");
-  return spawnProcess("API", apiPath);
+  return spawnProcess("API", apiPath, { IS_CLI: "1" });
 }
 
 export function startWorker(): ChildProcess {

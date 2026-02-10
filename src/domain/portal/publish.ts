@@ -72,12 +72,8 @@ const createFileManager = async (
 const executeOperation = async (
   fileManager: FileManager,
   file: any,
-  operation: "add" | "update" | "delete",
+  operation: "update" | "delete",
 ): Promise<PublishResult> => {
-  if (operation === "add") {
-    const result = await fileManager.addFile(file);
-    return { success: true, ...result };
-  }
 
   if (operation === "update") {
     const result = await fileManager.updateFile(file);
@@ -92,7 +88,7 @@ const executeOperation = async (
   throw new Error(`Invalid operation: ${operation}`);
 };
 
-export const publishFile = async (fileId: string, operation: "add" | "update" | "delete"): Promise<PublishResult> => {
+export const handleExistingFileOp = async (fileId: string, operation: "update" | "delete"): Promise<PublishResult> => {
   try {
     const { file, portalDetails, apiKey } = getPortalData(fileId);
 
@@ -113,7 +109,7 @@ export const publishFile = async (fileId: string, operation: "add" | "update" | 
   }
 };
 
-export const submitAddFileTrx = async (
+export const handleNewFileOp = async (
   fileId: string,
 ): Promise<{
   userOpHash: string;

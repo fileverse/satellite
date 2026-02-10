@@ -1,5 +1,5 @@
 import { getRuntimeConfig } from "../../config";
-import { submitAddFileTrx, getProxyAuthParams, publishFile } from "../../domain/portal";
+import { handleNewFileOp, getProxyAuthParams, handleExistingFileOp } from "../../domain/portal";
 import { FilesModel, EventsModel } from "../database/models";
 import type { Event, ProcessResult, UpdateFilePayload } from "../../types";
 import { logger } from "../index";
@@ -100,7 +100,7 @@ const processCreateEvent = async (event: Event): Promise<void> => {
     return;
   }
 
-  const result = await submitAddFileTrx(fileId);
+  const result = await handleNewFileOp(fileId);
   EventsModel.setEventPendingOp(event._id, result.userOpHash, {
     linkKey: result.linkKey,
     linkKeyNonce: result.linkKeyNonce,
@@ -142,7 +142,7 @@ const processUpdateEvent = async (event: Event): Promise<void> => {
     return;
   }
 
-  const result = await publishFile(fileId, "update");
+  const result = await handleExistingFileOp(fileId, "update");
   if (!result.success) {
     throw new Error(`Publish failed for file ${fileId}`);
   }
@@ -178,7 +178,7 @@ const processDeleteEvent = async (event: Event): Promise<void> => {
   };
 
   if (file.onChainFileId !== null || file.onChainFileId !== undefined) {
-    const result = await publishFile(fileId, "delete");
+    const result = await handleExistingFileOp(fileId, "delete");
     if (!result.success) {
       throw new Error(`Publish failed for file ${fileId}`);
     }

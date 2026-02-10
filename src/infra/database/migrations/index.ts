@@ -88,5 +88,5 @@ CREATE INDEX IF NOT EXISTS idx_folders_created_at ON folders(created_at);
 export function runMigrations(): void {
   const db = getDb();
   db.exec(STABLE_SCHEMA);
-  logger.info("Database schema ready");
+  logger.debug("Database schema ready");
 }

@@ -1,7 +1,7 @@
 import { validateDbPath } from "./config";
 import { logger } from "./infra";
 import { runMigrations } from "./infra/database/migrations";
-import { closeWorker, isWorkerActive, startWorker } from "./infra/worker";
+import { closeWorker, isWorkerActive, startWorker } from "./appWorker";
 
 validateDbPath();
 runMigrations();
