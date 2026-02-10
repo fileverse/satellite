@@ -6,6 +6,7 @@ import { logger } from "../index";
 import { waitForUserOpReceipt } from "../../sdk/pimlico-utils";
 import { parseFileEventLog } from "../../sdk/file-utils";
 import { ADDED_FILE_EVENT_ABI } from "../../constants";
+import { RateLimitError, normalizeRateLimitError } from "../../errors/rate-limit";
 
 export type { ProcessResult };
 
@@ -28,8 +29,10 @@ export const processEvent = async (event: Event): Promise<ProcessResult> => {
     }
     return { success: true };
   } catch (error) {
+    const normalized = normalizeRateLimitError(error);
+    if (normalized instanceof RateLimitError) throw normalized;
     const errorMsg = error instanceof Error ? error.message : String(error);
-    logger.error(`Error processing ${type} event for file ${fileId}:`, error);
+    logger.error(`Error processing ${type} event for file ${fileId}:`, errorMsg);
     return { success: false, error: errorMsg };
   }
 }

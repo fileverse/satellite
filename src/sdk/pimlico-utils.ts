@@ -15,16 +15,19 @@ import { entryPoint07Address, } from "viem/account-abstraction";
 import { CHAIN, getRpcUrl, getPimlicoUrl } from "../constants";
 import { generatePrivateKey } from "viem/accounts";
 
-
 export const getPublicClient = () =>
   createPublicClient({
-    transport: http(getRpcUrl()),
+    transport: http(getRpcUrl(), {
+      retryCount: 0,
+    }),
     chain: CHAIN,
+
   });
 
 export const getPimlicoClient = (authToken: string, portalAddress: Hex, invokerAddress: Hex) =>
   createPimlicoClient({
     transport: http(getPimlicoUrl(), {
+      retryCount: 0,
       fetchOptions: {
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -70,6 +73,7 @@ export const getSmartAccountClient = async (
           invoker: smartAccount.address,
         },
       },
+      retryCount: 0,
     }),
     userOperation: {
       estimateFeesPerGas: async () => (await pimlicoClient.getUserOperationGasPrice()).fast,

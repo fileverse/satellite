@@ -2,12 +2,27 @@ import pino, { Logger as PinoLogger, Level } from "pino";
 import { STATIC_CONFIG } from "../cli/constants";
 import { config } from "../config";
 
+const isProduction = config.NODE_ENV === "production";
+
 const pinoInstance = pino({
   name: STATIC_CONFIG.SERVICE_NAME,
   level: STATIC_CONFIG.LOG_LEVEL,
   formatters: {
     bindings: (bindings) => ({ name: bindings.name }),
     level: (label) => ({ level: label }),
+  },
+  serializers: {
+    err(err: Error | undefined) {
+      if (!err) return err;
+      if (isProduction) {
+        return { type: err.name, message: err.message };
+      }
+      return {
+        type: err.name,
+        message: err.message,
+        stack: err.stack,
+      };
+    },
   },
   transport: config.NODE_ENV !== "production"
     ? {

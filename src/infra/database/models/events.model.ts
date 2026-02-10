@@ -134,6 +134,19 @@ export class EventsModel {
     QueryBuilder.execute(sql, [errorMsg, nextRetryAt, _id]);
   }
 
+  static scheduleRetryAfter(_id: string, errorMsg: string, retryAfterMs: number): void {
+    const nextRetryAt = Date.now() + retryAfterMs;
+    const sql = `
+      UPDATE ${this.TABLE}
+      SET status = 'pending',
+          lastError = ?,
+          nextRetryAt = ?,
+          lockedAt = NULL
+      WHERE _id = ?
+    `;
+    QueryBuilder.execute(sql, [errorMsg, nextRetryAt, _id]);
+  }
+
   static markFailed(_id: string, errorMsg: string): void {
     const sql = `
       UPDATE ${this.TABLE}

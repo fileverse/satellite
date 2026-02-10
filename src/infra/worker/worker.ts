@@ -3,6 +3,7 @@ import { processEvent } from "./eventProcessor";
 import { onNewEvent } from "./workerSignal";
 import { EventsModel } from "../database/models";
 import type { Event } from "../database/models";
+import { RateLimitError } from "../../errors/rate-limit";
 
 const DEFAULT_CONCURRENCY = 5;
 const STALE_THRESHOLD_MS = 5 * 60 * 1000;
@@ -100,6 +101,12 @@ export class FileEventsWorker {
 
   private handleFailure(event: Event, error: unknown): void {
     const errorMsg = error instanceof Error ? error.message : String(error);
+    if (error instanceof RateLimitError) {
+      const retryAfterMs = error.retryAfterSeconds * 1000;
+      EventsModel.scheduleRetryAfter(event._id, errorMsg, retryAfterMs);
+      logger.warn(`Event ${event._id} rate limited; retry after ${error.retryAfterSeconds}s`);
+      return;
+    }
     if (event.retryCount < MAX_RETRIES) {
       EventsModel.scheduleRetry(event._id, errorMsg);
       logger.warn(`Event ${event._id} failed (retry ${event.retryCount + 1}/${MAX_RETRIES}): ${errorMsg}`);

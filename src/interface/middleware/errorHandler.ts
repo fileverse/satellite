@@ -1,5 +1,6 @@
 import { NextFunction, Response } from "express";
 import { reporter } from "../../infra";
+import { logger } from "../../infra/logger";
 import { ValidationError } from "./validator";
 import { Request } from "express";
 
@@ -15,9 +16,9 @@ export const expressErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log("error", err.details);
+  if (err.details != null) logger.warn({ details: err.details }, "Validation error details");
   const errorMessage = `Message: ${err.message}\nError Code: ${err.statusCode || err.code}`;
-  reporter.reportError(errorMessage).catch(console.log);
+  reporter.reportError(errorMessage).catch((e) => logger.warn(e));
   if (err instanceof ValidationError) {
     return res.status(err?.statusCode || 500).json({ message: err.message });
   }
