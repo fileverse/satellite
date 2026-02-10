@@ -1,11 +1,5 @@
-import { ApiKeysModel, PortalsModel, type ApiKey } from "../../infra/database/models";
-
-export interface AddApiKeyInput {
-  apiKeySeed: string;
-  name: string;
-  collaboratorAddress: string;
-  portalAddress: string;
-}
+import { ApiKeysModel, PortalsModel } from "../../infra/database/models";
+import type { AddApiKeyInput, ApiKey } from "../../types";
 
 export function addApiKey(input: AddApiKeyInput): ApiKey {
   if (!input.apiKeySeed || !input.name || !input.collaboratorAddress || !input.portalAddress) {

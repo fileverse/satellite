@@ -8,7 +8,8 @@ const TAG_LEN = 16;
 const b64ToBytes = (b64: string) => Uint8Array.from(Buffer.from(b64, "base64"));
 const bytesToB64 = (b: Uint8Array) => Buffer.from(b).toString("base64");
 
-export type DecryptionOptions = { key: string; iv: string; authTag: string };
+import type { DecryptionOptions } from "../types";
+export type { DecryptionOptions };
 
 export function gcmEncrypt(plaintext: Uint8Array) {
   const key = generateRandomBytes(KEY_LEN);

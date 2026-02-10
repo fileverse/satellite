@@ -1,32 +1,7 @@
 import { QueryBuilder } from "../index";
-import type { File } from "./files.model";
+import type { File, Folder, FolderWithDDocs, FolderListResponse } from "../../../types";
 
-export interface Folder {
-  _id: string;
-  onchainFileId: number;
-  folderId: string;
-  folderRef: string;
-  folderName: string;
-  portalAddress: string;
-  metadataIPFSHash: string;
-  contentIPFSHash: string;
-  isDeleted: boolean;
-  lastTransactionHash?: string;
-  lastTransactionBlockNumber: number;
-  lastTransactionBlockTimestamp: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FolderWithDDocs extends Folder {
-  ddocs: File[];
-}
-
-export interface FolderListResponse {
-  folders: Folder[];
-  total: number;
-  hasNext: boolean;
-}
+export type { Folder, FolderWithDDocs, FolderListResponse };
 
 export class FoldersModel {
   private static readonly TABLE = "folders";

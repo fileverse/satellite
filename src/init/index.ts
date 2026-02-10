@@ -1,17 +1,15 @@
-import { AppKeyMaterial, fetchApiKeyData, KeyMaterial, type ApiKeyMaterialResponse } from "../cli/fetch-api-key.js";
+import { fetchApiKeyData } from "../cli/fetch-api-key.js";
 import { savePortal } from "../domain/portal/savePortal.js";
 import { addApiKey } from "../domain/portal/saveApiKey.js";
 import { ApiKeysModel } from "../infra/database/models/apikeys.model.js";
 import { logger } from "../infra/index.js";
+import type { ApiKeyMaterialResponse, InitResult, KeyMaterial, AppKeyMaterial } from "../types";
 import { deriveHKDFKey } from "@fileverse/crypto/hkdf";
 import { toUint8Array } from "js-base64";
 import { stringToBytes } from "viem";
 import { toAESKey, aesDecrypt } from "@fileverse/crypto/webcrypto";
 
-export interface InitResult {
-  portalSaved: boolean;
-  apiKeySaved: boolean;
-}
+export type { InitResult };
 
 const SAVED_DATA_ENCRYPTION_KEY_INFO = "SAVED_DATA_ENCRYPTION_KEY";
 

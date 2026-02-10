@@ -5,12 +5,10 @@ import {
   createFile,
   updateFile,
   deleteFile,
-  type CreateFileInput,
-  type UpdateFileInput,
 } from "../../../../domain/file";
+import type { CreateFileInput, UpdateFileInput, ClientUpdateFileInput } from "../../../../types";
 import { createMiddleware, updateMiddleware } from "./customMiddlewares";
 import { extractTitleAndContent } from "./helper";
-import type { ClientUpdateFileInput } from "./types";
 import { ApiKeysModel } from "../../../../infra/database/models";
 import { config, getRuntimeConfig } from "../../../../config";
 

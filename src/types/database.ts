@@ -1,5 +1,4 @@
-// Type definitions for database operations
-export interface QueryResult<T = any> {
+export interface QueryResult<T = unknown> {
   rows: T[];
   changes: number;
   lastInsertRowid: number | bigint;

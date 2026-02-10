@@ -1,15 +1,8 @@
 import { QueryBuilder } from "../index";
 import { uuidv7 } from "uuidv7";
+import type { ApiKey } from "../../../types";
 
-export interface ApiKey {
-  _id: string;
-  apiKeySeed: string;
-  name: string;
-  collaboratorAddress: string;
-  portalAddress: string;
-  createdAt: string;
-  isDeleted: number;
-}
+export type { ApiKey };
 
 export class ApiKeysModel {
   private static readonly TABLE = "api_keys";

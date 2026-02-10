@@ -1,5 +1,5 @@
 import searchNodes from "./searchNodes";
-import type { SearchNodesParams, SearchNodesResult } from "./searchNodes";
+import type { SearchNodesParams, SearchNodesResult, SearchNode } from "../../types";
 
 export { searchNodes };
-export type { SearchNodesParams, SearchNodesResult };
+export type { SearchNodesParams, SearchNodesResult, SearchNode };

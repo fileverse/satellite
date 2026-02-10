@@ -11,23 +11,15 @@ import { AgentClient } from "../../sdk/smart-agent";
 import { FileManager } from "../../sdk/file-manager";
 import { getRuntimeConfig } from "../../config";
 
-export interface PublishResult {
-  success: boolean;
-  onChainFileId: number;
-  linkKey?: string;
-  linkKeyNonce?: string;
-  commentKey?: string;
-  metadata: Record<string, unknown>;
-}
+import type { PublishResult } from "../../types";
 
-interface PortalData {
+interface PublishContext {
   file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>;
   portalDetails: NonNullable<ReturnType<typeof PortalsModel.findByPortalAddress>>;
   apiKey: string;
-
 }
 
-function getPortalData(fileId: string): PortalData {
+function getPortalData(fileId: string): PublishContext {
   const file = FilesModel.findByIdIncludingDeleted(fileId);
   if (!file) {
     throw new Error(`File with _id ${fileId} not found`);

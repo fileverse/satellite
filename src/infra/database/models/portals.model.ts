@@ -1,14 +1,8 @@
 import { QueryBuilder } from "../index";
 import { uuidv7 } from "uuidv7";
+import type { Portal } from "../../../types";
 
-export interface Portal {
-  _id: string;
-  portalAddress: string;
-  portalSeed: string;
-  ownerAddress: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { Portal };
 
 export class PortalsModel {
   private static readonly TABLE = "portals";

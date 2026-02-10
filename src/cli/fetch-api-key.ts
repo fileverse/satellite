@@ -2,44 +2,7 @@ import axios from "axios";
 import { toUint8Array } from "js-base64";
 import { sha256 } from "viem";
 import { BASE_CONFIG } from "./constants";
-
-export interface PortalData {
-  portalAddress: string;
-  portalSeed: string;
-  ownerAddress: string;
-}
-
-export interface ApiKeyData {
-  apiKeySeed: string;
-  name: string;
-  collaboratorAddress: string;
-  portalAddress: string;
-}
-
-export interface ApiKeyResponse {
-  encryptedKeyMaterial: string;
-  encryptedAppMaterial: string;
-  id: string;
-}
-
-export interface KeyMaterial {
-  apiKeySeed: string;
-  name: string;
-  collaboratorAddress: string;
-  portalAddress: string;
-}
-
-export interface AppKeyMaterial {
-  portalSeed: string;
-  ownerAddress: string;
-  portalAddress: string;
-}
-
-export interface ApiKeyMaterialResponse {
-  keyMaterial: KeyMaterial;
-  appMaterial: AppKeyMaterial;
-  id: string;
-}
+import type { ApiKeyResponse } from "../types";
 
 export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyResponse> {
   try {

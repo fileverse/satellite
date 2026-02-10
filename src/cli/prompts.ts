@@ -1,11 +1,7 @@
 import prompts from "prompts";
 import { STATIC_CONFIG } from "./constants";
 import { getRuntimeConfig } from "../config/index.js";
-
-export interface PromptedConfig {
-  apiKey: string;
-  rpcUrl: string;
-}
+import type { PromptedConfig } from "../types";
 
 export async function promptForConfig(
   existingOptions: {

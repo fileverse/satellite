@@ -1,23 +1,6 @@
-import { FoldersModel, type Folder } from "../../infra/database/models";
+import { FoldersModel } from "../../infra/database/models";
+import type { CreateFolderInput, Folder } from "../../types";
 
-export interface CreateFolderInput {
-  _id?: string;
-  onchainFileId: number;
-  folderId: string;
-  folderRef: string;
-  folderName: string;
-  portalAddress: string;
-  metadataIPFSHash: string;
-  contentIPFSHash: string;
-  lastTransactionHash?: string;
-  lastTransactionBlockNumber: number;
-  lastTransactionBlockTimestamp: number;
-}
-
-/**
- * Domain function to create a new folder
- * Business logic layer - handles folder creation operations
- */
 export default function createFolder(input: CreateFolderInput): Folder {
   // Validate required fields
   if (!input.folderId) {

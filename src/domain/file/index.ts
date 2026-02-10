@@ -1,10 +1,8 @@
 import { generate } from "short-uuid";
 
-import { EventsModel, FilesModel, type File } from "../../infra/database/models";
+import { EventsModel, FilesModel } from "../../infra/database/models";
+import type { File, ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput, UpdateFilePayload, GetFileResult } from "../../types";
 import { DEFAULT_LIST_LIMIT } from "./constants";
-
-import type { ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput } from "./types";
-import type { UpdateFilePayload } from "../../infra/database/models/files/types";
 
 function listFiles(params: ListFilesParams): ListFilesResult {
   const { limit, skip, portalAddress } = params;
@@ -32,21 +30,6 @@ function listFiles(params: ListFilesParams): ListFilesResult {
     total: result.total,
     hasNext: result.hasNext,
   };
-}
-
-interface GetFileResult {
-  ddocId: string;
-  link: string;
-  title: string;
-  content: string;
-  localVersion: number;
-  onchainVersion: number;
-  syncStatus: string;
-  isDeleted: number;
-  onChainFileId: number | null;
-  portalAddress: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 function getFile(ddocId: string, portalAddress: string): GetFileResult | null {
@@ -146,4 +129,4 @@ async function deleteFile(ddocId: string, portalAddress: string): Promise<File> 
 }
 
 export { listFiles, getFile, createFile, updateFile, deleteFile };
-export type { CreateFileInput, UpdateFileInput, ListFilesParams, ListFilesResult };
+export type { CreateFileInput, UpdateFileInput, ListFilesParams, ListFilesResult, GetFileResult } from "../../types";

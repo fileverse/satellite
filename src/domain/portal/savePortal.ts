@@ -1,10 +1,5 @@
-import { PortalsModel, type Portal } from "../../infra/database/models";
-
-export interface SavePortalInput {
-  portalAddress: string;
-  portalSeed: string;
-  ownerAddress: string;
-}
+import { PortalsModel } from "../../infra/database/models";
+import type { Portal, SavePortalInput } from "../../types";
 
 export function savePortal(input: SavePortalInput): Portal {
   if (!input.portalAddress || !input.portalSeed || !input.ownerAddress) {

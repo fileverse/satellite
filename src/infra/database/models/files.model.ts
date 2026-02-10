@@ -1,32 +1,8 @@
 import { QueryBuilder } from "../index";
 import { uuidv7 } from "uuidv7";
-import type { UpdateFilePayload } from "./files/types";
+import type { File, FileListResponse, UpdateFilePayload } from "../../../types";
 
-export interface File {
-  _id: string;
-  title: string;
-  content: string;
-  ddocId: string;
-  localVersion: number;
-  onchainVersion: number;
-  syncStatus: "pending" | "synced" | "failed";
-  isDeleted: number;
-  onChainFileId: number | null;
-  portalAddress: string;
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  linkKey?: string | null;
-  linkKeyNonce?: string | null;
-  commentKey?: string | null;
-  link?: string | null;
-}
-
-export interface FileListResponse {
-  ddocs: File[];
-  total: number;
-  hasNext: boolean;
-}
+export type { File, FileListResponse };
 
 export class FilesModel {
   private static readonly TABLE = "files";

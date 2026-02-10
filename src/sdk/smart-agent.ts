@@ -1,14 +1,12 @@
-import { EncodeDeployDataReturnType, Hex, toHex } from "viem";
+import { Hex, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { getSmartAccountClient, getNonce, waitForUserOpReceipt } from "./pimlico-utils";
 import { AuthTokenProvider } from "./auth-token-provider";
 import { STATIC_CONFIG } from "../cli/constants";
 import { createSmartAccountClient } from "permissionless";
+import type { IExecuteUserOperationRequest } from "../types";
 
-export interface IExecuteUserOperationRequest {
-  contractAddress: Hex;
-  data: EncodeDeployDataReturnType;
-}
+export type { IExecuteUserOperationRequest };
 
 export class AgentClient {
   private smartAccountAgent: ReturnType<typeof createSmartAccountClient> | null = null;

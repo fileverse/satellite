@@ -1,15 +1,5 @@
-import { FoldersModel, type Folder } from "../../infra/database/models";
-
-export interface ListFoldersParams {
-  limit?: number;
-  skip?: number;
-}
-
-export interface ListFoldersResult {
-  folders: Folder[];
-  total: number;
-  hasNext: boolean;
-}
+import { FoldersModel } from "../../infra/database/models";
+import type { ListFoldersParams, ListFoldersResult } from "../../types";
 
 /**
  * Domain function to list all folders

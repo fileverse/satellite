@@ -1,21 +1,9 @@
 import { QueryBuilder } from "../index";
 import { uuidv7 } from "uuidv7";
 import { notifyNewEvent } from "../../worker/workerSignal";
+import type { Event, EventType, EventStatus } from "../../../types";
 
-export type EventType = "create" | "update" | "delete";
-export type EventStatus = "pending" | "processing" | "processed" | "failed";
-
-export interface Event {
-  _id: string;
-  type: EventType;
-  timestamp: number;
-  fileId: string;
-  status: EventStatus;
-  retryCount: number;
-  lastError: string | null;
-  lockedAt: number | null;
-  nextRetryAt: number | null;
-}
+export type { Event, EventType, EventStatus };
 
 const RETRY_DELAYS_MS = [5000, 30000, 120000];
 

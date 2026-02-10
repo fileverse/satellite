@@ -1,24 +1,6 @@
-import { FilesModel, type File, type Folder } from "../../infra/database/models";
+import { FilesModel } from "../../infra/database/models";
 import { QueryBuilder } from "../../infra/database";
-
-export interface SearchNodesParams {
-  query: string;
-  limit?: number;
-  skip?: number;
-  portalAddress: string;
-}
-
-/**
- * Normalized response type for search results
- * Can contain both files and folders at the API response level
- */
-export type SearchNode = ({ type: "file" } & File) | ({ type: "folder" } & Folder);
-
-export interface SearchNodesResult {
-  nodes: SearchNode[];
-  total: number;
-  hasNext: boolean;
-}
+import type { SearchNodesParams, SearchNode, SearchNodesResult } from "../../types";
 
 /**
  * Domain function to search files (for now)

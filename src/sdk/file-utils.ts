@@ -10,6 +10,7 @@ import { gcmEncrypt } from "./file-encryption";
 import { toAESKey, aesEncrypt } from "@fileverse/crypto/webcrypto";
 import axios from "axios";
 import { ADD_FILE_ABI, DELETED_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from "../constants";
+import type { UploadFileAuthParams, FileMetadataParams, UploadFilesParams } from "../types";
 import { encodeFunctionData, type Hex, parseEventLogs, type Abi } from "viem";
 
 interface LinkKeyMaterialParams {
@@ -188,11 +189,7 @@ interface UploadFileParams {
   appFileId: string;
 }
 
-export interface UploadFileAuthParams {
-  token: string;
-  invoker: Hex;
-  contractAddress: Hex;
-}
+export type { UploadFileAuthParams };
 
 export const uploadFileToIPFS = async (fileParams: UploadFileParams, authParams: UploadFileAuthParams) => {
   const { file, ipfsType, appFileId } = fileParams;
@@ -279,15 +276,7 @@ export const createEncryptedContentFile = async (content: any) => {
   return encryptFile(contentFile);
 };
 
-export interface FileMetadataParams {
-  encryptedTitle: string;
-  encryptedFileSize: number;
-  appLock: Record<string, string>;
-  ownerLock: Record<string, string>;
-  ddocId: string;
-  nonce: string;
-  owner: string;
-}
+export type { FileMetadataParams };
 
 export const buildFileMetadata = (params: FileMetadataParams) => ({
   title: params.encryptedTitle,
@@ -314,12 +303,7 @@ export const parseFileEventLog = (logs: any[], eventName: string, abi: Abi): num
   return Number(fileId);
 };
 
-export interface UploadFilesParams {
-  metadata: Record<string, any>;
-  encryptedFile: File;
-  linkLock: Record<string, string>;
-  ddocId: string;
-}
+export type { UploadFilesParams };
 
 export const uploadAllFilesToIPFS = async (params: UploadFilesParams, authParams: UploadFileAuthParams) => {
   const { metadata, encryptedFile, linkLock, ddocId } = params;

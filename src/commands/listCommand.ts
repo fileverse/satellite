@@ -1,11 +1,10 @@
 import { Command } from "commander";
 import Table from "cli-table3";
 import { listFiles } from "../domain/file";
-import type { File } from "../infra/database/models";
+import type { File, GetFileResult } from "../types";
 import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
-import { GetFileResult } from "../domain/file/types";
 
 export const listCommand = new Command()
   .name("list")

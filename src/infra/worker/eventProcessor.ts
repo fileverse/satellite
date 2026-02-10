@@ -1,14 +1,10 @@
 import { getRuntimeConfig } from "../../config";
 import { publishFile } from "../../domain/portal";
 import { FilesModel } from "../database/models";
-import type { Event } from "../database/models";
-import type { UpdateFilePayload } from "../database/models/files/types";
+import type { Event, ProcessResult, UpdateFilePayload } from "../../types";
 import { logger } from "../index";
 
-export interface ProcessResult {
-  success: boolean;
-  error?: string;
-}
+export type { ProcessResult };
 
 export async function processEvent(event: Event): Promise<ProcessResult> {
   const { fileId, type } = event;

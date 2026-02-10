@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { AppKeyMaterial, fetchApiKeyData, KeyMaterial } from "./fetch-api-key.js";
+import { fetchApiKeyData } from "./fetch-api-key.js";
+import type { AppKeyMaterial, KeyMaterial } from "../types";
 import { scaffoldConfig, configExists } from "./scaffold-config.js";
 import { startAll, setupShutdownHandlers, waitForProcesses } from "./process-manager.js";
 import { promptForConfig, needsPrompting } from "./prompts.js";

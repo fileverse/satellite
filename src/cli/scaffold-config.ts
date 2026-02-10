@@ -2,13 +2,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { STATIC_CONFIG } from "./constants";
-
-export interface ConfigOptions {
-  apiKey?: string;
-  dbPath?: string;
-  port?: string;
-  rpcUrl?: string;
-}
+import type { ConfigOptions } from "../types";
 
 export function getSatelliteDir(): string {
   return path.join(os.homedir(), ".satellite");
