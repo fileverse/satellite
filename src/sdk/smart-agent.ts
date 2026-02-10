@@ -81,19 +81,15 @@ export class AgentClient {
     request: IExecuteUserOperationRequest | IExecuteUserOperationRequest[],
     customGasLimit?: number,
   ) {
-    try {
-      const smartAccountAgent = this.getSmartAccountAgent();
+    const smartAccountAgent = this.getSmartAccountAgent();
 
-      const callData = await this.getCallData(request);
+    const callData = await this.getCallData(request);
 
-      return await smartAccountAgent.sendUserOperation({
-        callData,
-        callGasLimit: BigInt(customGasLimit || this.MAX_CALL_GAS_LIMIT),
-        nonce: getNonce(),
-      });
-    } catch (error) {
-      throw error;
-    }
+    return await smartAccountAgent.sendUserOperation({
+      callData,
+      callGasLimit: BigInt(customGasLimit || this.MAX_CALL_GAS_LIMIT),
+      nonce: getNonce(),
+    });
   }
 
   async executeUserOperationRequest(

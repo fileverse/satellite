@@ -1,4 +1,4 @@
-import { getRuntimeConfig } from "../../config";
+import { getRuntimeConfig, isUsingPublicRpc, isRpc429Error, RPC_429_USER_MESSAGE } from "../../config";
 import { handleNewFileOp, getProxyAuthParams, handleExistingFileOp } from "../../domain/portal";
 import { FilesModel, EventsModel } from "../database/models";
 import type { Event, ProcessResult, UpdateFilePayload } from "../../types";
@@ -31,8 +31,11 @@ export const processEvent = async (event: Event): Promise<ProcessResult> => {
   } catch (error) {
     const normalized = normalizeRateLimitError(error);
     if (normalized instanceof RateLimitError) throw normalized;
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    logger.error(`Error processing ${type} event for file ${fileId}:`, errorMsg);
+    let errorMsg = error instanceof Error ? error.message : String(error);
+    if (isUsingPublicRpc() && isRpc429Error(error)) {
+      errorMsg = RPC_429_USER_MESSAGE;
+    }
+    logger.error(`Error processing ${type} event for file ${fileId}: ${errorMsg}`);
     return { success: false, error: errorMsg };
   }
 };
