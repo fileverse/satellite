@@ -30,7 +30,7 @@ Configure runtime variables via `config/.env` or `~/.satellite/.env` (see Enviro
 npm run clean && npm run build
 ```
 
-`prebuild` runs automatically before `build` and generates constants from `config/network.config.json`.
+`build` generates constants from `config/network.config.json` then runs tsup. For a build using dev config (e.g. to test against a local backend), use `npm run build:local` (uses `config/dev.network.config.json`).
 
 **Why clean before build?**
 

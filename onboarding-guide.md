@@ -100,7 +100,7 @@ Network config (API URL, RPC, etc.) is defined in `config/network.config.json` (
 npm run clean && npm run build
 ```
 
-`prebuild` runs before `build` and generates constants from `config/network.config.json`.
+`build` generates constants from `config/network.config.json` then runs tsup. Use `npm run build:local` to build with `config/dev.network.config.json` (e.g. for local testing).
 
 **Why clean before build?**
 

@@ -41,6 +41,3 @@ PORT=${options.port || STATIC_CONFIG.DEFAULT_PORT}
   return envPath;
 }
 
-export function configExists(): boolean {
-  return fs.existsSync(getEnvPath());
-}

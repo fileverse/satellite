@@ -22,12 +22,12 @@
     "public"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/generate-constants.cjs config/network.config.json && tsup",
+    "build:local": "node scripts/generate-constants.cjs config/dev.network.config.json && tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "generate:constants": "node scripts/generate-constants.cjs",
-    "prebuild": "node scripts/generate-constants.cjs config/network.config.json",
-    "prepublishOnly": "node scripts/generate-constants.cjs config/network.config.json && npm run typecheck && npm run clean && npm run build",
+    "prepublishOnly": "npm run typecheck && npm run clean && npm run build",
     "dev": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx watch src/index.ts",
     "dev:worker": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx watch src/worker.ts",
     "dev:cli": "tsx watch src/commands/index.ts",

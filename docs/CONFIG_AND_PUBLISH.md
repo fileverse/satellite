@@ -13,8 +13,8 @@ Satellite uses two types of configuration:
 
 | File                                     | Purpose                                                                           |
 | ---------------------------------------- | --------------------------------------------------------------------------------- |
-| `config/network.config.json`             | Production network config. Used when building for publish.                        |
-| `config/dev.network.config.json`         | Development network config (gitignored). Used when running `dev` or `dev:worker`. |
+| `config/network.config.json`             | Production network config. Used by `build` and when publishing.                   |
+| `config/dev.network.config.json`         | Development network config (gitignored). Used by `build:local`, `dev`, and `dev:worker`. |
 | `config/dev.network.config.json.example` | Template for dev config. Copy to `dev.network.config.json` and customize.         |
 
 Both files share the same structure:
@@ -74,16 +74,13 @@ tsx watch src/index.ts or src/worker.ts
 npm publish (triggers prepublishOnly)
          │
          ▼
-generate-constants config/network.config.json
-         │
-         ▼
 npm run typecheck
          │
          ▼
 npm run clean && npm run build
          │
          ▼
-prebuild runs (generates constants again)
+generate-constants config/network.config.json
          │
          ▼
 tsup compiles (dist/ with production STATIC_CONFIG)
@@ -97,11 +94,11 @@ npm packs (dist, public, package.json, README only)
 | Script               | Description                                                                                              |
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `generate:constants` | Generate constants (pass config path as arg: `npm run generate:constants -- config/network.config.json`) |
-| `prebuild`           | Runs before `build`. Generates from `network.config.json`.                                               |
-| `prepublishOnly`     | Runs before `npm publish`. Generates prod config, typechecks, cleans, builds.                            |
+| `build`              | Generates from `network.config.json`, then tsup. Use for production.                                    |
+| `build:local`        | Generates from `dev.network.config.json`, then tsup. Use for local/dev testing.                          |
+| `prepublishOnly`     | Runs before `npm publish`. Typechecks, cleans, then runs `build` (prod config).                          |
 | `dev`                | Generates from `dev.network.config.json`, then starts API server with tsx watch.                         |
 | `dev:worker`         | Generates from `dev.network.config.json`, then starts worker with tsx watch.                             |
-| `build`              | Runs `prebuild` first, then tsup.                                                                        |
 
 ## Published Package Contents
 
@@ -137,7 +134,7 @@ End users configure the API via environment variables. The CLI scaffolds `~/.sat
 1. Clone: `git clone <repo> && cd satellite && npm install`
 2. Run `npm run dev` — generates `constants.generated.ts` and starts the server. If `dev.network.config.json` doesn't exist, it falls back to `network.config.json`.
 3. For dev-specific config: `cp config/dev.network.config.json.example config/dev.network.config.json` and customize.
-4. Or run `npm run build` — `prebuild` generates constants from prod config before building.
+4. Or run `npm run build` — generates constants from prod config then builds. Use `npm run build:local` to build with dev config.
 
 No `.env.example` exists; the CLI creates `~/.satellite/.env` when you run `fileverse-satellite` with your API key.
 
@@ -151,4 +148,4 @@ To change production config:
 To change dev config:
 
 1. Edit `config/dev.network.config.json`
-2. Run `npm run dev` — it regenerates before starting
+2. Run `npm run dev` or `npm run build:local` — dev regenerates before starting; build:local builds with dev config
