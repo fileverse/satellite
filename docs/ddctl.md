@@ -40,7 +40,9 @@ For installation options and how to run the Satellite server, see the [Install o
 
 ### list
 
-List ddocs for the portal associated with your configured API key.
+List ddocs associated with your configured API key.
+
+**Usage:**
 
 ```bash
 ddctl list
@@ -64,6 +66,8 @@ This prints a table of ddocs with their IDs, titles, sync status, versions, and 
 
 Retrieve a single ddoc by its `ddocId` and display its metadata.
 
+**Usage:**
+
 ```bash
 ddctl get <ddocId>
 ```
@@ -81,6 +85,8 @@ This prints a table with details like title, sync status, local/on‑chain versi
 ### create
 
 Create a new ddoc from a local file. The file contents become the document body, and the filename becomes the title.
+
+**Usage:**
 
 ```bash
 ddctl create <FILE_PATH>
@@ -100,6 +106,8 @@ ddctl create ./docs/my-note.md
 
 Update an existing ddoc. You can update in two ways:
 
+**Usage:**
+
 **1. Update from a file:**
 
 ```bash
@@ -107,7 +115,7 @@ ddctl update <ddocId> --file <FILE_PATH>
 ddctl update <ddocId> -f <FILE_PATH>
 ```
 
-**2. Edit in your default editor (vi/vim/nano/etc.):**
+**2. Edit in your editor:**
 
 ```bash
 ddctl update <ddocId>
@@ -116,11 +124,11 @@ ddctl update <ddocId>
 When you use `ddctl update <ddocId>` without the `--file` option, `ddctl`:
 
 - Writes the current content to a temporary file
-- Opens that file in your default editor (using `$EDITOR` environment variable, falling back to `vi` if not set)
+- Opens that file in your editor (uses the `$EDITOR` environment variable if set, otherwise defaults to `vi`)
 - Compares the edited content with the original and, if changed, updates the ddoc
 - Cleans up the temporary file
 
-This editor-based workflow is a special feature of `ddctl` that lets you edit documents directly in your preferred editor without creating intermediate files.
+This editor-based workflow lets you edit documents directly in your preferred editor without creating intermediate files.
 
 **Examples:**
 
@@ -128,7 +136,7 @@ This editor-based workflow is a special feature of `ddctl` that lets you edit do
 # Update from a file
 ddctl update u154d6GbzaNYHzKZ2wDyrf --file ./docs/updated-note.md
 
-# Edit in your editor (opens vi/vim/nano/etc.)
+# Edit in your editor (uses $EDITOR or defaults to vi)
 ddctl update u154d6GbzaNYHzKZ2wDyrf
 ```
 
@@ -137,6 +145,8 @@ ddctl update u154d6GbzaNYHzKZ2wDyrf
 ### delete
 
 Delete one or more ddocs by their IDs. Deletion follows the same semantics as the API (soft delete with background sync).
+
+**Usage:**
 
 ```bash
 ddctl delete <ddocId>
@@ -157,6 +167,8 @@ Each ddoc is processed individually. If an error occurs for a particular ID, it 
 ### download
 
 Download the content of a ddoc into a local markdown file.
+
+**Usage:**
 
 ```bash
 ddctl download <ddocId>
@@ -182,6 +194,8 @@ On success, `ddctl` prints the path where the file was saved.
 ### view
 
 Preview a ddoc's content directly in the terminal.
+
+**Usage:**
 
 ```bash
 ddctl view <ddocId>
