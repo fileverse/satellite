@@ -190,7 +190,7 @@ export const closeWorker = async (): Promise<void> => {
     await instance.close();
     instance = null;
   }
-}
+};
 
 export function isWorkerActive(): boolean {
   return instance !== null && instance.isActive();

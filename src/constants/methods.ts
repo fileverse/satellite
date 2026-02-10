@@ -85,7 +85,6 @@ export const EDIT_FILE_METHOD = [
   },
 ] as const;
 
-
 export const DELETED_FILE_ABI = [
   {
     inputs: [

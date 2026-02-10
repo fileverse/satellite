@@ -11,11 +11,11 @@ Satellite uses two types of configuration:
 
 ## Config Files
 
-| File                                     | Purpose                                                                           |
-| ---------------------------------------- | --------------------------------------------------------------------------------- |
-| `config/network.config.json`             | Production network config. Used by `build` and when publishing.                   |
+| File                                     | Purpose                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `config/network.config.json`             | Production network config. Used by `build` and when publishing.                          |
 | `config/dev.network.config.json`         | Development network config (gitignored). Used by `build:local`, `dev`, and `dev:worker`. |
-| `config/dev.network.config.json.example` | Template for dev config. Copy to `dev.network.config.json` and customize.         |
+| `config/dev.network.config.json.example` | Template for dev config. Copy to `dev.network.config.json` and customize.                |
 
 Both files share the same structure:
 
@@ -94,7 +94,7 @@ npm packs (dist, public, package.json, README only)
 | Script               | Description                                                                                              |
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
 | `generate:constants` | Generate constants (pass config path as arg: `npm run generate:constants -- config/network.config.json`) |
-| `build`              | Generates from `network.config.json`, then tsup. Use for production.                                    |
+| `build`              | Generates from `network.config.json`, then tsup. Use for production.                                     |
 | `build:local`        | Generates from `dev.network.config.json`, then tsup. Use for local/dev testing.                          |
 | `prepublishOnly`     | Runs before `npm publish`. Typechecks, cleans, then runs `build` (prod config).                          |
 | `dev`                | Generates from `dev.network.config.json`, then starts API server with tsx watch.                         |

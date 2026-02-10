@@ -35,9 +35,14 @@ export const processEvent = async (event: Event): Promise<ProcessResult> => {
     logger.error(`Error processing ${type} event for file ${fileId}:`, errorMsg);
     return { success: false, error: errorMsg };
   }
-}
+};
 
-const onTransactionSuccess = (fileId: string, file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>, onChainFileId: number, pending: { linkKey: string; linkKeyNonce: string; commentKey: string; metadata: Record<string, unknown> }): void => {
+const onTransactionSuccess = (
+  fileId: string,
+  file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>,
+  onChainFileId: number,
+  pending: { linkKey: string; linkKeyNonce: string; commentKey: string; metadata: Record<string, unknown> },
+): void => {
   const frontendUrl = getRuntimeConfig().FRONTEND_URL;
   const payload: UpdateFilePayload = {
     onchainVersion: file!.localVersion,
@@ -52,7 +57,7 @@ const onTransactionSuccess = (fileId: string, file: ReturnType<typeof FilesModel
   if (updatedFile.localVersion === updatedFile.onchainVersion) {
     FilesModel.update(fileId, { syncStatus: "synced" }, file!.portalAddress);
   }
-}
+};
 
 const processCreateEvent = async (event: Event): Promise<void> => {
   const { fileId } = event;
@@ -71,13 +76,24 @@ const processCreateEvent = async (event: Event): Promise<void> => {
   const timeout = 120000;
 
   if (event.userOpHash) {
-    const receipt = await waitForUserOpReceipt(event.userOpHash as `0x${string}`, waitContext.authToken, waitContext.portalAddress, waitContext.invokerAddress, timeout);
+    const receipt = await waitForUserOpReceipt(
+      event.userOpHash as `0x${string}`,
+      waitContext.authToken,
+      waitContext.portalAddress,
+      waitContext.invokerAddress,
+      timeout,
+    );
     if (!receipt.success) {
       EventsModel.clearEventPendingOp(event._id);
       throw new Error(`User operation failed: ${receipt.reason}`);
     }
     const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT);
-    const pending = JSON.parse(event.pendingPayload!) as { linkKey: string; linkKeyNonce: string; commentKey: string; metadata: Record<string, unknown> };
+    const pending = JSON.parse(event.pendingPayload!) as {
+      linkKey: string;
+      linkKeyNonce: string;
+      commentKey: string;
+      metadata: Record<string, unknown>;
+    };
     onTransactionSuccess(fileId, file, onChainFileId, pending);
     EventsModel.clearEventPendingOp(event._id);
     logger.info(`File ${file.ddocId} created and published successfully (resumed from pending op)`);
@@ -92,7 +108,13 @@ const processCreateEvent = async (event: Event): Promise<void> => {
     metadata: result.metadata,
   });
 
-  const receipt = await waitForUserOpReceipt(result.userOpHash as `0x${string}`, waitContext.authToken, waitContext.portalAddress, waitContext.invokerAddress, timeout);
+  const receipt = await waitForUserOpReceipt(
+    result.userOpHash as `0x${string}`,
+    waitContext.authToken,
+    waitContext.portalAddress,
+    waitContext.invokerAddress,
+    timeout,
+  );
   if (!receipt.success) {
     EventsModel.clearEventPendingOp(event._id);
     throw new Error(`User operation failed: ${receipt.reason}`);
@@ -106,7 +128,7 @@ const processCreateEvent = async (event: Event): Promise<void> => {
   });
   EventsModel.clearEventPendingOp(event._id);
   logger.info(`File ${file.ddocId} created and published successfully`);
-}
+};
 
 const processUpdateEvent = async (event: Event): Promise<void> => {
   const { fileId } = event;
@@ -135,7 +157,7 @@ const processUpdateEvent = async (event: Event): Promise<void> => {
     FilesModel.update(fileId, { syncStatus: "synced" }, file.portalAddress);
   }
   logger.info(`File ${file.ddocId} updated and published successfully`);
-}
+};
 
 const processDeleteEvent = async (event: Event): Promise<void> => {
   const { fileId } = event;
@@ -169,4 +191,4 @@ const processDeleteEvent = async (event: Event): Promise<void> => {
   FilesModel.update(fileId, payload, file.portalAddress);
 
   logger.info(`File ${fileId} delete event processed (syncStatus set to synced)`);
-}
+};

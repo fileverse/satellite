@@ -34,7 +34,7 @@ const startServer = async (): Promise<void> => {
   server = app.listen(port, ip, async () => {
     logger.info(`🚀 Server ready at http://${ip}:${port}`);
   });
-}
+};
 
 startServer().catch((error) => {
   logger.error("Failed to start server:", error);

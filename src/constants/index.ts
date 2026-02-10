@@ -16,6 +16,3 @@ const CHAIN_MAP = {
 export const CHAIN = CHAIN_MAP[NETWORK_NAME as keyof typeof CHAIN_MAP];
 export { DELETED_FILE_EVENT, EDITED_FILE_EVENT, ADDED_FILE_EVENT } from "./events";
 export { DELETED_FILE_ABI, EDIT_FILE_METHOD, ADD_FILE_METHOD } from "./methods";
-
-
-

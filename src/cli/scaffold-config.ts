@@ -40,4 +40,3 @@ PORT=${options.port || STATIC_CONFIG.DEFAULT_PORT}
 
   return envPath;
 }
-

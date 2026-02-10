@@ -1,11 +1,5 @@
 import { Request, Response } from "express";
-import {
-  listFiles,
-  getFile,
-  createFile,
-  updateFile,
-  deleteFile,
-} from "../../../../domain/file";
+import { listFiles, getFile, createFile, updateFile, deleteFile } from "../../../../domain/file";
 import type { CreateFileInput, UpdateFileInput, ClientUpdateFileInput } from "../../../../types";
 import { createMiddleware, updateMiddleware } from "./customMiddlewares";
 import { extractTitleAndContent } from "./helper";

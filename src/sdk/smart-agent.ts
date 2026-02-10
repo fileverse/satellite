@@ -24,7 +24,11 @@ export class AgentClient {
   async initializeAgentClient(keyMaterial: Uint8Array) {
     const agentAccount = privateKeyToAccount(toHex(keyMaterial));
     const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
-    const smartAccountClient = await getSmartAccountClient(agentAccount, authToken, this.authTokenProvider.portalAddress);
+    const smartAccountClient = await getSmartAccountClient(
+      agentAccount,
+      authToken,
+      this.authTokenProvider.portalAddress,
+    );
     this.smartAccountAgent = smartAccountClient;
   }
 

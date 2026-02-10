@@ -28,4 +28,4 @@ export const fetchApiKeyData = async (apiKey: string): Promise<ApiKeyResponse> =
     }
     throw error;
   }
-}
+};

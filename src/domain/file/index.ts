@@ -1,7 +1,15 @@
 import { generate } from "short-uuid";
 
 import { EventsModel, FilesModel } from "../../infra/database/models";
-import type { File, ListFilesParams, ListFilesResult, CreateFileInput, UpdateFileInput, UpdateFilePayload, GetFileResult } from "../../types";
+import type {
+  File,
+  ListFilesParams,
+  ListFilesResult,
+  CreateFileInput,
+  UpdateFileInput,
+  UpdateFilePayload,
+  GetFileResult,
+} from "../../types";
 import { DEFAULT_LIST_LIMIT } from "./constants";
 
 function listFiles(params: ListFilesParams): ListFilesResult {
@@ -74,7 +82,7 @@ const createFile = async (input: CreateFileInput): Promise<File> => {
 
   EventsModel.create({ type: "create", fileId: file._id, portalAddress: file.portalAddress });
   return file;
-}
+};
 
 const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddress: string): Promise<Partial<File>> => {
   if (!ddocId) {
@@ -110,7 +118,7 @@ const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddres
     onChainFileId: updatedFile.onChainFileId,
     portalAddress: updatedFile.portalAddress,
   };
-}
+};
 
 const deleteFile = async (ddocId: string, portalAddress: string): Promise<File> => {
   if (!ddocId) {
@@ -126,7 +134,7 @@ const deleteFile = async (ddocId: string, portalAddress: string): Promise<File> 
 
   EventsModel.create({ type: "delete", fileId: deletedFile._id, portalAddress: deletedFile.portalAddress });
   return deletedFile;
-}
+};
 
 export { listFiles, getFile, createFile, updateFile, deleteFile };
 export type { CreateFileInput, UpdateFileInput, ListFilesParams, ListFilesResult, GetFileResult } from "../../types";

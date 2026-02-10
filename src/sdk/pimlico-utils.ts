@@ -1,17 +1,9 @@
-import {
-  createPublicClient,
-  http,
-  hexToBigInt,
-  toHex,
-  toBytes,
-  type PrivateKeyAccount,
-  type Hex,
-} from "viem";
+import { createPublicClient, http, hexToBigInt, toHex, toBytes, type PrivateKeyAccount, type Hex } from "viem";
 
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createSmartAccountClient } from "permissionless";
 import { toSafeSmartAccount } from "permissionless/accounts";
-import { entryPoint07Address, } from "viem/account-abstraction";
+import { entryPoint07Address } from "viem/account-abstraction";
 import { CHAIN, getRpcUrl, getPimlicoUrl } from "../constants";
 import { generatePrivateKey } from "viem/accounts";
 
@@ -21,7 +13,6 @@ export const getPublicClient = () =>
       retryCount: 0,
     }),
     chain: CHAIN,
-
   });
 
 export const getPimlicoClient = (authToken: string, portalAddress: Hex, invokerAddress: Hex) =>
@@ -53,11 +44,7 @@ export const signerToSmartAccount = async (signer: PrivateKeyAccount) =>
     version: "1.4.1",
   });
 
-export const getSmartAccountClient = async (
-  signer: PrivateKeyAccount,
-  authToken: string,
-  portalAddress: Hex,
-) => {
+export const getSmartAccountClient = async (signer: PrivateKeyAccount, authToken: string, portalAddress: Hex) => {
   const smartAccount = await signerToSmartAccount(signer);
   const pimlicoClient = getPimlicoClient(authToken, portalAddress, smartAccount.address);
 
@@ -88,7 +75,13 @@ export const getNonce = () =>
     }),
   );
 
-export const waitForUserOpReceipt = async (hash: Hex, authToken: string, portalAddress: Hex, invokerAddress: Hex, timeout = 120000) => {
+export const waitForUserOpReceipt = async (
+  hash: Hex,
+  authToken: string,
+  portalAddress: Hex,
+  invokerAddress: Hex,
+  timeout = 120000,
+) => {
   const pimlicoClient = getPimlicoClient(authToken, portalAddress, invokerAddress);
   return pimlicoClient.waitForUserOperationReceipt({
     hash,

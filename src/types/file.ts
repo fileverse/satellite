@@ -6,10 +6,7 @@ export interface ListFilesParams {
   portalAddress: string;
 }
 
-export type GetFileResult = Omit<
-  File,
-  "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "_id"
->;
+export type GetFileResult = Omit<File, "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "_id">;
 
 export interface ListFilesResult {
   ddocs: GetFileResult[];

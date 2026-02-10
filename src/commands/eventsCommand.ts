@@ -5,9 +5,7 @@ import { formatDate } from "./utils/util";
 
 const MAX_ERROR_LEN = 60;
 
-export const eventsCommand = new Command()
-  .name("events")
-  .description("Worker event operations (list failed, retry)");
+export const eventsCommand = new Command().name("events").description("Worker event operations (list failed, retry)");
 
 eventsCommand
   .command("list-failed")

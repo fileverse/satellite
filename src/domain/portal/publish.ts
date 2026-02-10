@@ -35,8 +35,7 @@ function getPortalData(fileId: string): PublishContext {
     throw new Error("API key is not set");
   }
 
-
-  return { file, portalDetails, apiKey, };
+  return { file, portalDetails, apiKey };
 }
 
 function deriveCollaboratorKeys(apiKeySeed: Uint8Array) {
@@ -68,7 +67,7 @@ const createFileManager = async (
   await agentClient.initializeAgentClient(privateAccountKey);
 
   return new FileManager(keyStore, agentClient);
-}
+};
 
 const executeOperation = async (
   fileManager: FileManager,
@@ -91,7 +90,7 @@ const executeOperation = async (
   }
 
   throw new Error(`Invalid operation: ${operation}`);
-}
+};
 
 export const publishFile = async (fileId: string, operation: "add" | "update" | "delete"): Promise<PublishResult> => {
   try {
@@ -112,9 +111,11 @@ export const publishFile = async (fileId: string, operation: "add" | "update" | 
     logger.error(`Failed to publish file ${fileId}:`, error);
     throw error;
   }
-}
+};
 
-export const submitAddFileTrx = async (fileId: string): Promise<{
+export const submitAddFileTrx = async (
+  fileId: string,
+): Promise<{
   userOpHash: string;
   linkKey: string;
   linkKeyNonce: string;
@@ -131,9 +132,11 @@ export const submitAddFileTrx = async (fileId: string): Promise<{
     privateAccountKey,
   );
   return fileManager.submitAddFileTrx(file);
-}
+};
 
-export const getProxyAuthParams = async (fileId: string): Promise<{
+export const getProxyAuthParams = async (
+  fileId: string,
+): Promise<{
   authToken: string;
   portalAddress: Hex;
   invokerAddress: Hex;
@@ -148,4 +151,4 @@ export const getProxyAuthParams = async (fileId: string): Promise<{
     privateAccountKey,
   );
   return fileManager.getProxyAuthParams();
-}
+};

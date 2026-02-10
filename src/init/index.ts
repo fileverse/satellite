@@ -73,4 +73,4 @@ export const initializeFromApiKey = async (apiKey: string): Promise<void> => {
   } else {
     logger.info("API key already exists");
   }
-}
+};

@@ -7,7 +7,7 @@ function getDb() {
 
 const closeDatabase = async (): Promise<void> => {
   await databaseConnectionManager.close();
-}
+};
 
 export default getDb;
 export { getDb, closeDatabase, QueryBuilder };

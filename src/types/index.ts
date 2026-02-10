@@ -20,11 +20,7 @@ export type {
   UpdateFilePayload,
   ClientUpdateFileInput,
 } from "./file";
-export type {
-  ListFoldersParams,
-  ListFoldersResult,
-  CreateFolderInput,
-} from "./folder";
+export type { ListFoldersParams, ListFoldersResult, CreateFolderInput } from "./folder";
 export type {
   SavePortalInput,
   AddApiKeyInput,

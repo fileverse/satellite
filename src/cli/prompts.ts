@@ -49,7 +49,7 @@ export const promptForConfig = async (
     apiKey: existingOptions.apiKey || response.apiKey,
     rpcUrl: existingOptions.rpcUrl || response.rpcUrl || STATIC_CONFIG.DEFAULT_RPC_URL,
   };
-}
+};
 
 export function needsPrompting(options: { apiKey?: string }): boolean {
   return !options.apiKey;
