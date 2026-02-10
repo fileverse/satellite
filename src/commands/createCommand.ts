@@ -3,7 +3,7 @@ import { createFile } from "../domain/file";
 import * as fs from "fs";
 import * as path from "path";
 import Table from "cli-table3";
-import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { formatDate, getElapsedTime, columnNames, columnWidth, validateApiKey } from "./utils/util";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
 
@@ -21,7 +21,7 @@ export const createCommand = new Command()
 
       const apiKey = runtimeConfig.API_KEY;
 
-      if (!apiKey) throw new Error("API key is required");
+      validateApiKey(apiKey);
 
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
 

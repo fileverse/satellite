@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { deleteFile } from "../domain/file";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
+import { validateApiKey } from "./utils/util";
 
 export const deleteCommand = new Command()
   .name("delete")
@@ -13,7 +14,7 @@ export const deleteCommand = new Command()
 
       const apiKey = runtimeConfig.API_KEY;
 
-      if (!apiKey) throw new Error("API key is required");
+      validateApiKey(apiKey);
 
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
 

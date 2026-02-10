@@ -3,6 +3,7 @@ import * as fs from "fs";
 import { getFile } from "../domain/file";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
+import { validateApiKey } from "./utils/util";
 
 export const downloadCommand = new Command()
   .name("download")
@@ -13,7 +14,7 @@ export const downloadCommand = new Command()
     try {
       const runtimeConfig = getRuntimeConfig();
       const apiKey = runtimeConfig.API_KEY;
-      if (!apiKey) throw new Error("API key is required");
+      validateApiKey(apiKey);
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
 
