@@ -9,7 +9,7 @@ const DEFAULT_CONCURRENCY = 5;
 const STALE_THRESHOLD_MS = 5 * 60 * 1000;
 const SIGNAL_RETRY_DELAY_MS = 50;
 const FALLBACK_POLL_MS = 30000;
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 10;
 
 let instance: FileEventsWorker | null = null;
 
