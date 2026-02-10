@@ -11,7 +11,6 @@ export const getCommand = new Command()
   .argument("<ddocId>", "The ddoc ID to retrieve")
   .action(async (ddocId: string) => {
     try {
-
       const runtimeConfig = getRuntimeConfig();
       const apiKey = runtimeConfig.API_KEY;
       validateApiKey(apiKey);

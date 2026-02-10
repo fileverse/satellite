@@ -66,7 +66,6 @@ export function getElapsedTime(date: Date | string): string {
   return "just now";
 }
 
-
 export function validateApiKey(apiKey: string | undefined): asserts apiKey is string {
   if (!apiKey) {
     const API_KEY_SETUP_MESSAGE = `
