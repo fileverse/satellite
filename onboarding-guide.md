@@ -291,6 +291,21 @@ ddctl delete <ddocId1> <ddocId2> <ddocId3>
 # Soft delete (can delete multiple)
 ```
 
+#### Events (failed / retry)
+
+Events are stored with a **portal reference** (`portalAddress`). When you use the API with an API key, you only see and can retry failed events for that portal; the CLI lists and retries across all portals (for operators).
+
+```bash
+ddctl events list-failed
+# List all failed events (ID, fileId, portal, type, timestamp, last error)
+
+ddctl events retry <eventId>
+# Reset one failed event to pending (worker will pick it up; retry count reset to 0)
+
+ddctl events retry-all
+# Reset all failed events to pending
+```
+
 ## REST API
 
 Base URL: `http://127.0.0.1:8001`
@@ -470,6 +485,34 @@ GET /api/search?apiKey=<key>&q=<query>&limit=10&skip=0
 }
 ```
 
+### Events Endpoints
+
+Events are scoped by portal: the API key identifies a portal, so you only list and retry failed events for that portal.
+
+#### List failed events
+
+```http
+GET /api/events/failed?apiKey=<key>
+```
+
+**Response:** JSON array of failed events (e.g. `_id`, `fileId`, `portalAddress`, `type`, `timestamp`, `lastError`).
+
+#### Retry one failed event
+
+```http
+POST /api/events/:id/retry?apiKey=<key>
+```
+
+**Response:** `200` with `{ "ok": true }`, or `404` if the event is not found or not in failed state (or belongs to another portal).
+
+#### Retry all failed events for the portal
+
+```http
+POST /api/events/retry-failed?apiKey=<key>
+```
+
+**Response:** `200` with `{ "retried": <number> }`.
+
 ## Project Structure
 
 ```
@@ -563,18 +606,22 @@ CREATE TABLE files (
 
 ### Events Table
 
-Stores pending sync events for the worker to process:
+Stores pending sync events for the worker to process. Each event is tied to a **portal** (`portalAddress`) so that listing and retrying failed events via the API can be scoped per portal (per API key).
 
 ```sql
 CREATE TABLE events (
   _id TEXT PRIMARY KEY,
-  fileId TEXT NOT NULL,
   type TEXT NOT NULL,           -- 'create', 'update', 'delete'
+  timestamp INTEGER NOT NULL,
+  fileId TEXT NOT NULL,
+  portalAddress TEXT NOT NULL,
   status TEXT DEFAULT 'pending', -- 'pending', 'processing', 'processed', 'failed'
   retryCount INTEGER DEFAULT 0,
-  error TEXT,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  processedAt DATETIME
+  lastError TEXT,
+  lockedAt INTEGER,
+  nextRetryAt INTEGER,
+  userOpHash TEXT,
+  pendingPayload TEXT
 );
 ```
 
@@ -616,10 +663,11 @@ CREATE TABLE apikeys (
 ## Sync Process
 
 1. **Create/Update/Delete** operation happens in local DB
-2. **Event record** created in `events` table with type (`create`, `update`, `delete`)
+2. **Event record** created in `events` table with type (`create`, `update`, `delete`) and `portalAddress`
 3. **Worker** polls for pending events and processes them concurrently
 4. **On success**: Updates `onchainVersion`, sets `syncStatus` to `synced`, marks event as `processed`
 5. **On failure**: Event marked for retry (up to 3 attempts), then marked as `failed`
+6. **Recovery**: Failed events can be reset to pending via CLI (`ddctl events retry`, `retry-all`) or API (`POST /api/events/:id/retry`, `POST /api/events/retry-failed`). List failed via `ddctl events list-failed` or `GET /api/events/failed`. Events are scoped by portal so each API key only sees and can retry its own portal's events.
 
 ## Type System
 
@@ -679,7 +727,9 @@ npm run migrate:create <migration-name>
 ### Worker not processing events
 
 - Ensure worker is running (`npm run start:worker` or via `fileverse-satellite`)
-- Check for failed events in the `events` table
+- List failed events: `ddctl events list-failed` (or `GET /api/events/failed?apiKey=<key>` for your portal only)
+- Retry a single failed event: `ddctl events retry <eventId>` (or `POST /api/events/:id/retry?apiKey=<key>`)
+- Retry all failed events: `ddctl events retry-all` (or `POST /api/events/retry-failed?apiKey=<key>` for your portal only)
 - Review worker logs for error messages
 - Verify `WORKER_CONCURRENCY` setting is appropriate
 

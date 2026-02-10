@@ -110,6 +110,8 @@ npm run dev:cli list
 ddctl list
 ```
 
+**Events (failed recovery):** List failed sync events with `ddctl events list-failed`. Retry one with `ddctl events retry <eventId>` or all with `ddctl events retry-all`. Events are scoped by portal; the API (`GET /api/events/failed`, `POST /api/events/:id/retry`, `POST /api/events/retry-failed`) only lists and retries events for the portal of the API key.
+
 **Note:** The CLI works from any directory because `DB_PATH` is resolved to an absolute path at startup.
 
 ## Environment Variables
