@@ -78,6 +78,7 @@ export interface Event {
   type: EventType;
   timestamp: number;
   fileId: string;
+  portalAddress: string;
   status: EventStatus;
   retryCount: number;
   lastError: string | null;

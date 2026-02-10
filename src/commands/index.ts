@@ -17,6 +17,7 @@ import { updateCommand } from "./updateCommand";
 import { deleteCommand } from "./deleteCommand";
 import { downloadCommand } from "./downloadCommand";
 import { viewCommand } from "./viewCommand";
+import { eventsCommand } from "./eventsCommand";
 import { closeWorker, closeDatabase } from "../infra";
 
 export const program = new Command()
@@ -33,6 +34,7 @@ program.addCommand(updateCommand);
 program.addCommand(deleteCommand);
 program.addCommand(downloadCommand);
 program.addCommand(viewCommand);
+program.addCommand(eventsCommand);
 
 // Close connections and exit after command completes
 program

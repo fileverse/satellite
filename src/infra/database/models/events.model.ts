@@ -12,6 +12,7 @@ interface EventRow {
   type: string;
   timestamp: number;
   fileId: string;
+  portalAddress: string;
   status: string;
   retryCount: number;
   lastError: string | null;
@@ -24,18 +25,18 @@ interface EventRow {
 export class EventsModel {
   private static readonly TABLE = "events";
 
-  static create(input: { type: EventType; fileId: string }): Event {
+  static create(input: { type: EventType; fileId: string; portalAddress: string }): Event {
     const _id = uuidv7();
     const timestamp = Date.now();
     const status: EventStatus = "pending";
 
     const sql = `
       INSERT INTO ${this.TABLE} 
-      (_id, type, timestamp, fileId, status, retryCount, lastError, lockedAt, nextRetryAt) 
-      VALUES (?, ?, ?, ?, ?, 0, NULL, NULL, NULL)
+      (_id, type, timestamp, fileId, portalAddress, status, retryCount, lastError, lockedAt, nextRetryAt) 
+      VALUES (?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL)
     `;
 
-    QueryBuilder.execute(sql, [_id, input.type, timestamp, input.fileId, status]);
+    QueryBuilder.execute(sql, [_id, input.type, timestamp, input.fileId, input.portalAddress, status]);
 
     notifyNewEvent();
 
@@ -44,6 +45,7 @@ export class EventsModel {
       type: input.type,
       timestamp,
       fileId: input.fileId,
+      portalAddress: input.portalAddress,
       status,
       retryCount: 0,
       lastError: null,
@@ -158,6 +160,60 @@ export class EventsModel {
     QueryBuilder.execute(sql, [errorMsg, _id]);
   }
 
+  static listFailed(portalAddress?: string): Event[] {
+    const portalClause = portalAddress != null ? "AND portalAddress = ?" : "";
+    const sql = `
+      SELECT * FROM ${this.TABLE}
+      WHERE status = 'failed'
+      ${portalClause}
+      ORDER BY timestamp ASC
+    `;
+    const params = portalAddress != null ? [portalAddress] : [];
+    const rows = QueryBuilder.select<EventRow>(sql, params);
+    return rows.map((row) => this.parseEvent(row));
+  }
+
+  static resetFailedToPending(_id: string, portalAddress?: string): boolean {
+    const portalClause = portalAddress != null ? "AND portalAddress = ?" : "";
+    const sql = `
+      UPDATE ${this.TABLE}
+      SET status = 'pending',
+          retryCount = 0,
+          lastError = NULL,
+          nextRetryAt = NULL,
+          lockedAt = NULL
+      WHERE _id = ?
+      AND status = 'failed'
+      ${portalClause}
+    `;
+    const params = portalAddress != null ? [_id, portalAddress] : [_id];
+    const result = QueryBuilder.execute(sql, params);
+    if (result.changes > 0) {
+      notifyNewEvent();
+    }
+    return result.changes > 0;
+  }
+
+  static resetAllFailedToPending(portalAddress?: string): number {
+    const portalClause = portalAddress != null ? "AND portalAddress = ?" : "";
+    const sql = `
+      UPDATE ${this.TABLE}
+      SET status = 'pending',
+          retryCount = 0,
+          lastError = NULL,
+          nextRetryAt = NULL,
+          lockedAt = NULL
+      WHERE status = 'failed'
+      ${portalClause}
+    `;
+    const params = portalAddress != null ? [portalAddress] : [];
+    const result = QueryBuilder.execute(sql, params);
+    if (result.changes > 0) {
+      notifyNewEvent();
+    }
+    return result.changes;
+  }
+
   static resetStaleEvents(staleThreshold: number): number {
     const sql = `
       UPDATE ${this.TABLE}
@@ -189,6 +245,7 @@ export class EventsModel {
       type: row.type as EventType,
       timestamp: row.timestamp,
       fileId: row.fileId,
+      portalAddress: row.portalAddress ?? "",
       status: row.status as EventStatus,
       retryCount: row.retryCount,
       lastError: row.lastError,

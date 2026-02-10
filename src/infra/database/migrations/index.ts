@@ -243,6 +243,38 @@ const migrations: MigrationFile[] = [
         WHERE status = 'processing';
     `,
   },
+  {
+    timestamp: "20260210150000",
+    name: "add_events_portal_address",
+    up: `
+      ALTER TABLE events ADD COLUMN portalAddress TEXT;
+      UPDATE events SET portalAddress = (SELECT portalAddress FROM files WHERE files._id = events.fileId) WHERE portalAddress IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_events_failed_portal ON events (portalAddress, status) WHERE status = 'failed';
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_events_failed_portal;
+      CREATE TABLE events_old (
+        _id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        fileId TEXT NOT NULL,
+        status TEXT NOT NULL,
+        retryCount INTEGER NOT NULL,
+        lastError TEXT,
+        lockedAt INTEGER,
+        nextRetryAt INTEGER,
+        userOpHash TEXT,
+        pendingPayload TEXT
+      );
+      INSERT INTO events_old (_id, type, timestamp, fileId, status, retryCount, lastError, lockedAt, nextRetryAt, userOpHash, pendingPayload)
+      SELECT _id, type, timestamp, fileId, status, retryCount, lastError, lockedAt, nextRetryAt, userOpHash, pendingPayload FROM events;
+      DROP TABLE events;
+      ALTER TABLE events_old RENAME TO events;
+      CREATE INDEX IF NOT EXISTS idx_events_pending_eligible ON events (status, nextRetryAt, timestamp) WHERE status = 'pending';
+      CREATE INDEX IF NOT EXISTS idx_events_file_pending_ts ON events (fileId, status, timestamp) WHERE status = 'pending';
+      CREATE INDEX IF NOT EXISTS idx_events_processing_locked ON events (status, lockedAt) WHERE status = 'processing';
+    `,
+  },
 ];
 
 export function runMigrations(): void {

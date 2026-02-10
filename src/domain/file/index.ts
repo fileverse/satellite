@@ -72,7 +72,7 @@ const createFile = async (input: CreateFileInput): Promise<File> => {
     portalAddress: input.portalAddress,
   });
 
-  EventsModel.create({ type: "create", fileId: file._id });
+  EventsModel.create({ type: "create", fileId: file._id, portalAddress: file.portalAddress });
   return file;
 }
 
@@ -97,7 +97,7 @@ const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddres
   };
   const updatedFile = FilesModel.update(existingFile._id, updatePayload, portalAddress);
 
-  EventsModel.create({ type: "update", fileId: updatedFile._id });
+  EventsModel.create({ type: "update", fileId: updatedFile._id, portalAddress: updatedFile.portalAddress });
   return {
     ddocId: updatedFile.ddocId,
     link: updatedFile.link,
@@ -124,7 +124,7 @@ const deleteFile = async (ddocId: string, portalAddress: string): Promise<File> 
 
   const deletedFile = FilesModel.softDelete(existingFile._id);
 
-  EventsModel.create({ type: "delete", fileId: deletedFile._id });
+  EventsModel.create({ type: "delete", fileId: deletedFile._id, portalAddress: deletedFile.portalAddress });
   return deletedFile;
 }
 
