@@ -3,6 +3,7 @@ import * as fs from "fs";
 import { getFile } from "../domain/file";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
+import { validateApiKey } from "./utils/util";
 
 export const downloadCommand = new Command()
   .name("download")
@@ -11,9 +12,9 @@ export const downloadCommand = new Command()
   .option("-o, --output <filename>", "Output filename (only supports markdown)")
   .action(async (ddocId: string, options: { output?: string }) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error("API key is required");
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
+      validateApiKey(apiKey);
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
 

@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { getFile } from "../domain/file";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
+import { validateApiKey } from "./utils/util";
 
 export const viewCommand = new Command()
   .name("view")
@@ -10,9 +11,9 @@ export const viewCommand = new Command()
   .option("-n, --lines <number>", "Number of lines to preview (default: 10)", "10")
   .action(async (ddocId: string, options: { lines?: string }) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error("API key is required");
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
+      validateApiKey(apiKey);
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
 

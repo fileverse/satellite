@@ -117,6 +117,8 @@ const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddres
     isDeleted: updatedFile.isDeleted,
     onChainFileId: updatedFile.onChainFileId,
     portalAddress: updatedFile.portalAddress,
+    createdAt: updatedFile.createdAt,
+    updatedAt: updatedFile.updatedAt,
   };
 };
 

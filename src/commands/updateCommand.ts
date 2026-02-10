@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { updateFile, getFile, type UpdateFileInput } from "../domain/file";
 import { spawnSync } from "child_process";
 import Table from "cli-table3";
-import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { formatDate, getElapsedTime, columnNames, columnWidth, validateApiKey } from "./utils/util";
 import { ApiKeysModel } from "../infra/database/models";
 import { getRuntimeConfig } from "../config";
 
@@ -54,9 +54,9 @@ export const updateCommand = new Command()
   .option("-f, --file <file_path>", "path to file to update ddoc from")
   .action(async (ddocId: string, options: { file?: string }) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error("API key is required");
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
+      validateApiKey(apiKey);
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
 

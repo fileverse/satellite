@@ -3,7 +3,7 @@ import { createFile } from "../domain/file";
 import * as fs from "fs";
 import * as path from "path";
 import Table from "cli-table3";
-import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { formatDate, getElapsedTime, columnNames, columnWidth, validateApiKey } from "./utils/util";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
 
@@ -17,11 +17,11 @@ export const createCommand = new Command()
         throw new Error(`File not found: ${filepath}`);
       }
 
-      const runtimConfig = getRuntimeConfig();
+      const runtimeConfig = getRuntimeConfig();
 
-      const apiKey = runtimConfig.API_KEY;
+      const apiKey = runtimeConfig.API_KEY;
 
-      if (!apiKey) throw new Error("API key is required");
+      validateApiKey(apiKey);
 
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
 
@@ -29,7 +29,8 @@ export const createCommand = new Command()
 
       const content = fs.readFileSync(filepath, "utf-8");
       if (!content || content.trim().length === 0) {
-        throw new Error("File content cannot be empty");
+        console.error("Error creating ddoc: File content cannot be empty. Add some content to the file and try again.");
+        process.exit(1);
       }
 
       const title = path.basename(filepath);
@@ -72,6 +73,6 @@ export const createCommand = new Command()
       console.log(table.toString());
     } catch (error: any) {
       console.error("Error creating ddoc:", error.message);
-      throw error;
+      process.exit(1);
     }
   });

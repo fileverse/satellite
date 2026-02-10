@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { deleteFile } from "../domain/file";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
+import { validateApiKey } from "./utils/util";
 
 export const deleteCommand = new Command()
   .name("delete")
@@ -9,11 +10,11 @@ export const deleteCommand = new Command()
   .argument("<ddocIds...>", "One or more ddoc IDs to delete (space-separated)")
   .action(async (ddocIds: string[]) => {
     try {
-      const runtimConfig = getRuntimeConfig();
+      const runtimeConfig = getRuntimeConfig();
 
-      const apiKey = runtimConfig.API_KEY;
+      const apiKey = runtimeConfig.API_KEY;
 
-      if (!apiKey) throw new Error("API key is required");
+      validateApiKey(apiKey);
 
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
 

@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import Table from "cli-table3";
 import { getFile } from "../domain/file";
-import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import { formatDate, getElapsedTime, columnNames, columnWidth, validateApiKey } from "./utils/util";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
 
@@ -11,9 +11,9 @@ export const getCommand = new Command()
   .argument("<ddocId>", "The ddoc ID to retrieve")
   .action(async (ddocId: string) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error("API key is required");
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
+      validateApiKey(apiKey);
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
       const file = getFile(ddocId, portalAddress);

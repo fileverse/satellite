@@ -65,3 +65,19 @@ export function getElapsedTime(date: Date | string): string {
 
   return "just now";
 }
+
+export function validateApiKey(apiKey: string | undefined): asserts apiKey is string {
+  if (!apiKey) {
+    const API_KEY_SETUP_MESSAGE = `
+API key is not configured.
+
+To set up your API key, run:
+  satellite --apiKey <your-api-key> --rpcUrl <rpc-url>
+  
+This will configure your Satellite instance and save your credentials.
+After setup, you can use ddctl commands.
+`;
+    console.error(API_KEY_SETUP_MESSAGE);
+    process.exit(1);
+  }
+}

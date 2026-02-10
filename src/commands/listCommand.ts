@@ -1,8 +1,8 @@
 import { Command } from "commander";
 import Table from "cli-table3";
 import { listFiles } from "../domain/file";
-import type { File, GetFileResult } from "../types";
-import { formatDate, getElapsedTime, columnNames, columnWidth } from "./utils/util";
+import type { GetFileResult } from "../types";
+import { formatDate, getElapsedTime, columnNames, columnWidth, validateApiKey } from "./utils/util";
 import { getRuntimeConfig } from "../config";
 import { ApiKeysModel } from "../infra/database/models";
 
@@ -13,9 +13,9 @@ export const listCommand = new Command()
   .option("-s, --skip <number>", "Skip the first N results", parseInt)
   .action(async (options) => {
     try {
-      const runtimConfig = getRuntimeConfig();
-      const apiKey = runtimConfig.API_KEY;
-      if (!apiKey) throw new Error("API key is required");
+      const runtimeConfig = getRuntimeConfig();
+      const apiKey = runtimeConfig.API_KEY;
+      validateApiKey(apiKey);
       const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
       const params = {
