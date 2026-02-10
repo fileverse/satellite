@@ -5,7 +5,7 @@
   "NETWORK_NAME": "gnosis",
   "DEFAULT_PORT": "8001",
   "DEFAULT_RPC_URL": "https://rpc.gnosischain.com",
-  "PIMLICO_PROXY_URL": "https://pimlico-proxy.fileverse.io",
+  "PIMLICO_PROXY_URL": "https://pimlico-proxy-0a326da116f8.herokuapp.com/",
   "SERVICE_NAME": "satellite",
   "LOG_LEVEL": "info",
   "FRONTEND_URL": "https://docs.fileverse.io"

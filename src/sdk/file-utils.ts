@@ -9,7 +9,7 @@ import { fromUint8Array, toUint8Array } from "js-base64";
 import { gcmEncrypt } from "./file-encryption";
 import { toAESKey, aesEncrypt } from "@fileverse/crypto/webcrypto";
 import axios from "axios";
-import { ADD_FILE_ABI, DELETED_FILE_ABI, EDIT_FILE_ABI, UPLOAD_SERVER_URL } from "../constants";
+import { ADD_FILE_METHOD, DELETED_FILE_ABI, EDIT_FILE_METHOD, UPLOAD_SERVER_URL } from "../constants";
 import type { UploadFileAuthParams, FileMetadataParams, UploadFilesParams } from "../types";
 import { encodeFunctionData, type Hex, parseEventLogs, type Abi } from "viem";
 
@@ -222,7 +222,7 @@ const getEditFileTrxCalldata = (args: {
   gateHash: string;
 }) => {
   return encodeFunctionData({
-    abi: EDIT_FILE_ABI,
+    abi: EDIT_FILE_METHOD,
     functionName: "editFile",
     args: [BigInt(args.fileId), args.appFileId, args.metadataHash, args.contentHash, args.gateHash, 2, BigInt(0)],
   });
@@ -235,7 +235,7 @@ const getAddFileTrxCalldata = (args: {
   gateHash: string;
 }) => {
   return encodeFunctionData({
-    abi: ADD_FILE_ABI,
+    abi: ADD_FILE_METHOD,
     functionName: "addFile",
     args: [args.appFileId, 2, args.metadataHash, args.contentHash, args.gateHash, BigInt(0)],
   });

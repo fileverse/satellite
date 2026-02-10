@@ -15,7 +15,7 @@ import {
 import { AgentClient } from "./smart-agent";
 import { generateAESKey, exportAESKey } from "@fileverse/crypto/webcrypto";
 import { STATIC_CONFIG } from "../cli/constants";
-import { ADDED_FILE_EVENT_ABI, DELETED_FILE_EVENT_ABI, EDITED_FILE_EVENT_ABI } from "../constants";
+import { ADDED_FILE_EVENT, DELETED_FILE_EVENT, EDITED_FILE_EVENT } from "../constants";
 import { markdownToYjs } from "@fileverse/content-processor";
 import { logger } from "../infra";
 
@@ -173,7 +173,7 @@ export class FileManager {
     logger.info(`Prepared call data for file ${file.ddocId}`);
 
     const { logs } = await this.executeFileOperation(callData);
-    const onChainFileId = parseFileEventLog(logs, "AddedFile", ADDED_FILE_EVENT_ABI);
+    const onChainFileId = parseFileEventLog(logs, "AddedFile", ADDED_FILE_EVENT);
     logger.info(`Executed file operation for file ${file.ddocId}`);
     return {
       onChainFileId,
@@ -232,7 +232,7 @@ export class FileManager {
     logger.info(`Executing file operation for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
 
     const { logs } = await this.executeFileOperation(callData);
-    const onChainFileId = parseFileEventLog(logs, "EditedFile", EDITED_FILE_EVENT_ABI);
+    const onChainFileId = parseFileEventLog(logs, "EditedFile", EDITED_FILE_EVENT);
 
     return { onChainFileId, metadata };
   }
@@ -245,7 +245,7 @@ export class FileManager {
     logger.info(`Prepared call data for deleting file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
 
     const { logs } = await this.executeFileOperation(callData);
-    parseFileEventLog(logs, "DeletedFile", DELETED_FILE_EVENT_ABI);
+    parseFileEventLog(logs, "DeletedFile", DELETED_FILE_EVENT);
     logger.info(`Executed file operation for deleting file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
     return {
       fileId: file.id,

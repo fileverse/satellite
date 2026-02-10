@@ -5,7 +5,7 @@ import type { Event, ProcessResult, UpdateFilePayload } from "../../types";
 import { logger } from "../index";
 import { waitForUserOpReceipt } from "../../sdk/pimlico-utils";
 import { parseFileEventLog } from "../../sdk/file-utils";
-import { ADDED_FILE_EVENT_ABI } from "../../constants";
+import { ADDED_FILE_EVENT } from "../../constants";
 import { RateLimitError, normalizeRateLimitError } from "../../errors/rate-limit";
 
 export type { ProcessResult };
@@ -76,7 +76,7 @@ const processCreateEvent = async (event: Event): Promise<void> => {
       EventsModel.clearEventPendingOp(event._id);
       throw new Error(`User operation failed: ${receipt.reason}`);
     }
-    const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT_ABI);
+    const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT);
     const pending = JSON.parse(event.pendingPayload!) as { linkKey: string; linkKeyNonce: string; commentKey: string; metadata: Record<string, unknown> };
     onTransactionSuccess(fileId, file, onChainFileId, pending);
     EventsModel.clearEventPendingOp(event._id);
@@ -97,7 +97,7 @@ const processCreateEvent = async (event: Event): Promise<void> => {
     EventsModel.clearEventPendingOp(event._id);
     throw new Error(`User operation failed: ${receipt.reason}`);
   }
-  const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT_ABI);
+  const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT);
   onTransactionSuccess(fileId, file, onChainFileId, {
     linkKey: result.linkKey,
     linkKeyNonce: result.linkKeyNonce,
