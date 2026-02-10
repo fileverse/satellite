@@ -4,6 +4,7 @@ import { getSmartAccountClient, getNonce, waitForUserOpReceipt } from "./pimlico
 import { AuthTokenProvider } from "./auth-token-provider";
 import { STATIC_CONFIG } from "../cli/constants";
 import { createSmartAccountClient } from "permissionless";
+import { isRpc429Error, isUsingPublicRpc, RPC_429_USER_MESSAGE } from "../config";
 import type { IExecuteUserOperationRequest } from "../types";
 
 export type { IExecuteUserOperationRequest };
@@ -22,10 +23,21 @@ export class AgentClient {
   }
 
   async initializeAgentClient(keyMaterial: Uint8Array) {
-    const agentAccount = privateKeyToAccount(toHex(keyMaterial));
-    const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
-    const smartAccountClient = await getSmartAccountClient(agentAccount, authToken, this.authTokenProvider.portalAddress);
-    this.smartAccountAgent = smartAccountClient;
+    try {
+      const agentAccount = privateKeyToAccount(toHex(keyMaterial));
+      const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
+      const smartAccountClient = await getSmartAccountClient(
+        agentAccount,
+        authToken,
+        this.authTokenProvider.portalAddress,
+      );
+      this.smartAccountAgent = smartAccountClient;
+    } catch (error) {
+      if (isUsingPublicRpc() && isRpc429Error(error)) {
+        throw new Error(RPC_429_USER_MESSAGE);
+      }
+      throw error;
+    }
   }
 
   getSmartAccountAgent() {
@@ -88,6 +100,9 @@ export class AgentClient {
         nonce: getNonce(),
       });
     } catch (error) {
+      if (isUsingPublicRpc() && isRpc429Error(error)) {
+        throw new Error(RPC_429_USER_MESSAGE);
+      }
       throw error;
     }
   }
@@ -97,8 +112,21 @@ export class AgentClient {
     timeout: number,
     customGasLimit?: number,
   ) {
-    const userOpHash = await this.sendUserOperation(request, customGasLimit);
-    const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
-    return await waitForUserOpReceipt(userOpHash, authToken, this.authTokenProvider.portalAddress, this.getAgentAddress(), timeout);
+    try {
+      const userOpHash = await this.sendUserOperation(request, customGasLimit);
+      const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
+      return await waitForUserOpReceipt(
+        userOpHash,
+        authToken,
+        this.authTokenProvider.portalAddress,
+        this.getAgentAddress(),
+        timeout,
+      );
+    } catch (error) {
+      if (isUsingPublicRpc() && isRpc429Error(error)) {
+        throw new Error(RPC_429_USER_MESSAGE);
+      }
+      throw error;
+    }
   }
 }
