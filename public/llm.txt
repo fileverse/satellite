@@ -4,6 +4,18 @@
 
 **Skill Name**: satellite
 
+## How to use this document
+
+Fetch this via GET {SERVER_URL}/llm.txt. Use it to discover the server URL, decide API vs CLI mode, then follow the relevant section below.
+
+## Integration checklist
+
+1. Get server URL (from the URL you used to fetch this doc, minus /llm.txt) and apiKey (see API Key Configuration).
+2. Try GET {SERVER_URL}/ping. If you get 200 and {"reply":"pong"}, use API mode; otherwise use CLI mode.
+3. In API mode: every request must include apiKey as a query parameter; the path is complete before any query string.
+4. For create/update: extract ddocId from response.data.ddocId (not from the top level of the response).
+5. After create or update, poll GET /api/ddocs/{ddocId}?apiKey=... until syncStatus is "synced" or "failed", then show the link if synced.
+
 ## Server URL
 
 If you fetched this document from a URL (e.g., http://localhost:8001/llm.txt):
@@ -31,8 +43,47 @@ After getting the server URL:
 2. **If successful** (response: {"reply":"pong"}) → Use API Mode
 3. **If connection fails** (timeout, refused, unreachable) → Switch to CLI Mode
 
+In API mode, every request must include apiKey as a query parameter; the path is complete before any query string.
+
 When switching to CLI mode, inform the user:
 "I can't reach your server directly (localhost isn't accessible from here). I'll help you using CLI commands instead - just run them and share the output with me."
+
+---
+
+# Quick reference
+
+## All API endpoints
+
+| Method | Path | Auth | Key params/body |
+|--------|------|------|-----------------|
+| GET | /ping | No | - |
+| GET | /api/ddocs | apiKey | limit, skip |
+| GET | /api/ddocs/{ddocId} | apiKey | - |
+| POST | /api/ddocs | apiKey | form-data: file |
+| PUT | /api/ddocs/{ddocId} | apiKey | form-data: file |
+| DELETE | /api/ddocs/{ddocId} | apiKey | - |
+| GET | /api/folders | apiKey | limit, skip |
+| POST | /api/folders | apiKey | body: see Create Folder |
+| GET | /api/folders/{folderRef}/{folderId} | apiKey | - |
+| GET | /api/search | apiKey | q (required), limit, skip |
+| GET | /api/events/failed | apiKey | - |
+| POST | /api/events/retry-failed | apiKey | - |
+| POST | /api/events/{id}/retry | apiKey | - |
+
+## All ddctl commands
+
+| Command | Purpose | Key options |
+|---------|---------|-------------|
+| ddctl list | List ddocs | -l/--limit, -s/--skip |
+| ddctl get <ddocId> | Get document metadata | - |
+| ddctl view <ddocId> | View content preview | -n/--lines (default 10) |
+| ddctl create <filepath> | Create from file | title = filename; file cannot be empty |
+| ddctl update <ddocId> | Update ddoc | -f/--file <path> or opens editor |
+| ddctl download <ddocId> | Download to file | -o/--output <filename> |
+| ddctl delete <ddocIds...> | Delete one or more | space-separated ids |
+| ddctl events list-failed | List failed worker events | - |
+| ddctl events retry <eventId> | Retry one failed event | - |
+| ddctl events retry-all | Retry all failed events | - |
 
 ---
 
@@ -41,20 +92,23 @@ When switching to CLI mode, inform the user:
 Use this when you cannot reach the user's server (localhost, firewall, etc.).
 You generate commands, user runs them and shares output with you.
 
-## Installation
+## Installation and invocation
 
-If user needs to set up Satellite:
+To set up Satellite and run the server:
 
 ```bash
 npm install -g @fileverse/satellite
 npx @fileverse/satellite --apiKey <key> --rpcUrl <url>
 ```
 
+The package exposes the ddctl binary. After npm install -g @fileverse/satellite, run ddctl <command>. Without global install: npx -p @fileverse/satellite ddctl <command>.
+
 ## CLI Commands Reference
 
 ### List Documents
 ```bash
 ddctl list
+ddctl list -l 10 -s 20
 ddctl list --limit 10 --skip 20
 ```
 
@@ -67,60 +121,62 @@ Shows metadata including the link (if synced to blockchain).
 ### View Document Content
 ```bash
 ddctl view <ddocId>
+ddctl view <ddocId> -n 20
 ddctl view <ddocId> --lines 20
 ```
+Default preview is 10 lines.
 
 ### Create Document
 ```bash
 ddctl create <filepath>
 ```
-Creates document from file (title = filename).
+Creates document from file. Title is derived from filename. File content cannot be empty.
 
 ### Update Document
 ```bash
+ddctl update <ddocId> -f <filepath>
 ddctl update <ddocId> --file <filepath>
-ddctl update <ddocId>  # Opens in editor
+ddctl update <ddocId>
 ```
+Without --file opens in editor (uses EDITOR env or vi).
 
 ### Download Document
 ```bash
 ddctl download <ddocId>
+ddctl download <ddocId> -o myfile.md
 ddctl download <ddocId> --output myfile.md
 ```
+Output supports markdown.
 
 ### Delete Document
 ```bash
 ddctl delete <ddocId>
-ddctl delete <id1> <id2> <id3>  # Multiple
+ddctl delete <id1> <id2> <id3>
 ```
+One or more space-separated ddoc IDs.
+
+### Worker events
+```bash
+ddctl events list-failed
+ddctl events retry <eventId>
+ddctl events retry-all
+```
+If sync is stuck, run ddctl events list-failed then ddctl events retry <id> or ddctl events retry-all.
 
 ## CLI Workflow Examples
 
 ### Create and Check Sync Status
 ```bash
-# 1. Create the document
 ddctl create mydocument.md
-
-# 2. Note the ddocId from output
-
-# 3. Check sync status (repeat until synced)
 ddctl get <ddocId>
-
-# 4. When syncStatus is "synced", the link field shows the public URL
 ```
+Repeat get until syncStatus is "synced"; then the link field shows the public URL.
 
 ### Search and Update
 ```bash
-# 1. List documents to find one
 ddctl list
-
-# 2. View content
 ddctl view <ddocId>
-
-# 3. Update with new content
 ddctl update <ddocId> --file updated.md
-
-# 4. Check sync status
 ddctl get <ddocId>
 ```
 
@@ -154,6 +210,13 @@ WRONG (do NOT do this):
 
 The query string (?apiKey=...) must ALWAYS come after the full path is complete.
 
+## Common mistakes
+
+- Putting path segments after ?apiKey=... (wrong).
+- Forgetting that create/update return data.ddocId, not top-level ddocId; always use response.data.ddocId.
+- Sending JSON for create/update; use multipart/form-data with a "file" field only.
+- Not polling after create/update until syncStatus is "synced" or "failed".
+
 ## Important: Sync Status Polling
 
 When you create or update a document, it syncs to blockchain asynchronously:
@@ -162,18 +225,14 @@ When you create or update a document, it syncs to blockchain asynchronously:
 - **synced**: Published to blockchain (link field available)
 - **failed**: Sync failed
 
-After CREATE or UPDATE, poll until syncStatus is "synced":
+After CREATE or UPDATE, poll until syncStatus is "synced" or "failed":
 
-```
 1. POST /api/ddocs or PUT /api/ddocs/{id}
-2. Note the ddocId from response
+2. Extract ddocId from response.data.ddocId (not from the top level)
 3. Poll: GET /api/ddocs/{ddocId}?apiKey={API_KEY}
 4. If "pending", wait 5 seconds and poll again
-5. If "synced":
-   - Extract the "link" field from response
-   - Show the link to user as clickable: [View Document](link)
+5. If "synced": extract the "link" field and show as clickable: [View Document](link)
 6. If "failed", inform user of sync failure
-```
 
 Typical sync time: 5-30 seconds.
 
@@ -204,32 +263,28 @@ Response:
   "title": "...",
   "content": "...",
   "syncStatus": "pending|synced|failed",
-  "link": "https://...",  // Available when synced
+  "link": "https://...",
   ...
 }
+(link available when synced)
 
 ### Create Document
 POST /api/ddocs?apiKey={API_KEY}
-Content-Type: application/json
+Content-Type: multipart/form-data
 
-{
-  "title": "Document Title",
-  "fileContent": "Document content..."
-}
+Send a single form field "file" with the document file. Title is derived from the filename. Max file size 10MB.
 
-IMPORTANT: Poll GET /api/ddocs/{ddocId} until syncStatus is "synced", then show the link.
+Response: 201 with { "message": "...", "data": { "ddocId": "...", "title": "...", "syncStatus": "...", ... } }
+Extract ddocId from response.data.ddocId. Then poll GET /api/ddocs/{ddocId} until syncStatus is "synced", then show the link.
 
 ### Update Document
 PUT /api/ddocs/{ddocId}?apiKey={API_KEY}
-Content-Type: application/json
+Content-Type: multipart/form-data
 
-{
-  "title": "Updated Title",
-  "fileContent": "Updated content..."
-}
+Send a single form field "file" with the updated document file. Title is derived from the filename. Max file size 10MB.
 
-At least one of title or fileContent required.
-IMPORTANT: Poll until synced, then show the link.
+Response: 200 with { "message": "...", "data": { ... } }
+Poll until synced, then show the link.
 
 ### Delete Document
 DELETE /api/ddocs/{ddocId}?apiKey={API_KEY}
@@ -237,30 +292,61 @@ DELETE /api/ddocs/{ddocId}?apiKey={API_KEY}
 ### List Folders
 GET /api/folders?apiKey={API_KEY}&limit=10&skip=0
 
+Response:
+{
+  "folders": [...],
+  "total": 100,
+  "hasNext": true
+}
+
 ### Create Folder
 POST /api/folders?apiKey={API_KEY}
 Content-Type: application/json
 
-{"name": "Folder Name"}
+Required body fields: onchainFileId, folderId, folderRef, folderName, portalAddress, metadataIPFSHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp.
+Typically used for sync/on-chain integration, not ad-hoc folder creation by agents.
 
 ### Get Folder
 GET /api/folders/{folderRef}/{folderId}?apiKey={API_KEY}
+Both folderRef and folderId are required.
 
 ### Search Documents
 GET /api/search?apiKey={API_KEY}&q={query}&limit=10&skip=0
+Query parameter "q" is required.
+
+Response:
+{
+  "nodes": [...],
+  "total": 100,
+  "hasNext": true
+}
+(Search returns "nodes", not "ddocs".)
+
+### List Failed Events
+GET /api/events/failed?apiKey={API_KEY}
+
+Response: array of events (e.g. _id, fileId, portalAddress, type, timestamp, lastError).
+
+### Retry All Failed Events
+POST /api/events/retry-failed?apiKey={API_KEY}
+
+Response: { "retried": number }
+
+### Retry One Failed Event
+POST /api/events/{id}/retry?apiKey={API_KEY}
+
+Response: { "ok": true } or 404 if event not found or not in failed state.
 
 ## API Workflow Examples
 
 ### Create Document and Show Link
 
-1. POST /api/ddocs?apiKey={API_KEY} with title and fileContent
-2. Extract ddocId from response
-3. Poll loop:
-   - GET /api/ddocs/{ddocId}?apiKey={API_KEY}
-   - If syncStatus is "pending", wait 5 seconds, repeat
-   - If syncStatus is "synced":
-     * Show user: "Document published! [View Document](link)"
-   - If "failed": "Document saved but blockchain sync failed"
+1. POST /api/ddocs?apiKey={API_KEY} with multipart/form-data, field name "file", containing the document file
+2. Extract ddocId from response.data.ddocId
+3. Poll: GET /api/ddocs/{ddocId}?apiKey={API_KEY}
+4. If syncStatus "pending", wait 5 seconds, repeat
+5. If "synced": show "Document published! [View Document](link)"
+6. If "failed": "Document saved but blockchain sync failed"
 
 ---
 
@@ -274,6 +360,8 @@ GET /api/search?apiKey={API_KEY}&q={query}&limit=10&skip=0
 
 # Error Handling
 
+**400 Bad Request**: Validation errors (missing/invalid body or params). Response body: { "error": "..." } or { "message": "..." }.
 **401 Unauthorized**: Invalid or missing API key
 **404 Not Found**: Resource doesn't exist
+**429 Too Many Requests**: If returned (e.g. from upstream), respect Retry-After header if present.
 **500 Server Error**: Internal error, retry or inform user
