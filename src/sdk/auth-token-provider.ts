@@ -8,7 +8,7 @@ export class AuthTokenProvider {
     scheme: "storage",
   };
   private keyPair: ucans.EdKeypair;
-  private portalAddress: Hex;
+  portalAddress: Hex;
   constructor(keyPair: ucans.EdKeypair, portalAddress: Hex) {
     this.keyPair = keyPair;
     this.portalAddress = portalAddress;

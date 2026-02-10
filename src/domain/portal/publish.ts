@@ -1,5 +1,4 @@
-import { FilesModel } from "../../infra/database/models";
-import { PortalsModel } from "../../infra/database/models";
+import { FilesModel, PortalsModel } from "../../infra/database/models";
 import { logger } from "../../infra";
 import { KeyStore } from "../../sdk/key-store";
 import { AuthTokenProvider } from "../../sdk/auth-token-provider";
@@ -25,6 +24,7 @@ interface PortalData {
   file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>;
   portalDetails: NonNullable<ReturnType<typeof PortalsModel.findByPortalAddress>>;
   apiKey: string;
+
 }
 
 function getPortalData(fileId: string): PortalData {
@@ -43,7 +43,8 @@ function getPortalData(fileId: string): PortalData {
     throw new Error("API key is not set");
   }
 
-  return { file, portalDetails, apiKey };
+
+  return { file, portalDetails, apiKey, };
 }
 
 function deriveCollaboratorKeys(apiKeySeed: Uint8Array) {

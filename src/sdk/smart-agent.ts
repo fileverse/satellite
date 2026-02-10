@@ -1,8 +1,9 @@
 import { EncodeDeployDataReturnType, Hex, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { getSmartAccountClient, getNonce, waitForUserOpReceipt, type TSmartAccountClient } from "./pimlico-utils";
+import { getSmartAccountClient, getNonce, waitForUserOpReceipt } from "./pimlico-utils";
 import { AuthTokenProvider } from "./auth-token-provider";
 import { STATIC_CONFIG } from "../cli/constants";
+import { createSmartAccountClient } from "permissionless";
 
 export interface IExecuteUserOperationRequest {
   contractAddress: Hex;
@@ -10,7 +11,7 @@ export interface IExecuteUserOperationRequest {
 }
 
 export class AgentClient {
-  private smartAccountAgent: TSmartAccountClient | null = null;
+  private smartAccountAgent: ReturnType<typeof createSmartAccountClient> | null = null;
   private readonly MAX_CALL_GAS_LIMIT = 500000;
   private readonly authOptions: {
     namespace: string;
@@ -22,14 +23,14 @@ export class AgentClient {
     this.authTokenProvider = authTokenProvider;
   }
 
-  async initializeAgentClient(keyMaterial: Uint8Array, smartAccountAddress?: Hex) {
+  async initializeAgentClient(keyMaterial: Uint8Array) {
     const agentAccount = privateKeyToAccount(toHex(keyMaterial));
     const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
-    const smartAccountClient = await getSmartAccountClient(agentAccount, authToken, smartAccountAddress);
+    const smartAccountClient = await getSmartAccountClient(agentAccount, authToken, this.authTokenProvider.portalAddress);
     this.smartAccountAgent = smartAccountClient;
   }
 
-  getSmartAccountAgent(): TSmartAccountClient {
+  getSmartAccountAgent() {
     if (!this.smartAccountAgent) throw new Error("Agent client not initialized");
 
     return this.smartAccountAgent;
@@ -37,11 +38,13 @@ export class AgentClient {
 
   getAgentAddress() {
     const smartAccountAgent = this.getSmartAccountAgent();
+    if (!smartAccountAgent.account) throw new Error("Agent account not found");
     return smartAccountAgent.account.address;
   }
 
   getAgentAccount() {
     const smartAccountAgent = this.getSmartAccountAgent();
+    if (!smartAccountAgent.account) throw new Error("Agent account not found");
     return smartAccountAgent.account;
   }
 
@@ -98,6 +101,6 @@ export class AgentClient {
   ) {
     const userOpHash = await this.sendUserOperation(request, customGasLimit);
     const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
-    return await waitForUserOpReceipt(userOpHash, authToken, timeout);
+    return await waitForUserOpReceipt(userOpHash, authToken, this.authTokenProvider.portalAddress, this.getAgentAddress(), timeout);
   }
 }

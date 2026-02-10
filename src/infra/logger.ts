@@ -1,5 +1,6 @@
 import pino, { Logger as PinoLogger, Level } from "pino";
 import { STATIC_CONFIG } from "../cli/constants";
+import { config } from "../config";
 
 const pinoInstance = pino({
   name: STATIC_CONFIG.SERVICE_NAME,
@@ -8,17 +9,17 @@ const pinoInstance = pino({
     bindings: (bindings) => ({ name: bindings.name }),
     level: (label) => ({ level: label }),
   },
-  transport: true
+  transport: config.NODE_ENV !== "production"
     ? {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          translateTime: "SYS:standard",
-          ignore: "pid,hostname",
-          errorProps: "*",
-          errorLikeObjectKeys: ["err", "error"],
-        },
-      }
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        translateTime: "SYS:standard",
+        ignore: "pid,hostname",
+        errorProps: "*",
+        errorLikeObjectKeys: ["err", "error"],
+      },
+    }
     : undefined,
 });
 

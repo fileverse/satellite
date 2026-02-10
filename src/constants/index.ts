@@ -6,7 +6,7 @@ export const NETWORK_NAME = STATIC_CONFIG.NETWORK_NAME;
 export const UPLOAD_SERVER_URL = STATIC_CONFIG.API_URL;
 
 export const getRpcUrl = () => getRuntimeConfig().RPC_URL;
-export const getPimlicoUrl = () => `${STATIC_CONFIG.PIMLICO_PROXY_URL}/v2/${NETWORK_NAME}/rpc`;
+export const getPimlicoUrl = () => `${STATIC_CONFIG.PIMLICO_PROXY_URL}/api/${NETWORK_NAME}/rpc`;
 
 const CHAIN_MAP = {
   gnosis: gnosis,
