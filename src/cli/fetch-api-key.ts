@@ -4,7 +4,7 @@ import { sha256 } from "viem";
 import { BASE_CONFIG } from "./constants";
 import type { ApiKeyResponse } from "../types";
 
-export async function fetchApiKeyData(apiKey: string): Promise<ApiKeyResponse> {
+export const fetchApiKeyData = async (apiKey: string): Promise<ApiKeyResponse> => {
   try {
     const keyHash = sha256(toUint8Array(apiKey));
     const fullUrl = BASE_CONFIG.API_URL + "api-access" + `/${keyHash}`;

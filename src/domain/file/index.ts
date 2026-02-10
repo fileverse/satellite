@@ -59,7 +59,7 @@ function getFile(ddocId: string, portalAddress: string): GetFileResult | null {
   };
 }
 
-async function createFile(input: CreateFileInput): Promise<File> {
+const createFile = async (input: CreateFileInput): Promise<File> => {
   if (!input.title || !input.content || !input.portalAddress) {
     throw new Error("title, content, and portalAddress are required");
   }
@@ -76,7 +76,7 @@ async function createFile(input: CreateFileInput): Promise<File> {
   return file;
 }
 
-async function updateFile(ddocId: string, payload: UpdateFileInput, portalAddress: string): Promise<Partial<File>> {
+const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddress: string): Promise<Partial<File>> => {
   if (!ddocId) {
     throw new Error("ddocId is required");
   }
@@ -112,7 +112,7 @@ async function updateFile(ddocId: string, payload: UpdateFileInput, portalAddres
   };
 }
 
-async function deleteFile(ddocId: string, portalAddress: string): Promise<File> {
+const deleteFile = async (ddocId: string, portalAddress: string): Promise<File> => {
   if (!ddocId) {
     throw new Error("ddocId is required");
   }

@@ -200,6 +200,49 @@ const migrations: MigrationFile[] = [
     up: `ALTER TABLE files ADD COLUMN link TEXT;`,
     down: `ALTER TABLE files DROP COLUMN link;`,
   },
+  {
+    timestamp: "20260210120000",
+    name: "add_events_pending_op",
+    up: `
+      ALTER TABLE events ADD COLUMN userOpHash TEXT;
+      ALTER TABLE events ADD COLUMN pendingPayload TEXT;
+    `,
+    down: `
+      DROP INDEX IF EXISTS idx_events_pending_eligible;
+      DROP INDEX IF EXISTS idx_events_file_pending_ts;
+      DROP INDEX IF EXISTS idx_events_processing_locked;
+
+      CREATE TABLE events_old (
+        _id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
+        timestamp INTEGER NOT NULL,
+        fileId TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'processed', 'failed')),
+        retryCount INTEGER NOT NULL DEFAULT 0,
+        lastError TEXT,
+        lockedAt INTEGER,
+        nextRetryAt INTEGER
+      );
+
+      INSERT INTO events_old (_id, type, timestamp, fileId, status, retryCount, lastError, lockedAt, nextRetryAt)
+      SELECT _id, type, timestamp, fileId, status, retryCount, lastError, lockedAt, nextRetryAt FROM events;
+
+      DROP TABLE events;
+      ALTER TABLE events_old RENAME TO events;
+
+      CREATE INDEX IF NOT EXISTS idx_events_pending_eligible
+        ON events (status, nextRetryAt, timestamp)
+        WHERE status = 'pending';
+
+      CREATE INDEX IF NOT EXISTS idx_events_file_pending_ts
+        ON events (fileId, status, timestamp)
+        WHERE status = 'pending';
+
+      CREATE INDEX IF NOT EXISTS idx_events_processing_locked
+        ON events (status, lockedAt)
+        WHERE status = 'processing';
+    `,
+  },
 ];
 
 export function runMigrations(): void {

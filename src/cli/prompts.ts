@@ -3,12 +3,12 @@ import { STATIC_CONFIG } from "./constants";
 import { getRuntimeConfig } from "../config/index.js";
 import type { PromptedConfig } from "../types";
 
-export async function promptForConfig(
+export const promptForConfig = async (
   existingOptions: {
     apiKey?: string;
     rpcUrl?: string;
   } = {},
-): Promise<PromptedConfig> {
+): Promise<PromptedConfig> => {
   const savedConfig = getRuntimeConfig();
   const questions: prompts.PromptObject[] = [];
 

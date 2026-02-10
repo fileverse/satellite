@@ -98,7 +98,18 @@ export class AgentClient {
     customGasLimit?: number,
   ) {
     const userOpHash = await this.sendUserOperation(request, customGasLimit);
+    const { authToken, portalAddress, invokerAddress } = await this.getAuthParams();
+    const receipt = await waitForUserOpReceipt(userOpHash, authToken, portalAddress, invokerAddress, timeout);
+    if (!receipt.success) throw new Error(`Failed to execute user operation: ${receipt.reason}`);
+    return receipt;
+  }
+
+  async getAuthParams(): Promise<{ authToken: string; portalAddress: Hex; invokerAddress: Hex }> {
     const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
-    return await waitForUserOpReceipt(userOpHash, authToken, this.authTokenProvider.portalAddress, this.getAgentAddress(), timeout);
+    return {
+      authToken,
+      portalAddress: this.authTokenProvider.portalAddress,
+      invokerAddress: this.getAgentAddress(),
+    };
   }
 }

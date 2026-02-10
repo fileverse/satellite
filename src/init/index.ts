@@ -58,7 +58,7 @@ export const decryptSavedData = async <T>(apiKey: string, encryptedData: string)
   return data;
 };
 
-export async function initializeFromApiKey(apiKey: string): Promise<void> {
+export const initializeFromApiKey = async (apiKey: string): Promise<void> => {
   logger.info("Fetching API key data from server...");
   const data = await fetchApiKeyData(apiKey);
   logger.info("API key data retrieved");

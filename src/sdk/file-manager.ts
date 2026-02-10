@@ -55,6 +55,77 @@ export class FileManager {
     );
   }
 
+  private async sendFileOperation(callData: `0x${string}`) {
+    return this.agentClient.sendUserOperation(
+      {
+        contractAddress: this.keyStore.getPortalAddress(),
+        data: callData,
+      },
+      1000000,
+    );
+  }
+
+  async getProxyAuthParams() {
+    return this.agentClient.getAuthParams();
+  }
+
+  async submitAddFileTrx(file: any) {
+    logger.info(`Preparing to add file ${file.ddocId}`);
+    const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
+      ddocId: file.ddocId,
+      linkKey: file.linkKey,
+      linkKeyNonce: file.linkKeyNonce,
+    });
+
+    const yJSContent = markdownToYjs(file.content);
+    const { encryptedFile, key } = await createEncryptedContentFile(yJSContent);
+    logger.info(`Generated encrypted content file for file ${file.ddocId}`);
+    const commentKey = await exportAESKey(await generateAESKey(128));
+
+    const { appLock, ownerLock } = this.createLocks(key, encryptedSecretKey, commentKey);
+    const linkLock = buildLinklock(secretKey, toUint8Array(key), commentKey);
+
+    const encryptedTitle = await encryptTitleWithFileKey({
+      title: file.title || "Untitled",
+      key,
+    });
+    const metadata = buildFileMetadata({
+      encryptedTitle,
+      encryptedFileSize: encryptedFile.size,
+      appLock,
+      ownerLock,
+      ddocId: file.ddocId,
+      nonce: fromUint8Array(nonce),
+      owner: this.agentClient.getAgentAddress(),
+    });
+
+    const authParams = await this.getAuthParams();
+    const { metadataHash, contentHash, gateHash } = await uploadAllFilesToIPFS(
+      { metadata, encryptedFile, linkLock, ddocId: file.ddocId },
+      authParams,
+    );
+    logger.info(`Uploaded files to IPFS for file ${file.ddocId}`);
+
+    const callData = prepareCallData({
+      metadataHash,
+      contentHash,
+      gateHash,
+      appFileId: file.ddocId,
+      fileId: file.fileId,
+    });
+    logger.info(`Prepared call data for file ${file.ddocId}`);
+
+    const userOpHash = await this.sendFileOperation(callData);
+    logger.info(`Submitted user op for file ${file.ddocId}`);
+    return {
+      userOpHash,
+      linkKey: encryptedSecretKey,
+      linkKeyNonce: fromUint8Array(nonce),
+      commentKey: fromUint8Array(commentKey),
+      metadata,
+    };
+  }
+
   async addFile(file: any) {
     logger.info(`Preparing to add file ${file.ddocId}`);
     const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({

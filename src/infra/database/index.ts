@@ -5,7 +5,7 @@ function getDb() {
   return databaseConnectionManager.getConnection();
 }
 
-async function closeDatabase(): Promise<void> {
+const closeDatabase = async (): Promise<void> => {
   await databaseConnectionManager.close();
 }
 

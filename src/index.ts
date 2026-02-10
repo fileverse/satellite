@@ -11,7 +11,7 @@ const ip = config.IP || "0.0.0.0";
 
 let server: ReturnType<typeof app.listen>;
 
-async function startServer() {
+const startServer = async (): Promise<void> => {
   validateDbPath();
   runMigrations();
 

@@ -83,4 +83,6 @@ export interface Event {
   lastError: string | null;
   lockedAt: number | null;
   nextRetryAt: number | null;
+  userOpHash?: string | null;
+  pendingPayload?: string | null;
 }

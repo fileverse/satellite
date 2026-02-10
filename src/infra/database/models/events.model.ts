@@ -17,6 +17,8 @@ interface EventRow {
   lastError: string | null;
   lockedAt: number | null;
   nextRetryAt: number | null;
+  userOpHash?: string | null;
+  pendingPayload?: string | null;
 }
 
 export class EventsModel {
@@ -147,13 +149,25 @@ export class EventsModel {
     const sql = `
       UPDATE ${this.TABLE}
       SET status = 'pending',
-          lockedAt = NULL
+          lockedAt = NULL,
+          userOpHash = NULL,
+          pendingPayload = NULL
       WHERE status = 'processing'
       AND lockedAt IS NOT NULL
       AND lockedAt < ?
     `;
     const result = QueryBuilder.execute(sql, [staleThreshold]);
     return result.changes;
+  }
+
+  static setEventPendingOp(_id: string, userOpHash: string, payload: Record<string, unknown>): void {
+    const sql = `UPDATE ${this.TABLE} SET userOpHash = ?, pendingPayload = ? WHERE _id = ?`;
+    QueryBuilder.execute(sql, [userOpHash, JSON.stringify(payload), _id]);
+  }
+
+  static clearEventPendingOp(_id: string): void {
+    const sql = `UPDATE ${this.TABLE} SET userOpHash = NULL, pendingPayload = NULL WHERE _id = ?`;
+    QueryBuilder.execute(sql, [_id]);
   }
 
   private static parseEvent(row: EventRow): Event {
@@ -167,6 +181,8 @@ export class EventsModel {
       lastError: row.lastError,
       lockedAt: row.lockedAt,
       nextRetryAt: row.nextRetryAt,
+      userOpHash: row.userOpHash ?? null,
+      pendingPayload: row.pendingPayload ?? null,
     };
   }
 }

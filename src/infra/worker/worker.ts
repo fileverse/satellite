@@ -178,7 +178,7 @@ export function startWorker(concurrency: number = DEFAULT_CONCURRENCY): void {
   instance.start();
 }
 
-export async function closeWorker(): Promise<void> {
+export const closeWorker = async (): Promise<void> => {
   if (instance) {
     await instance.close();
     instance = null;

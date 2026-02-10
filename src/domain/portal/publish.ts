@@ -51,12 +51,12 @@ function deriveCollaboratorKeys(apiKeySeed: Uint8Array) {
   return { privateAccountKey, ucanSecret };
 }
 
-async function createFileManager(
+const createFileManager = async (
   portalSeed: string,
   portalAddress: Hex,
   ucanSecret: Uint8Array,
   privateAccountKey: Uint8Array,
-): Promise<FileManager> {
+): Promise<FileManager> => {
   const keyPair = ucans.EdKeypair.fromSecretKey(fromUint8Array(ucanSecret), {
     exportable: true,
   });
@@ -70,11 +70,11 @@ async function createFileManager(
   return new FileManager(keyStore, agentClient);
 }
 
-async function executeOperation(
+const executeOperation = async (
   fileManager: FileManager,
   file: any,
   operation: "add" | "update" | "delete",
-): Promise<PublishResult> {
+): Promise<PublishResult> => {
   if (operation === "add") {
     const result = await fileManager.addFile(file);
     return { success: true, ...result };
@@ -93,7 +93,7 @@ async function executeOperation(
   throw new Error(`Invalid operation: ${operation}`);
 }
 
-export async function publishFile(fileId: string, operation: "add" | "update" | "delete"): Promise<PublishResult> {
+export const publishFile = async (fileId: string, operation: "add" | "update" | "delete"): Promise<PublishResult> => {
   try {
     const { file, portalDetails, apiKey } = getPortalData(fileId);
 
@@ -112,4 +112,40 @@ export async function publishFile(fileId: string, operation: "add" | "update" | 
     logger.error(`Failed to publish file ${fileId}:`, error);
     throw error;
   }
+}
+
+export const submitAddFileTrx = async (fileId: string): Promise<{
+  userOpHash: string;
+  linkKey: string;
+  linkKeyNonce: string;
+  commentKey: string;
+  metadata: Record<string, unknown>;
+}> => {
+  const { file, portalDetails, apiKey } = getPortalData(fileId);
+  const apiKeySeed = toUint8Array(apiKey);
+  const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
+  const fileManager = await createFileManager(
+    portalDetails.portalSeed,
+    portalDetails.portalAddress as Hex,
+    ucanSecret,
+    privateAccountKey,
+  );
+  return fileManager.submitAddFileTrx(file);
+}
+
+export const getProxyAuthParams = async (fileId: string): Promise<{
+  authToken: string;
+  portalAddress: Hex;
+  invokerAddress: Hex;
+}> => {
+  const { portalDetails, apiKey } = getPortalData(fileId);
+  const apiKeySeed = toUint8Array(apiKey);
+  const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
+  const fileManager = await createFileManager(
+    portalDetails.portalSeed,
+    portalDetails.portalAddress as Hex,
+    ucanSecret,
+    privateAccountKey,
+  );
+  return fileManager.getProxyAuthParams();
 }

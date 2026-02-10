@@ -86,11 +86,8 @@ export const getNonce = () =>
 
 export const waitForUserOpReceipt = async (hash: Hex, authToken: string, portalAddress: Hex, invokerAddress: Hex, timeout = 120000) => {
   const pimlicoClient = getPimlicoClient(authToken, portalAddress, invokerAddress);
-  const receipt = await pimlicoClient.waitForUserOperationReceipt({
+  return pimlicoClient.waitForUserOperationReceipt({
     hash,
     timeout,
   });
-
-  if (!receipt.success) throw new Error(`Failed to execute user operation: ${receipt.reason}`);
-  return receipt;
 };
