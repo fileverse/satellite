@@ -33,7 +33,9 @@ export const createCommand = new Command()
         process.exit(1);
       }
 
-      const title = path.basename(filepath);
+      const basename = path.basename(filepath);
+      const lastDotIndex = basename.lastIndexOf(".");
+      const title = lastDotIndex > 0 ? basename.substring(0, lastDotIndex) : basename;
       const file = await createFile({ title, content, portalAddress });
 
       console.log("\nDdoc created successfully!\n");

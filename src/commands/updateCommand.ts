@@ -49,9 +49,9 @@ function showTable(updatedFile: any) {
 
 export const updateCommand = new Command()
   .name("update")
-  .description("Update an existing ddoc from a file")
+  .description("Update an existing ddoc. Use -f to update from a file, or omit -f to edit in vi editor")
   .argument("<ddocId>", "The ddoc ID to update")
-  .option("-f, --file <file_path>", "path to file to update ddoc from")
+  .option("-f, --file <file_path>", "path to file to update ddoc from (if omitted, opens vi editor)")
   .action(async (ddocId: string, options: { file?: string }) => {
     try {
       const runtimeConfig = getRuntimeConfig();
