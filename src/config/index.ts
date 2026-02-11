@@ -33,10 +33,7 @@ export function isUsingPublicRpc(): boolean {
 }
 
 export function isRpc429Error(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  const msg = err.message || "";
-  const full = String(err);
-  return /429/.test(msg) || /Too Many Requests/i.test(msg) || /429/.test(full) || /Too Many Requests/i.test(full);
+  return (err as any)?.response?.status === 429;
 }
 
 export function getRuntimeConfig() {
