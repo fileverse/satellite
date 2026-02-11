@@ -59,8 +59,8 @@ When switching to CLI mode, inform the user:
 | GET | /ping | No | - |
 | GET | /api/ddocs | apiKey | limit, skip |
 | GET | /api/ddocs/{ddocId} | apiKey | - |
-| POST | /api/ddocs | apiKey | form-data: file |
-| PUT | /api/ddocs/{ddocId} | apiKey | form-data: file |
+| POST | /api/ddocs | apiKey | JSON: {title, content} or form-data: file |
+| PUT | /api/ddocs/{ddocId} | apiKey | JSON: {title?, content?} or form-data: file |
 | DELETE | /api/ddocs/{ddocId} | apiKey | - |
 | GET | /api/folders | apiKey | limit, skip |
 | POST | /api/folders | apiKey | body: see Create Folder |
@@ -84,6 +84,129 @@ When switching to CLI mode, inform the user:
 | ddctl events list-failed | List failed worker events | - |
 | ddctl events retry <eventId> | Retry one failed event | - |
 | ddctl events retry-all | Retry all failed events | - |
+
+---
+
+# MCP Integration (Recommended for AI Agents)
+
+The Satellite MCP server is the easiest way for AI agents to interact with Satellite. It wraps all API calls into native MCP tools with built-in sync polling.
+
+## Setup
+
+Install Satellite globally, then configure your MCP client:
+
+### Claude Code / Cursor
+
+Add to your MCP config (e.g., `.claude/mcp.json` or Cursor MCP settings):
+
+```json
+{
+  "mcpServers": {
+    "satellite": {
+      "command": "satellite-mcp",
+      "env": {
+        "SATELLITE_API_KEY": "your-api-key",
+        "SATELLITE_SERVER_URL": "http://localhost:8001"
+      }
+    }
+  }
+}
+```
+
+The MCP server can also read credentials from `~/.satelliterc` if env vars are not set.
+
+## Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| satellite_list_documents | List documents with pagination |
+| satellite_get_document | Get a single document by ddocId |
+| satellite_create_document | Create document and wait for sync (returns link) |
+| satellite_update_document | Update document and wait for sync (returns link) |
+| satellite_delete_document | Delete a document |
+| satellite_search_documents | Search documents by text query |
+| satellite_get_sync_status | Check sync status and link of a document |
+| satellite_retry_failed_events | Retry all failed blockchain sync events |
+
+Create and update tools automatically poll until blockchain sync completes, so the agent does not need to implement polling logic.
+
+---
+
+# Response Schemas
+
+## Document
+
+Fields returned by GET /api/ddocs/{ddocId} and in list/search results:
+
+```
+{
+  ddocId: string,            // Unique document identifier
+  title: string,             // Document title
+  content: string,           // Document content (text/markdown)
+  syncStatus: "pending" | "synced" | "failed",
+  link: string | null,       // Public URL (only when syncStatus is "synced")
+  localVersion: number,      // Increments on each local edit
+  onchainVersion: number,    // Version published to blockchain
+  isDeleted: number,         // 0 = active, 1 = deleted
+  onChainFileId: number | null,
+  portalAddress: string,
+  createdAt: string,         // ISO timestamp
+  updatedAt: string          // ISO timestamp
+}
+```
+
+## Document List
+
+Returned by GET /api/ddocs:
+
+```
+{
+  ddocs: Document[],
+  total: number,
+  hasNext: boolean
+}
+```
+
+## Search Result
+
+Returned by GET /api/search:
+
+```
+{
+  nodes: Document[],         // Note: "nodes" not "ddocs"
+  total: number,
+  hasNext: boolean
+}
+```
+
+## Create/Update Response
+
+Returned by POST /api/ddocs and PUT /api/ddocs/{ddocId}:
+
+```
+{
+  message: string,
+  data: Document              // Extract ddocId from data.ddocId
+}
+```
+
+## Event
+
+Returned by GET /api/events/failed:
+
+```
+{
+  _id: string,
+  type: "create" | "update" | "delete",
+  timestamp: number,
+  fileId: string,
+  portalAddress: string,
+  status: "pending" | "processing" | "processed" | "failed",
+  retryCount: number,
+  lastError: string | null,
+  userOpHash: string | null
+}
+```
 
 ---
 
@@ -214,7 +337,6 @@ The query string (?apiKey=...) must ALWAYS come after the full path is complete.
 
 - Putting path segments after ?apiKey=... (wrong).
 - Forgetting that create/update return data.ddocId, not top-level ddocId; always use response.data.ddocId.
-- Sending JSON for create/update; use multipart/form-data with a "file" field only.
 - Not polling after create/update until syncStatus is "synced" or "failed".
 
 ## Important: Sync Status Polling
@@ -268,23 +390,41 @@ Response:
 }
 (link available when synced)
 
-### Create Document
+### Create Document (JSON - recommended for AI agents)
+POST /api/ddocs?apiKey={API_KEY}
+Content-Type: application/json
+
+{ "title": "Document Title", "content": "Document content here..." }
+
+Response: 201 with { "message": "...", "data": { "ddocId": "...", "title": "...", "syncStatus": "...", ... } }
+Extract ddocId from response.data.ddocId. Then poll GET /api/ddocs/{ddocId} until syncStatus is "synced", then show the link.
+
+### Create Document (Multipart - for file uploads)
 POST /api/ddocs?apiKey={API_KEY}
 Content-Type: multipart/form-data
 
 Send a single form field "file" with the document file. Title is derived from the filename. Max file size 10MB.
 
-Response: 201 with { "message": "...", "data": { "ddocId": "...", "title": "...", "syncStatus": "...", ... } }
-Extract ddocId from response.data.ddocId. Then poll GET /api/ddocs/{ddocId} until syncStatus is "synced", then show the link.
+Response: same as JSON create above.
 
-### Update Document
+### Update Document (JSON - recommended for AI agents)
+PUT /api/ddocs/{ddocId}?apiKey={API_KEY}
+Content-Type: application/json
+
+{ "title": "New Title", "content": "Updated content..." }
+
+Both fields are optional; send only what you want to change.
+
+Response: 200 with { "message": "...", "data": { ... } }
+Poll until synced, then show the link.
+
+### Update Document (Multipart - for file uploads)
 PUT /api/ddocs/{ddocId}?apiKey={API_KEY}
 Content-Type: multipart/form-data
 
 Send a single form field "file" with the updated document file. Title is derived from the filename. Max file size 10MB.
 
-Response: 200 with { "message": "...", "data": { ... } }
-Poll until synced, then show the link.
+Response: same as JSON update above.
 
 ### Delete Document
 DELETE /api/ddocs/{ddocId}?apiKey={API_KEY}
@@ -337,16 +477,120 @@ POST /api/events/{id}/retry?apiKey={API_KEY}
 
 Response: { "ok": true } or 404 if event not found or not in failed state.
 
-## API Workflow Examples
+## OpenAPI Specification
 
-### Create Document and Show Link
+A machine-readable OpenAPI 3.1 spec is available at GET {SERVER_URL}/openapi.json. Use it for auto-generating tool definitions or importing into Swagger UI / Postman.
 
-1. POST /api/ddocs?apiKey={API_KEY} with multipart/form-data, field name "file", containing the document file
-2. Extract ddocId from response.data.ddocId
-3. Poll: GET /api/ddocs/{ddocId}?apiKey={API_KEY}
-4. If syncStatus "pending", wait 5 seconds, repeat
-5. If "synced": show "Document published! [View Document](link)"
-6. If "failed": "Document saved but blockchain sync failed"
+---
+
+# Agent Workflow Recipes
+
+## Recipe 1: Publish a local file to blockchain
+
+1. Read the file content from the local filesystem
+2. POST /api/ddocs?apiKey={API_KEY} with JSON body: {"title": "<filename>", "content": "<file content>"}
+3. Extract ddocId from response.data.ddocId
+4. Poll GET /api/ddocs/{ddocId}?apiKey={API_KEY} every 5 seconds
+5. When syncStatus is "synced", show: "Published! [View Document](link)"
+6. If syncStatus is "failed", show: "Saved locally but blockchain sync failed. Run retry."
+
+## Recipe 2: Find and update a document by title
+
+1. GET /api/search?apiKey={API_KEY}&q={title} to search for the document
+2. From the results (response.nodes), find the matching document and extract its ddocId
+3. PUT /api/ddocs/{ddocId}?apiKey={API_KEY} with JSON body: {"content": "<new content>"}
+4. Poll GET /api/ddocs/{ddocId}?apiKey={API_KEY} until synced
+5. Show the updated link
+
+## Recipe 3: Check health and diagnose sync issues
+
+1. GET /ping - verify server is running (expect {"reply":"pong"})
+2. GET /api/ddocs?apiKey={API_KEY}&limit=5 - verify API key works and list recent docs
+3. GET /api/events/failed?apiKey={API_KEY} - check for failed sync events
+4. If failed events exist, POST /api/events/retry-failed?apiKey={API_KEY} to retry them
+5. Report: server status, number of documents, number of failed events (and if retried)
+
+---
+
+# Claude Code Integration
+
+## Custom Slash Commands
+
+You can create custom slash commands for Claude Code that integrate with Satellite. Create a `.claude/commands/` directory in your project and add markdown prompt files.
+
+### satellite-publish.md
+
+Create `.claude/commands/satellite-publish.md`:
+
+```markdown
+Publish a file to Satellite blockchain storage.
+
+Steps:
+1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+2. Read the file at: $ARGUMENTS
+3. POST to {serverUrl}/api/ddocs?apiKey={apiKey} with JSON body:
+   Content-Type: application/json
+   {"title": "<filename without extension>", "content": "<file contents>"}
+4. Extract ddocId from response.data.ddocId
+5. Poll GET {serverUrl}/api/ddocs/{ddocId}?apiKey={apiKey} every 5 seconds until syncStatus is "synced" or "failed"
+6. If synced: show "Published! Link: {link}"
+7. If failed: show "Saved locally but blockchain sync failed"
+```
+
+Usage: `/satellite-publish path/to/document.md`
+
+### satellite-list.md
+
+Create `.claude/commands/satellite-list.md`:
+
+```markdown
+List all documents in Satellite.
+
+Steps:
+1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+2. GET {serverUrl}/api/ddocs?apiKey={apiKey}&limit=50
+3. Display results as a table with columns: ddocId, title, syncStatus, link, updatedAt
+4. Show total count and whether more documents exist (hasNext)
+```
+
+Usage: `/satellite-list`
+
+### satellite-search.md
+
+Create `.claude/commands/satellite-search.md`:
+
+```markdown
+Search for documents in Satellite.
+
+Steps:
+1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+2. GET {serverUrl}/api/search?apiKey={apiKey}&q=$ARGUMENTS
+3. Display matching documents with: ddocId, title, syncStatus, link
+4. Show total matches found
+```
+
+Usage: `/satellite-search meeting notes`
+
+### satellite-status.md
+
+Create `.claude/commands/satellite-status.md`:
+
+```markdown
+Check the sync status of a Satellite document.
+
+Steps:
+1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+2. GET {serverUrl}/api/ddocs/$ARGUMENTS?apiKey={apiKey}
+3. Display:
+   - Title
+   - Sync Status (pending/synced/failed)
+   - Link (if synced)
+   - Local Version vs On-chain Version
+   - Last Updated
+4. If status is "failed", suggest running: POST {serverUrl}/api/events/retry-failed?apiKey={apiKey}
+```
+
+Usage: `/satellite-status <ddocId>`
 
 ---
 
@@ -365,3 +609,13 @@ Response: { "ok": true } or 404 if event not found or not in failed state.
 **404 Not Found**: Resource doesn't exist
 **429 Too Many Requests**: If returned (e.g. from upstream), respect Retry-After header if present.
 **500 Server Error**: Internal error, retry or inform user
+
+---
+
+# Future Improvements (Planned)
+
+- **SSE for Sync Status**: Real-time sync status push via GET /api/ddocs/:ddocId/stream to eliminate polling
+- **Batch Operations**: POST /api/ddocs/bulk for creating/updating/deleting multiple documents at once
+- **Partial Responses**: ?fields=ddocId,syncStatus,link for requesting only specific fields
+- **TypeScript SDK**: Typed client library with built-in sync polling at @fileverse/satellite/client
+- **Webhook Callbacks**: Register a URL to be notified when sync completes instead of polling

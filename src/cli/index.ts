@@ -70,6 +70,18 @@ const program = new Command()
   API Server: http://127.0.0.1:${options.port}
   Worker:     Active
 
+  MCP:  Add this to your AI agent's MCP config (e.g. .claude/mcp.json):
+
+        {
+          "mcpServers": {
+            "satellite": {
+              "command": "satellite-mcp"
+            }
+          }
+        }
+
+        Config is auto-read from ~/.satellite/.env — no env vars needed.
+
 Press Ctrl+C to stop.
 `);
 

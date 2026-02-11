@@ -6,6 +6,7 @@ export default defineConfig({
     worker: "src/worker.ts",
     "cli/index": "src/cli/index.ts",
     "commands/index": "src/commands/index.ts",
+    "mcp/index": "src/mcp/index.ts",
   },
   format: ["esm"],
   target: "node20",
