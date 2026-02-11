@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
+import { existsSync } from "fs";
 
 interface ManagedProcess {
   name: string;
@@ -14,6 +15,11 @@ function getDistDir(): string {
   return path.resolve(__dirname, "..");
 }
 
+function isDevMode(): boolean {
+  const distDir = getDistDir();
+  return existsSync(path.join(distDir, "index.ts"));
+}
+
 function prefixOutput(name: string, data: Buffer): void {
   const lines = data.toString().split("\n").filter(Boolean);
   for (const line of lines) {
@@ -21,10 +27,10 @@ function prefixOutput(name: string, data: Buffer): void {
   }
 }
 
-function spawnProcess(name: string, scriptPath: string, extraEnv?: Record<string, string>): ChildProcess {
-  const child = spawn("node", [scriptPath], {
+function spawnProcess(name: string, executable: string, scriptPath: string, extraEnv?: Record<string, string>): ChildProcess {
+  const child = spawn(executable, [scriptPath], {
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "production", ...extraEnv },
+    env: { ...process.env, NODE_ENV: executable === "tsx" ? "development" : "production", ...extraEnv },
     detached: false,
   });
 
@@ -49,14 +55,18 @@ function spawnProcess(name: string, scriptPath: string, extraEnv?: Record<string
 
 export function startApiServer(): ChildProcess {
   const distDir = getDistDir();
-  const apiPath = path.join(distDir, "index.js");
-  return spawnProcess("API", apiPath, { IS_CLI: "1" });
+  const dev = isDevMode();
+  const executable = dev ? "tsx" : "node";
+  const apiPath = path.join(distDir, dev ? "index.ts" : "index.js");
+  return spawnProcess("API", executable, apiPath, { IS_CLI: "1" });
 }
 
 export function startWorker(): ChildProcess {
   const distDir = getDistDir();
-  const workerPath = path.join(distDir, "worker.js");
-  return spawnProcess("WORKER", workerPath);
+  const dev = isDevMode();
+  const executable = dev ? "tsx" : "node";
+  const workerPath = path.join(distDir, dev ? "worker.ts" : "worker.js");
+  return spawnProcess("WORKER", executable, workerPath);
 }
 
 export function startAll(): { api: ChildProcess; worker: ChildProcess } {
