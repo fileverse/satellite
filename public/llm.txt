@@ -1,8 +1,8 @@
-# Satellite - AI Agent Guide
+# Fileverse API - AI Agent Guide
 
-> Satellite is a document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.
+> Fileverse API is a document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.
 
-**Skill Name**: satellite
+**Skill Name**: fileverse-api
 
 ## How to use this document
 
@@ -28,12 +28,12 @@ If this document was provided another way, ask the user for their server URL.
 
 Before starting, check for stored credentials:
 
-1. Look for config file at: ~/.satelliterc
+1. Look for config file at: ~/.fileverseapirc
 2. If found with valid apiKey, use it automatically
 3. If not found or missing apiKey:
-   - Ask user for their Satellite API key
+   - Ask user for their Fileverse API key
    - Offer to save it: "Would you like me to save this API key for future sessions?"
-   - If yes, create/update ~/.satelliterc with JSON: {"apiKey": "...", "serverUrl": "..."}
+   - If yes, create/update ~/.fileverseapirc with JSON: {"apiKey": "...", "serverUrl": "..."}
 
 ## Connection Strategy
 
@@ -89,11 +89,11 @@ When switching to CLI mode, inform the user:
 
 # MCP Integration (Recommended for AI Agents)
 
-The Satellite MCP server is the easiest way for AI agents to interact with Satellite. It wraps all API calls into native MCP tools with built-in sync polling.
+The Fileverse API MCP server is the easiest way for AI agents to interact with Fileverse API. It wraps all API calls into native MCP tools with built-in sync polling.
 
 ## Setup
 
-Install Satellite globally, then configure your MCP client:
+Install Fileverse API globally, then configure your MCP client:
 
 ### Claude Code / Cursor
 
@@ -102,31 +102,31 @@ Add to your MCP config (e.g., `.claude/mcp.json` or Cursor MCP settings):
 ```json
 {
   "mcpServers": {
-    "satellite": {
-      "command": "satellite-mcp",
+    "fileverse-api": {
+      "command": "fileverse-api-mcp",
       "env": {
-        "SATELLITE_API_KEY": "your-api-key",
-        "SATELLITE_SERVER_URL": "http://localhost:8001"
+        "FILEVERSE_API_KEY": "your-api-key",
+        "FILEVERSE_SERVER_URL": "http://localhost:8001"
       }
     }
   }
 }
 ```
 
-The MCP server can also read credentials from `~/.satelliterc` if env vars are not set.
+The MCP server can also read credentials from `~/.fileverseapirc` if env vars are not set.
 
 ## Available MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| satellite_list_documents | List documents with pagination |
-| satellite_get_document | Get a single document by ddocId |
-| satellite_create_document | Create document and wait for sync (returns link) |
-| satellite_update_document | Update document and wait for sync (returns link) |
-| satellite_delete_document | Delete a document |
-| satellite_search_documents | Search documents by text query |
-| satellite_get_sync_status | Check sync status and link of a document |
-| satellite_retry_failed_events | Retry all failed blockchain sync events |
+| fileverse_list_documents | List documents with pagination |
+| fileverse_get_document | Get a single document by ddocId |
+| fileverse_create_document | Create document and wait for sync (returns link) |
+| fileverse_update_document | Update document and wait for sync (returns link) |
+| fileverse_delete_document | Delete a document |
+| fileverse_search_documents | Search documents by text query |
+| fileverse_get_sync_status | Check sync status and link of a document |
+| fileverse_retry_failed_events | Retry all failed blockchain sync events |
 
 Create and update tools automatically poll until blockchain sync completes, so the agent does not need to implement polling logic.
 
@@ -217,14 +217,14 @@ You generate commands, user runs them and shares output with you.
 
 ## Installation and invocation
 
-To set up Satellite and run the server:
+To set up Fileverse API and run the server:
 
 ```bash
-npm install -g @fileverse/satellite
-npx @fileverse/satellite --apiKey <key> --rpcUrl <url>
+npm install -g @fileverse/api
+npx @fileverse/api --apiKey <key> --rpcUrl <url>
 ```
 
-The package exposes the ddctl binary. After npm install -g @fileverse/satellite, run ddctl <command>. Without global install: npx -p @fileverse/satellite ddctl <command>.
+The package exposes the ddctl binary. After npm install -g @fileverse/api, run ddctl <command>. Without global install: npx -p @fileverse/api ddctl <command>.
 
 ## CLI Commands Reference
 
@@ -516,17 +516,17 @@ A machine-readable OpenAPI 3.1 spec is available at GET {SERVER_URL}/openapi.jso
 
 ## Custom Slash Commands
 
-You can create custom slash commands for Claude Code that integrate with Satellite. Create a `.claude/commands/` directory in your project and add markdown prompt files.
+You can create custom slash commands for Claude Code that integrate with Fileverse API. Create a `.claude/commands/` directory in your project and add markdown prompt files.
 
-### satellite-publish.md
+### fileverse-publish.md
 
-Create `.claude/commands/satellite-publish.md`:
+Create `.claude/commands/fileverse-publish.md`:
 
 ```markdown
-Publish a file to Satellite blockchain storage.
+Publish a file to Fileverse API blockchain storage.
 
 Steps:
-1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
 2. Read the file at: $ARGUMENTS
 3. POST to {serverUrl}/api/ddocs?apiKey={apiKey} with JSON body:
    Content-Type: application/json
@@ -537,49 +537,49 @@ Steps:
 7. If failed: show "Saved locally but blockchain sync failed"
 ```
 
-Usage: `/satellite-publish path/to/document.md`
+Usage: `/fileverse-publish path/to/document.md`
 
-### satellite-list.md
+### fileverse-list.md
 
-Create `.claude/commands/satellite-list.md`:
+Create `.claude/commands/fileverse-list.md`:
 
 ```markdown
-List all documents in Satellite.
+List all documents in Fileverse API.
 
 Steps:
-1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
 2. GET {serverUrl}/api/ddocs?apiKey={apiKey}&limit=50
 3. Display results as a table with columns: ddocId, title, syncStatus, link, updatedAt
 4. Show total count and whether more documents exist (hasNext)
 ```
 
-Usage: `/satellite-list`
+Usage: `/fileverse-list`
 
-### satellite-search.md
+### fileverse-search.md
 
-Create `.claude/commands/satellite-search.md`:
+Create `.claude/commands/fileverse-search.md`:
 
 ```markdown
-Search for documents in Satellite.
+Search for documents in Fileverse API.
 
 Steps:
-1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
 2. GET {serverUrl}/api/search?apiKey={apiKey}&q=$ARGUMENTS
 3. Display matching documents with: ddocId, title, syncStatus, link
 4. Show total matches found
 ```
 
-Usage: `/satellite-search meeting notes`
+Usage: `/fileverse-search meeting notes`
 
-### satellite-status.md
+### fileverse-status.md
 
-Create `.claude/commands/satellite-status.md`:
+Create `.claude/commands/fileverse-status.md`:
 
 ```markdown
-Check the sync status of a Satellite document.
+Check the sync status of a Fileverse API document.
 
 Steps:
-1. Read credentials from ~/.satelliterc (JSON with apiKey and serverUrl fields)
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
 2. GET {serverUrl}/api/ddocs/$ARGUMENTS?apiKey={apiKey}
 3. Display:
    - Title
@@ -590,7 +590,7 @@ Steps:
 4. If status is "failed", suggest running: POST {serverUrl}/api/events/retry-failed?apiKey={apiKey}
 ```
 
-Usage: `/satellite-status <ddocId>`
+Usage: `/fileverse-status <ddocId>`
 
 ---
 
@@ -617,5 +617,5 @@ Usage: `/satellite-status <ddocId>`
 - **SSE for Sync Status**: Real-time sync status push via GET /api/ddocs/:ddocId/stream to eliminate polling
 - **Batch Operations**: POST /api/ddocs/bulk for creating/updating/deleting multiple documents at once
 - **Partial Responses**: ?fields=ddocId,syncStatus,link for requesting only specific fields
-- **TypeScript SDK**: Typed client library with built-in sync polling at @fileverse/satellite/client
+- **TypeScript SDK**: Typed client library with built-in sync polling at @fileverse/api/client
 - **Webhook Callbacks**: Register a URL to be notified when sync completes instead of polling

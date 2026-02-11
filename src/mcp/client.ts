@@ -1,5 +1,5 @@
 import type {
-  SatelliteConfig,
+  FileverseConfig,
   DocumentResult,
   ListDocumentsResult,
   SearchResult,
@@ -8,11 +8,11 @@ import type {
   RetryFailedResponse,
 } from "./types.js";
 
-export class SatelliteClient {
+export class FileverseClient {
   private serverUrl: string;
   private apiKey: string;
 
-  constructor(config: SatelliteConfig) {
+  constructor(config: FileverseConfig) {
     this.serverUrl = config.serverUrl.replace(/\/+$/, "");
     this.apiKey = config.apiKey;
   }

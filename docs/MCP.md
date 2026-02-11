@@ -1,15 +1,15 @@
-# Satellite MCP Integration
+# Fileverse API MCP Integration
 
-Satellite exposes an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that lets AI agents manage documents, search content, and monitor blockchain sync — all through native tool calls.
+Fileverse API exposes an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that lets AI agents manage documents, search content, and monitor blockchain sync — all through native tool calls.
 
 Two transport modes are available:
 
 | Mode | Transport | Use case |
 |------|-----------|----------|
-| **CLI (stdio)** | Standard I/O | Satellite runs locally on your machine |
-| **Server (HTTP)** | Streamable HTTP | Satellite is deployed remotely (Heroku, VPS, etc.) |
+| **CLI (stdio)** | Standard I/O | Fileverse API runs locally on your machine |
+| **Server (HTTP)** | Streamable HTTP | Fileverse API is deployed remotely (Heroku, VPS, etc.) |
 
-Both modes expose the same tools. Choose based on where your Satellite instance runs.
+Both modes expose the same tools. Choose based on where your Fileverse API instance runs.
 
 ---
 
@@ -18,41 +18,41 @@ Both modes expose the same tools. Choose based on where your Satellite instance 
 Install the package globally (required for stdio mode, optional for HTTP mode):
 
 ```bash
-npm install -g @fileverse/satellite
+npm install -g @fileverse/api
 ```
 
-Make sure Satellite is running:
+Make sure Fileverse API is running:
 
 ```bash
-# Start the server (also writes ~/.satellite/.env with your API key)
-npx @fileverse/satellite --apiKey <your-api-key> --rpcUrl <your-rpc-url>
+# Start the server (also writes ~/.fileverse/.env with your API key)
+npx @fileverse/api --apiKey <your-api-key> --rpcUrl <your-rpc-url>
 ```
 
 ---
 
 ## Mode 1: CLI (stdio transport)
 
-Use this when Satellite runs on the **same machine** as your AI tool. The MCP client spawns the `satellite-mcp` binary as a subprocess and communicates over stdin/stdout.
+Use this when Fileverse API runs on the **same machine** as your AI tool. The MCP client spawns the `fileverse-api-mcp` binary as a subprocess and communicates over stdin/stdout.
 
 The stdio server reads credentials automatically from:
-1. Environment variables (`SATELLITE_API_KEY`, `SATELLITE_SERVER_URL`)
+1. Environment variables (`FILEVERSE_API_KEY`, `FILEVERSE_SERVER_URL`)
 2. `config/.env` in the current working directory
-3. `~/.satellite/.env` (written by the CLI on first run)
-4. `~/.satelliterc`
+3. `~/.fileverse/.env` (written by the CLI on first run)
+4. `~/.fileverseapirc`
 
 ### Claude Code
 
 ```bash
-claude mcp add satellite -- satellite-mcp
+claude mcp add fileverse-api -- fileverse-api-mcp
 ```
 
 Or with explicit environment variables:
 
 ```bash
-claude mcp add satellite \
-  -e SATELLITE_API_KEY=your-api-key \
-  -e SATELLITE_SERVER_URL=http://localhost:8001 \
-  -- satellite-mcp
+claude mcp add fileverse-api \
+  -e FILEVERSE_API_KEY=your-api-key \
+  -e FILEVERSE_SERVER_URL=http://localhost:8001 \
+  -- fileverse-api-mcp
 ```
 
 To verify it was added:
@@ -71,11 +71,11 @@ Edit your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "satellite": {
-      "command": "satellite-mcp",
+    "fileverse-api": {
+      "command": "fileverse-api-mcp",
       "env": {
-        "SATELLITE_API_KEY": "your-api-key",
-        "SATELLITE_SERVER_URL": "http://localhost:8001"
+        "FILEVERSE_API_KEY": "your-api-key",
+        "FILEVERSE_SERVER_URL": "http://localhost:8001"
       }
     }
   }
@@ -91,11 +91,11 @@ Open **Settings > MCP** and add a new server:
 ```json
 {
   "mcpServers": {
-    "satellite": {
-      "command": "satellite-mcp",
+    "fileverse-api": {
+      "command": "fileverse-api-mcp",
       "env": {
-        "SATELLITE_API_KEY": "your-api-key",
-        "SATELLITE_SERVER_URL": "http://localhost:8001"
+        "FILEVERSE_API_KEY": "your-api-key",
+        "FILEVERSE_SERVER_URL": "http://localhost:8001"
       }
     }
   }
@@ -109,11 +109,11 @@ Open **Settings > MCP** and add:
 ```json
 {
   "mcpServers": {
-    "satellite": {
-      "command": "satellite-mcp",
+    "fileverse-api": {
+      "command": "fileverse-api-mcp",
       "env": {
-        "SATELLITE_API_KEY": "your-api-key",
-        "SATELLITE_SERVER_URL": "http://localhost:8001"
+        "FILEVERSE_API_KEY": "your-api-key",
+        "FILEVERSE_SERVER_URL": "http://localhost:8001"
       }
     }
   }
@@ -124,20 +124,20 @@ Open **Settings > MCP** and add:
 
 ## Mode 2: Server (HTTP transport)
 
-Use this when Satellite is deployed **remotely** and agents cannot spawn local processes. The MCP server is available at `POST /mcp` on the same Express app that serves the REST API.
+Use this when Fileverse API is deployed **remotely** and agents cannot spawn local processes. The MCP server is available at `POST /mcp` on the same Express app that serves the REST API.
 
-HTTP mode is enabled automatically when the Satellite server starts — no additional configuration needed. The MCP endpoint uses stateless Streamable HTTP transport, so each request is independent (no sessions).
+HTTP mode is enabled automatically when the Fileverse API server starts — no additional configuration needed. The MCP endpoint uses stateless Streamable HTTP transport, so each request is independent (no sessions).
 
 ### Claude Code
 
 ```bash
-claude mcp add satellite --transport http https://your-satellite-server.com/mcp
+claude mcp add fileverse-api --transport http https://your-fileverse-api-server.com/mcp
 ```
 
 For a local dev server:
 
 ```bash
-claude mcp add satellite --transport http http://localhost:8001/mcp
+claude mcp add fileverse-api --transport http http://localhost:8001/mcp
 ```
 
 To verify:
@@ -151,9 +151,9 @@ claude mcp list
 ```json
 {
   "mcpServers": {
-    "satellite": {
+    "fileverse-api": {
       "type": "streamable-http",
-      "url": "https://your-satellite-server.com/mcp"
+      "url": "https://your-fileverse-api-server.com/mcp"
     }
   }
 }
@@ -166,9 +166,9 @@ Open **Settings > MCP** and add a new server with type **streamable-http**:
 ```json
 {
   "mcpServers": {
-    "satellite": {
+    "fileverse-api": {
       "type": "streamable-http",
-      "url": "https://your-satellite-server.com/mcp"
+      "url": "https://your-fileverse-api-server.com/mcp"
     }
   }
 }
@@ -179,9 +179,9 @@ Open **Settings > MCP** and add a new server with type **streamable-http**:
 ```json
 {
   "mcpServers": {
-    "satellite": {
+    "fileverse-api": {
       "type": "streamable-http",
-      "url": "https://your-satellite-server.com/mcp"
+      "url": "https://your-fileverse-api-server.com/mcp"
     }
   }
 }
@@ -195,14 +195,14 @@ Once connected (in either mode), the following tools are available to the AI age
 
 | Tool | Description |
 |------|-------------|
-| `satellite_list_documents` | List documents with optional `limit` and `skip` for pagination |
-| `satellite_get_document` | Get a single document by `ddocId` |
-| `satellite_create_document` | Create a document (title + content) and wait for blockchain sync |
-| `satellite_update_document` | Update a document and wait for blockchain sync |
-| `satellite_delete_document` | Delete a document by `ddocId` |
-| `satellite_search_documents` | Search documents by text query |
-| `satellite_get_sync_status` | Check sync status and blockchain link of a document |
-| `satellite_retry_failed_events` | Retry all failed blockchain sync events |
+| `fileverse_list_documents` | List documents with optional `limit` and `skip` for pagination |
+| `fileverse_get_document` | Get a single document by `ddocId` |
+| `fileverse_create_document` | Create a document (title + content) and wait for blockchain sync |
+| `fileverse_update_document` | Update a document and wait for blockchain sync |
+| `fileverse_delete_document` | Delete a document by `ddocId` |
+| `fileverse_search_documents` | Search documents by text query |
+| `fileverse_get_sync_status` | Check sync status and blockchain link of a document |
+| `fileverse_retry_failed_events` | Retry all failed blockchain sync events |
 
 Create and update tools **automatically poll** until blockchain sync completes, so agents don't need to implement polling logic.
 
@@ -212,7 +212,7 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 ### List all documents
 
-**Tool:** `satellite_list_documents`
+**Tool:** `fileverse_list_documents`
 **Input:**
 ```json
 { "limit": 10, "skip": 0 }
@@ -236,7 +236,7 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 ### Create a document
 
-**Tool:** `satellite_create_document`
+**Tool:** `fileverse_create_document`
 **Input:**
 ```json
 {
@@ -259,7 +259,7 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 ### Search documents
 
-**Tool:** `satellite_search_documents`
+**Tool:** `fileverse_search_documents`
 **Input:**
 ```json
 { "query": "roadmap", "limit": 5 }
@@ -282,7 +282,7 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 ### Update a document
 
-**Tool:** `satellite_update_document`
+**Tool:** `fileverse_update_document`
 **Input:**
 ```json
 {
@@ -293,7 +293,7 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 ### Check sync status
 
-**Tool:** `satellite_get_sync_status`
+**Tool:** `fileverse_get_sync_status`
 **Input:**
 ```json
 { "ddocId": "def456" }
@@ -315,14 +315,14 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 | Consideration | stdio (CLI) | HTTP (Server) |
 |---------------|-------------|---------------|
-| Satellite runs locally | Yes | Yes (via localhost) |
-| Satellite runs remotely | No | Yes |
-| Requires `satellite-mcp` installed | Yes | No |
+| Fileverse API runs locally | Yes | Yes (via localhost) |
+| Fileverse API runs remotely | No | Yes |
+| Requires `fileverse-api-mcp` installed | Yes | No |
 | Authentication | API key via env/config files | API key is server-side |
 | Latency | Lower (direct subprocess) | Slightly higher (HTTP) |
 | Session management | Persistent process | Stateless per-request |
 
-**Rule of thumb:** Use stdio when running Satellite on your own machine. Use HTTP when connecting to a deployed Satellite instance.
+**Rule of thumb:** Use stdio when running Fileverse API on your own machine. Use HTTP when connecting to a deployed Fileverse API instance.
 
 ---
 
@@ -330,21 +330,21 @@ Create and update tools **automatically poll** until blockchain sync completes, 
 
 ### stdio mode: "No API key configured"
 
-The `satellite-mcp` binary couldn't find an API key. Fix by either:
-- Setting the environment variable: `SATELLITE_API_KEY=your-key`
-- Running `npx @fileverse/satellite` once (writes credentials to `~/.satellite/.env`)
-- Creating `~/.satelliterc` with `{"apiKey": "your-key", "serverUrl": "http://localhost:8001"}`
+The `fileverse-api-mcp` binary couldn't find an API key. Fix by either:
+- Setting the environment variable: `FILEVERSE_API_KEY=your-key`
+- Running `npx @fileverse/api` once (writes credentials to `~/.fileverse/.env`)
+- Creating `~/.fileverseapirc` with `{"apiKey": "your-key", "serverUrl": "http://localhost:8001"}`
 
 ### stdio mode: Tools return connection errors
 
-The Satellite server isn't running. Start it:
+The Fileverse API server isn't running. Start it:
 ```bash
-npx @fileverse/satellite --apiKey <key> --rpcUrl <url>
+npx @fileverse/api --apiKey <key> --rpcUrl <url>
 ```
 
 ### HTTP mode: POST /mcp returns 404
 
-The MCP endpoint is only available when the full Satellite server is running (via `npm run dev` or `node dist/index.js`). Verify the server is up:
+The MCP endpoint is only available when the full Fileverse API server is running (via `npm run dev` or `node dist/index.js`). Verify the server is up:
 ```bash
 curl http://localhost:8001/ping
 # Expected: {"reply":"pong"}
@@ -357,6 +357,6 @@ This is expected. The MCP HTTP transport only accepts `POST` requests. `GET` and
 ### MCP tools not appearing in your AI client
 
 1. Verify the server is registered: check your client's MCP settings
-2. For stdio: ensure `satellite-mcp` is in your PATH (`which satellite-mcp`)
+2. For stdio: ensure `fileverse-api-mcp` is in your PATH (`which fileverse-api-mcp`)
 3. For HTTP: confirm the URL is reachable (`curl -X POST http://your-server/mcp`)
 4. Restart your AI client after configuration changes

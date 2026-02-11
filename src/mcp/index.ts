@@ -5,22 +5,22 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { createMcpServer } from "./server.js";
-import type { SatelliteConfig } from "./types.js";
+import type { FileverseConfig } from "./types.js";
 
-function loadConfig(): SatelliteConfig {
-  // Priority: explicit env vars > ~/.satellite/.env (written by CLI) > ~/.satelliterc > defaults
-  const satelliteEnv = tryReadSatelliteEnv();
+function loadConfig(): FileverseConfig {
+  // Priority: explicit env vars > ~/.fileverse/.env (written by CLI) > ~/.fileverseapirc > defaults
+  const fileverseEnv = tryReadFileverseEnv();
   const rc = tryReadRc();
 
   const apiKey =
-    process.env.SATELLITE_API_KEY || satelliteEnv?.apiKey || rc?.apiKey;
+    process.env.FILEVERSE_API_KEY || fileverseEnv?.apiKey || rc?.apiKey;
 
   const serverUrl =
-    process.env.SATELLITE_SERVER_URL || satelliteEnv?.serverUrl || rc?.serverUrl || "http://localhost:8001";
+    process.env.FILEVERSE_SERVER_URL || fileverseEnv?.serverUrl || rc?.serverUrl || "http://localhost:8001";
 
   if (!apiKey) {
     console.error(
-      "No API key configured. Run 'npx @fileverse/satellite' first, or set SATELLITE_API_KEY env var.",
+      "No API key configured. Run 'npx @fileverse/api' first, or set FILEVERSE_API_KEY env var.",
     );
     process.exit(1);
   }
@@ -43,10 +43,10 @@ function parseEnvFile(filePath: string): Record<string, string> | null {
   }
 }
 
-function tryReadSatelliteEnv(): Partial<SatelliteConfig> | null {
-  // Same resolution order as src/config/index.ts: project config/.env first, then ~/.satellite/.env
+function tryReadFileverseEnv(): Partial<FileverseConfig> | null {
+  // Same resolution order as src/config/index.ts: project config/.env first, then ~/.fileverse/.env
   const projectEnvPath = join(process.cwd(), "config", ".env");
-  const userEnvPath = join(homedir(), ".satellite", ".env");
+  const userEnvPath = join(homedir(), ".fileverse", ".env");
 
   const vars = parseEnvFile(projectEnvPath) || parseEnvFile(userEnvPath);
   if (!vars) return null;
@@ -58,9 +58,9 @@ function tryReadSatelliteEnv(): Partial<SatelliteConfig> | null {
   };
 }
 
-function tryReadRc(): Partial<SatelliteConfig> | null {
+function tryReadRc(): Partial<FileverseConfig> | null {
   try {
-    const rcPath = join(homedir(), ".satelliterc");
+    const rcPath = join(homedir(), ".fileverseapirc");
     if (!existsSync(rcPath)) return null;
     const content = readFileSync(rcPath, "utf-8");
     return JSON.parse(content);

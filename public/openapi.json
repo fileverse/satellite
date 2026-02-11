@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Satellite API",
+    "title": "Fileverse API",
     "description": "Document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.",
     "version": "0.0.12",
     "contact": {
@@ -12,7 +12,7 @@
   "servers": [
     {
       "url": "http://localhost:8001",
-      "description": "Local Satellite server"
+      "description": "Local Fileverse API server"
     }
   ],
   "security": [

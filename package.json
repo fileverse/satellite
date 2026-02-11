@@ -1,7 +1,7 @@
 {
-  "name": "@fileverse/satellite",
-  "version": "0.0.16",
-  "description": "Satellite",
+  "name": "@fileverse/api",
+  "version": "0.0.1",
+  "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",
   "publishConfig": {
@@ -13,10 +13,10 @@
     "./worker": "./dist/worker.js"
   },
   "bin": {
-    "satellite": "dist/cli/index.js",
-    "fileverse-satellite": "dist/cli/index.js",
+    "api": "dist/cli/index.js",
+    "fileverse-api": "dist/cli/index.js",
     "ddctl": "dist/commands/index.js",
-    "satellite-mcp": "dist/mcp/index.js"
+    "fileverse-api-mcp": "dist/mcp/index.js"
   },
   "files": [
     "dist",
@@ -32,7 +32,7 @@
     "dev": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx watch src/index.ts",
     "dev:worker": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx watch src/worker.ts",
     "dev:cli": "tsx src/commands/index.ts",
-    "dev:satellite": "tsx src/cli/index.ts",
+    "dev:api": "tsx src/cli/index.ts",
     "start:api": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/worker.js",
     "lint": "eslint . --ext .ts,.js",

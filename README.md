@@ -1,12 +1,12 @@
-# satellite
+# Fileverse API
 
 ## Quick Start
 
-The fastest way to get started is using the `@fileverse/satellite` CLI:
+The fastest way to get started is using the `@fileverse/api` CLI:
 
 ```bash
-npm install @fileverse/satellite
-npx @fileverse/satellite --apiKey <key> --rpcUrl <url>
+npm install @fileverse/api
+npx @fileverse/api --apiKey <key> --rpcUrl <url>
 ```
 
 This will prompt for any missing values, set up configuration, run migrations, and start the server.
@@ -19,7 +19,7 @@ cd satellite
 npm install
 ```
 
-Configure runtime variables via `config/.env` or `~/.satellite/.env` (see Environment Variables). The CLI creates `~/.satellite/.env` when you run `fileverse-satellite` with your API key.
+Configure runtime variables via `config/.env` or `~/.fileverse/.env` (see Environment Variables). The CLI creates `~/.fileverse/.env` when you run `fileverse-api` with your API key.
 
 ### Building the Project
 
@@ -116,16 +116,16 @@ ddctl list
 
 ## Environment Variables
 
-Create a `.env` file in `config/` or `~/.satellite/` with the following variables:
+Create a `.env` file in `config/` or `~/.fileverse/` with the following variables:
 
 **Required:**
 
 - `DB_PATH`: Database file path (required) - **Must be an absolute path**. Both API and CLI use the same database location.
   - **Examples:**
-    - `DB_PATH=/Users/username/data/satellite.db`
-    - `DB_PATH=/absolute/path/to/satellite.db`
+    - `DB_PATH=/Users/username/data/fileverse-api.db`
+    - `DB_PATH=/absolute/path/to/fileverse-api.db`
   - **Important:**
-    - Use absolute paths only (e.g., `/Users/username/data/satellite.db`)
+    - Use absolute paths only (e.g., `/Users/username/data/fileverse-api.db`)
     - Relative paths will cause issues when running CLI from different directories
     - The directory will be created automatically if it doesn't exist
     - Both API server and CLI tool use the exact same database file
@@ -137,6 +137,6 @@ Create a `.env` file in `config/` or `~/.satellite/` with the following variable
 - `NODE_ENV`: Environment (development, production, etc.)
 - `WORKER_CONCURRENCY`: Number of concurrent events to process (default: 5)
 - `LOG_LEVEL`: Logging level - trace, debug, info, warn, error, fatal (default: info)
-- `SERVICE_NAME`: Service name for logging (default: satellite)
+- `SERVICE_NAME`: Service name for logging (default: fileverse-api)
 
 **Note:** The application will not start if `DB_PATH` is not set. Both the API server and CLI tool use the same database location specified by `DB_PATH`.

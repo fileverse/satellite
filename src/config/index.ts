@@ -5,7 +5,7 @@ import os from "os";
 import { STATIC_CONFIG } from "../cli/constants.js";
 
 const projectEnvPath = path.join(process.cwd(), "config", ".env");
-const userEnvPath = path.join(os.homedir(), ".satellite", ".env");
+const userEnvPath = path.join(os.homedir(), ".fileverse", ".env");
 
 function getEnvPath(): string {
   if (fs.existsSync(projectEnvPath)) {
@@ -48,7 +48,7 @@ export function validateDbPath(): void {
   const dbPath = process.env.DB_PATH;
   if (!dbPath) {
     console.error("Error: DB_PATH environment variable is required");
-    console.error("Please set DB_PATH in your .env file (config/.env or ~/.satellite/.env) or run the CLI first");
+    console.error("Please set DB_PATH in your .env file (config/.env or ~/.fileverse/.env) or run the CLI first");
     process.exit(1);
   }
 

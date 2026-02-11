@@ -1,11 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { SatelliteClient } from "./client.js";
+import { FileverseClient } from "./client.js";
 
-export function registerTools(server: McpServer, client: SatelliteClient): void {
+export function registerTools(server: McpServer, client: FileverseClient): void {
   server.tool(
-    "satellite_list_documents",
-    "List documents stored in Satellite. Returns an array of documents with their metadata and sync status.",
+    "fileverse_list_documents",
+    "List documents stored in Fileverse. Returns an array of documents with their metadata and sync status.",
     {
       limit: z.number().optional().describe("Maximum number of documents to return"),
       skip: z.number().optional().describe("Number of documents to skip (for pagination)"),
@@ -19,7 +19,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_get_document",
+    "fileverse_get_document",
     "Get a single document by its ddocId. Returns the full document including content, sync status, and blockchain link.",
     {
       ddocId: z.string().describe("The unique document identifier"),
@@ -33,7 +33,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_create_document",
+    "fileverse_create_document",
     "Create a new document and wait for blockchain sync. Returns the document with its sync status and public link once synced.",
     {
       title: z.string().describe("Document title"),
@@ -50,7 +50,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_update_document",
+    "fileverse_update_document",
     "Update an existing document's title and/or content, then wait for blockchain sync. Returns the updated document with sync status and link.",
     {
       ddocId: z.string().describe("The unique document identifier"),
@@ -67,7 +67,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_delete_document",
+    "fileverse_delete_document",
     "Delete a document by its ddocId.",
     {
       ddocId: z.string().describe("The unique document identifier to delete"),
@@ -81,7 +81,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_search_documents",
+    "fileverse_search_documents",
     "Search documents by text query. Returns matching documents ranked by relevance.",
     {
       query: z.string().describe("Search query string"),
@@ -97,7 +97,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_get_sync_status",
+    "fileverse_get_sync_status",
     "Check the sync status of a document. Returns the current syncStatus and blockchain link if synced.",
     {
       ddocId: z.string().describe("The unique document identifier"),
@@ -118,7 +118,7 @@ export function registerTools(server: McpServer, client: SatelliteClient): void 
   );
 
   server.tool(
-    "satellite_retry_failed_events",
+    "fileverse_retry_failed_events",
     "Retry all failed blockchain sync events. Use this when documents are stuck in 'failed' sync status.",
     {},
     async () => {

@@ -288,7 +288,7 @@ export const buildFileMetadata = (params: FileMetadataParams) => ({
   nonce: params.nonce,
   owner: params.owner,
   version: "4",
-  sourceApp: "satellite",
+  sourceApp: "fileverse-api",
 });
 
 export const parseFileEventLog = (logs: any[], eventName: string, abi: Abi): number => {

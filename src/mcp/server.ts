@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { SatelliteClient } from "./client.js";
+import { FileverseClient } from "./client.js";
 import { registerTools } from "./tools.js";
-import type { SatelliteConfig } from "./types.js";
+import type { FileverseConfig } from "./types.js";
 
-export function createMcpServer(config: SatelliteConfig): McpServer {
-  const client = new SatelliteClient(config);
+export function createMcpServer(config: FileverseConfig): McpServer {
+  const client = new FileverseClient(config);
 
   const server = new McpServer({
-    name: "satellite",
+    name: "fileverse-api-mcp",
     version: "0.0.13",
   });
 

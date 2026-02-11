@@ -1,10 +1,10 @@
-# Satellite - Onboarding Guide
+# Fileverse API - Onboarding Guide
 
 ## Overview
 
-**Satellite** is a document management system that stores and syncs documents (called "ddocs") between a local SQLite database and a blockchain. It provides a REST API and two CLI tools:
+**Fileverse API** is a document management system that stores and syncs documents (called "ddocs") between a local SQLite database and a blockchain. It provides a REST API and two CLI tools:
 
-- **`fileverse-satellite`**: Setup and run the Satellite server (API + worker)
+- **`fileverse-api`**: Setup and run the Fileverse API server (API + worker)
 - **`ddctl`**: Manage ddocs from the command line
 
 ### Key Concepts
@@ -40,7 +40,7 @@ The system follows a clean architecture pattern:
 1. **API Server**: Express.js REST API for managing ddocs
 2. **Worker**: Background event processor that publishes changes to blockchain
 3. **CLI Tools**:
-   - `fileverse-satellite`: Setup and run the server
+   - `fileverse-api`: Setup and run the server
    - `ddctl`: Manage ddocs from command line
 4. **Database**: SQLite database storing ddocs, events, folders, and configuration
 
@@ -66,9 +66,9 @@ npm install
 
 ### Configuration
 
-Runtime config is loaded from `config/.env` or `~/.satellite/.env`. The CLI creates `~/.satellite/.env` when you run `fileverse-satellite` with your API key.
+Runtime config is loaded from `config/.env` or `~/.fileverse/.env`. The CLI creates `~/.fileverse/.env` when you run `fileverse-api` with your API key.
 
-Create `config/.env` or `~/.satellite/.env` with:
+Create `config/.env` or `~/.fileverse/.env` with:
 
 ```env
 PORT=8001
@@ -77,7 +77,7 @@ NODE_ENV=development
 DB_PATH=/absolute/path/to/sqlite_db_name.db
 WORKER_CONCURRENCY=5
 LOG_LEVEL=info
-SERVICE_NAME=satellite
+SERVICE_NAME=fileverse-api
 ```
 
 **Important Notes:**
@@ -139,12 +139,12 @@ npm run dev:cli <command>
 # Uses ts-node - no build needed
 ```
 
-### Quick Start with `fileverse-satellite`
+### Quick Start with `fileverse-api`
 
-The `fileverse-satellite` CLI provides an all-in-one setup and run experience:
+The `fileverse-api` CLI provides an all-in-one setup and run experience:
 
 ```bash
-fileverse-satellite --apiKey <key> --rpcUrl <url>
+fileverse-api --apiKey <key> --rpcUrl <url>
 ```
 
 This command will:
@@ -318,7 +318,7 @@ All `/api/*` endpoints require API key authentication via query parameter:
 ?apiKey=<your-api-key>
 ```
 
-The API key is the same key you provided during `fileverse-satellite` setup. Requests without a valid API key will receive a `401 Unauthorized` response.
+The API key is the same key you provided during `fileverse-api` setup. Requests without a valid API key will receive a `401 Unauthorized` response.
 
 ### Health Check
 
@@ -528,7 +528,7 @@ src/
 ├── app.ts                   # Express app setup
 ├── index.ts                 # API server entry point
 ├── worker.ts                # Worker entry point
-├── cli/                     # Satellite CLI (fileverse-satellite)
+├── cli/                     # Fileverse API CLI (fileverse-api)
 │   ├── constants.ts         # Re-exports from constants.generated.ts
 │   ├── constants.generated.ts  # Generated (gitignored), do not edit
 │   ├── index.ts             # CLI entry point
@@ -583,7 +583,7 @@ src/
 - **`src/infra/worker/worker.ts`**: Event-based worker that processes sync jobs
 - **`src/infra/worker/eventProcessor.ts`**: Processes individual events and publishes to blockchain
 - **`src/domain/portal/publish.ts`**: Blockchain publishing logic
-- **`src/cli/index.ts`**: Satellite CLI entry point (fileverse-satellite)
+- **`src/cli/index.ts`**: Fileverse API CLI entry point (fileverse-api)
 
 ## Database Schema
 
@@ -708,7 +708,7 @@ npm run migrate:create <migration-name>
 
 ### CLI doesn't work from other directories
 
-- Ensure `DB_PATH` is set to an **absolute path** in `config/.env` or `~/.satellite/.env`
+- Ensure `DB_PATH` is set to an **absolute path** in `config/.env` or `~/.fileverse/.env`
 - Check that migrations have run (they run automatically)
 - Verify the path is correct: check logs for "SQLite database connected: <path>"
 
@@ -726,7 +726,7 @@ npm run migrate:create <migration-name>
 
 ### Worker not processing events
 
-- Ensure worker is running (`npm run start:worker` or via `fileverse-satellite`)
+- Ensure worker is running (`npm run start:worker` or via `fileverse-api`)
 - List failed events: `ddctl events list-failed` (or `GET /api/events/failed?apiKey=<key>` for your portal only)
 - Retry a single failed event: `ddctl events retry <eventId>` (or `POST /api/events/:id/retry?apiKey=<key>`)
 - Retry all failed events: `ddctl events retry-all` (or `POST /api/events/retry-failed?apiKey=<key>` for your portal only)

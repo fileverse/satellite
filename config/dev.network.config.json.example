@@ -6,7 +6,7 @@
   "DEFAULT_PORT": "8001",
   "DEFAULT_RPC_URL": "",
   "PIMLICO_PROXY_URL": "http://localhost:8002",
-  "SERVICE_NAME": "satellite",
+  "SERVICE_NAME": "fileverse-api",
   "LOG_LEVEL": "info",
   "FRONTEND_URL": ""
 }

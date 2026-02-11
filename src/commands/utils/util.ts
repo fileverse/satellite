@@ -72,9 +72,9 @@ export function validateApiKey(apiKey: string | undefined): asserts apiKey is st
 API key is not configured.
 
 To set up your API key, run:
-  satellite --apiKey <your-api-key> --rpcUrl <rpc-url>
-  
-This will configure your Satellite instance and save your credentials.
+  fileverse-api --apiKey <your-api-key> --rpcUrl <rpc-url>
+
+This will configure your Fileverse API instance and save your credentials.
 After setup, you can use ddctl commands.
 `;
     console.error(API_KEY_SETUP_MESSAGE);

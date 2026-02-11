@@ -1,4 +1,4 @@
-export interface SatelliteConfig {
+export interface FileverseConfig {
   serverUrl: string;
   apiKey: string;
 }

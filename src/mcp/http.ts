@@ -2,9 +2,9 @@ import { Router } from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./server.js";
-import type { SatelliteConfig } from "./types.js";
+import type { FileverseConfig } from "./types.js";
 
-export function createMcpRouter(config: SatelliteConfig): Router {
+export function createMcpRouter(config: FileverseConfig): Router {
   const router = Router();
 
   router.post("/", async (req, res) => {

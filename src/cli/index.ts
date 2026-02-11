@@ -9,8 +9,8 @@ import { loadConfig } from "../config/index.js";
 import { decryptSavedData, initializeWithData } from "../init/index.js";
 
 const program = new Command()
-  .name("satellite")
-  .description("Run the Satellite server for Fileverse")
+  .name("fileverse-api")
+  .description("Run the Fileverse API server")
   .version("0.0.1")
   .option("--apiKey <key>", "API key for authentication")
   .option("--rpcUrl <url>", "RPC URL for blockchain connection")
@@ -18,7 +18,7 @@ const program = new Command()
   .option("--db <path>", "Database path")
   .action(async (options) => {
     try {
-      console.log("🛰️  Satellite - Starting initialization...\n");
+      console.log("Fileverse API - Starting initialization...\n");
 
       if (needsPrompting(options)) {
         const prompted = await promptForConfig({
@@ -65,7 +65,7 @@ const program = new Command()
       startAll();
 
       console.log(`
-✓ Satellite is running!
+✓ Fileverse API is running!
 
   API Server: http://127.0.0.1:${options.port}
   Worker:     Active
@@ -74,13 +74,13 @@ const program = new Command()
 
         {
           "mcpServers": {
-            "satellite": {
-              "command": "satellite-mcp"
+            "fileverse-api": {
+              "command": "fileverse-api-mcp"
             }
           }
         }
 
-        Config is auto-read from ~/.satellite/.env — no env vars needed.
+        Config is auto-read from ~/.fileverse/.env — no env vars needed.
 
 Press Ctrl+C to stop.
 `);

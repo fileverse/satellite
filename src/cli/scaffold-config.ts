@@ -4,24 +4,24 @@ import os from "os";
 import { STATIC_CONFIG } from "./constants";
 import type { ConfigOptions } from "../types";
 
-export function getSatelliteDir(): string {
-  return path.join(os.homedir(), ".satellite");
+export function getFileverseDir(): string {
+  return path.join(os.homedir(), ".fileverse");
 }
 
 function getDefaultDbPath(): string {
-  return path.join(getSatelliteDir(), "satellite.db");
+  return path.join(getFileverseDir(), "fileverse-api.db");
 }
 
 export function getEnvPath(): string {
-  return path.join(getSatelliteDir(), ".env");
+  return path.join(getFileverseDir(), ".env");
 }
 
 export function scaffoldConfig(options: ConfigOptions = {}): string {
-  const satelliteDir = getSatelliteDir();
+  const fileverseDir = getFileverseDir();
   const envPath = getEnvPath();
 
-  if (!fs.existsSync(satelliteDir)) {
-    fs.mkdirSync(satelliteDir, { recursive: true });
+  if (!fs.existsSync(fileverseDir)) {
+    fs.mkdirSync(fileverseDir, { recursive: true });
   }
 
   const dbPath = options.dbPath || getDefaultDbPath();

@@ -4,7 +4,7 @@ This document describes how network configuration and static constants work, and
 
 ## Overview
 
-Satellite uses two types of configuration:
+Fileverse API uses two types of configuration:
 
 1. **Network config** (static, build-time): API URL, server DID, network name, RPC URL, etc. — derived from JSON files and baked into the build.
 2. **Runtime config** (env): API key, DB path, port overrides — loaded from `.env` at runtime (never published).
@@ -27,13 +27,13 @@ Both files share the same structure:
   "DEFAULT_PORT": "8001",
   "DEFAULT_RPC_URL": "https://rpc.sepolia.org",
   "PIMLICO_PROXY_URL": "https://pimlico-proxy.fileverse.io",
-  "SERVICE_NAME": "satellite",
+  "SERVICE_NAME": "fileverse-api",
   "LOG_LEVEL": "info",
   "FRONTEND_URL": "https://..."
 }
 ```
 
-`PIMLICO_PROXY_URL` is the Pimlico proxy service that authenticates with Satellite API keys and forwards bundler/paymaster requests to Pimlico. For local dev, use `http://localhost:8002` if running the proxy locally.
+`PIMLICO_PROXY_URL` is the Pimlico proxy service that authenticates with Fileverse API keys and forwards bundler/paymaster requests to Pimlico. For local dev, use `http://localhost:8002` if running the proxy locally.
 
 ## Constants Generation
 
@@ -118,7 +118,7 @@ The published package (`npm pack`) includes only:
 
 ## Runtime Configuration
 
-End users configure the API via environment variables. The CLI scaffolds `~/.satellite/.env` when run with `fileverse-satellite`. Alternatively, users can create `config/.env` in the project root.
+End users configure the API via environment variables. The CLI scaffolds `~/.fileverse/.env` when run with `fileverse-api`. Alternatively, users can create `config/.env` in the project root.
 
 **Required at runtime:**
 
@@ -136,7 +136,7 @@ End users configure the API via environment variables. The CLI scaffolds `~/.sat
 3. For dev-specific config: `cp config/dev.network.config.json.example config/dev.network.config.json` and customize.
 4. Or run `npm run build` — generates constants from prod config then builds. Use `npm run build:local` to build with dev config.
 
-No `.env.example` exists; the CLI creates `~/.satellite/.env` when you run `fileverse-satellite` with your API key.
+No `.env.example` exists; the CLI creates `~/.fileverse/.env` when you run `fileverse-api` with your API key.
 
 ## Modifying Network Config
 
