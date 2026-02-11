@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-import { SatelliteClient } from "./client.js";
-import { registerTools } from "./tools.js";
+import { createMcpServer } from "./server.js";
 import type { SatelliteConfig } from "./types.js";
 
 function loadConfig(): SatelliteConfig {
@@ -30,24 +28,34 @@ function loadConfig(): SatelliteConfig {
   return { serverUrl, apiKey };
 }
 
-function tryReadSatelliteEnv(): Partial<SatelliteConfig> | null {
+function parseEnvFile(filePath: string): Record<string, string> | null {
   try {
-    const envPath = join(homedir(), ".satellite", ".env");
-    if (!existsSync(envPath)) return null;
-    const content = readFileSync(envPath, "utf-8");
+    if (!existsSync(filePath)) return null;
+    const content = readFileSync(filePath, "utf-8");
     const vars: Record<string, string> = {};
     for (const line of content.split("\n")) {
       const match = line.match(/^([^=]+)=(.*)$/);
       if (match) vars[match[1].trim()] = match[2].trim();
     }
-    const port = vars.PORT || "8001";
-    return {
-      apiKey: vars.API_KEY,
-      serverUrl: `http://localhost:${port}`,
-    };
+    return vars;
   } catch {
     return null;
   }
+}
+
+function tryReadSatelliteEnv(): Partial<SatelliteConfig> | null {
+  // Same resolution order as src/config/index.ts: project config/.env first, then ~/.satellite/.env
+  const projectEnvPath = join(process.cwd(), "config", ".env");
+  const userEnvPath = join(homedir(), ".satellite", ".env");
+
+  const vars = parseEnvFile(projectEnvPath) || parseEnvFile(userEnvPath);
+  if (!vars) return null;
+
+  const port = vars.PORT || "8001";
+  return {
+    apiKey: vars.API_KEY,
+    serverUrl: `http://localhost:${port}`,
+  };
 }
 
 function tryReadRc(): Partial<SatelliteConfig> | null {
@@ -63,14 +71,7 @@ function tryReadRc(): Partial<SatelliteConfig> | null {
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const client = new SatelliteClient(config);
-
-  const server = new McpServer({
-    name: "satellite",
-    version: "0.0.12",
-  });
-
-  registerTools(server, client);
+  const server = createMcpServer(config);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
