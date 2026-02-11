@@ -5,6 +5,7 @@ import { closeWorker, startWorker } from "./appWorker";
 import { closeDatabase } from "./infra/database";
 import { initializeFromApiKey } from "./init";
 import app from "./app";
+import { createMcpRouter } from "./mcp/http.js";
 
 const port = parseInt(config.PORT || "8001", 10);
 const ip = config.IP || "0.0.0.0";
@@ -32,6 +33,9 @@ const startServer = async (): Promise<void> => {
     startWorker(concurrency);
     logger.info("Inline worker started");
   }
+
+  app.use("/mcp", createMcpRouter({ serverUrl: `http://localhost:${port}`, apiKey }));
+  logger.info("MCP HTTP transport mounted at /mcp");
 
   server = app.listen(port, ip, async () => {
     logger.info(`🚀 Server ready at http://${ip}:${port}`);

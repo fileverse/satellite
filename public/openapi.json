@@ -1,0 +1,922 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Satellite API",
+    "description": "Document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.",
+    "version": "0.0.12",
+    "contact": {
+      "name": "Fileverse",
+      "url": "https://github.com/fileverse"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001",
+      "description": "Local Satellite server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/ping": {
+      "get": {
+        "summary": "Health check",
+        "description": "Check if the server is running. No authentication required.",
+        "operationId": "ping",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Server is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reply": {
+                      "type": "string",
+                      "enum": ["pong"]
+                    }
+                  },
+                  "required": ["reply"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ddocs": {
+      "get": {
+        "summary": "List documents",
+        "description": "List all documents with pagination support.",
+        "operationId": "listDocuments",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of documents to return",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of documents to skip",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of documents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create document",
+        "description": "Create a new document. Accepts JSON body with title and content, or multipart file upload. After creation, poll GET /api/ddocs/{ddocId} until syncStatus is 'synced' to get the blockchain link.",
+        "operationId": "createDocument",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Document file to upload. Title is derived from filename."
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Document created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Document"
+                    }
+                  },
+                  "required": ["message", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/ddocs/{ddocId}": {
+      "get": {
+        "summary": "Get document",
+        "description": "Get a single document by its ddocId, including content, sync status, and blockchain link.",
+        "operationId": "getDocument",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DdocId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update document",
+        "description": "Update a document's title and/or content. Accepts JSON body or multipart file upload. After update, poll GET /api/ddocs/{ddocId} until syncStatus is 'synced'.",
+        "operationId": "updateDocument",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DdocId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Updated document file. Title is derived from filename."
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Document updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Document"
+                    }
+                  },
+                  "required": ["message", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete document",
+        "description": "Delete a document by its ddocId.",
+        "operationId": "deleteDocument",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DdocId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/folders": {
+      "get": {
+        "summary": "List folders",
+        "description": "List all folders with pagination support.",
+        "operationId": "listFolders",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of folders to return",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of folders to skip",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of folders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FolderList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create folder",
+        "description": "Create a new folder. Typically used for sync/on-chain integration, not ad-hoc folder creation.",
+        "operationId": "createFolder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "onchainFileId": {
+                    "type": "integer"
+                  },
+                  "folderId": {
+                    "type": "string"
+                  },
+                  "folderRef": {
+                    "type": "string"
+                  },
+                  "folderName": {
+                    "type": "string"
+                  },
+                  "portalAddress": {
+                    "type": "string"
+                  },
+                  "metadataIPFSHash": {
+                    "type": "string"
+                  },
+                  "lastTransactionBlockNumber": {
+                    "type": "integer"
+                  },
+                  "lastTransactionBlockTimestamp": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "onchainFileId",
+                  "folderId",
+                  "folderRef",
+                  "folderName",
+                  "portalAddress",
+                  "metadataIPFSHash",
+                  "lastTransactionBlockNumber",
+                  "lastTransactionBlockTimestamp"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Folder created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/folders/{folderRef}/{folderId}": {
+      "get": {
+        "summary": "Get folder",
+        "description": "Get a folder by its folderRef and folderId.",
+        "operationId": "getFolder",
+        "parameters": [
+          {
+            "name": "folderRef",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Folder reference identifier"
+          },
+          {
+            "name": "folderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Folder identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Folder details with documents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FolderWithDDocs"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "Search documents",
+        "description": "Search documents by text query. Results are returned in the 'nodes' field (not 'ddocs').",
+        "operationId": "searchDocuments",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Search query string",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "Number of results to skip",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/events/failed": {
+      "get": {
+        "summary": "List failed events",
+        "description": "List all failed blockchain sync events.",
+        "operationId": "listFailedEvents",
+        "responses": {
+          "200": {
+            "description": "List of failed events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/events/retry-failed": {
+      "post": {
+        "summary": "Retry all failed events",
+        "description": "Retry all events that are in a failed state.",
+        "operationId": "retryAllFailedEvents",
+        "responses": {
+          "200": {
+            "description": "Events retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "retried": {
+                      "type": "integer",
+                      "description": "Number of events retried"
+                    }
+                  },
+                  "required": ["retried"]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/retry": {
+      "post": {
+        "summary": "Retry one failed event",
+        "description": "Retry a single failed event by its ID.",
+        "operationId": "retryOneEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Event ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "apiKey",
+        "description": "API key passed as a query parameter"
+      }
+    },
+    "parameters": {
+      "DdocId": {
+        "name": "ddocId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Unique document identifier"
+      }
+    },
+    "schemas": {
+      "Document": {
+        "type": "object",
+        "properties": {
+          "ddocId": {
+            "type": "string",
+            "description": "Unique document identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Document title"
+          },
+          "content": {
+            "type": "string",
+            "description": "Document content (text or markdown)"
+          },
+          "syncStatus": {
+            "type": "string",
+            "enum": ["pending", "synced", "failed"],
+            "description": "Blockchain sync status"
+          },
+          "link": {
+            "type": ["string", "null"],
+            "description": "Public URL, available only when syncStatus is 'synced'"
+          },
+          "localVersion": {
+            "type": "integer",
+            "description": "Increments on each local edit"
+          },
+          "onchainVersion": {
+            "type": "integer",
+            "description": "Version published to blockchain"
+          },
+          "isDeleted": {
+            "type": "integer",
+            "enum": [0, 1],
+            "description": "0 = active, 1 = deleted"
+          },
+          "onChainFileId": {
+            "type": ["integer", "null"],
+            "description": "File ID on blockchain"
+          },
+          "portalAddress": {
+            "type": "string",
+            "description": "Portal address"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO timestamp of creation"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO timestamp of last update"
+          }
+        },
+        "required": [
+          "ddocId",
+          "title",
+          "content",
+          "syncStatus",
+          "localVersion",
+          "onchainVersion",
+          "isDeleted",
+          "portalAddress",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DocumentList": {
+        "type": "object",
+        "properties": {
+          "ddocs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of documents"
+          },
+          "hasNext": {
+            "type": "boolean",
+            "description": "Whether more documents are available"
+          }
+        },
+        "required": ["ddocs", "total", "hasNext"]
+      },
+      "CreateDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Document title"
+          },
+          "content": {
+            "type": "string",
+            "description": "Document content (text or markdown)"
+          }
+        },
+        "required": ["title", "content"]
+      },
+      "UpdateDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "New document title"
+          },
+          "content": {
+            "type": "string",
+            "description": "New document content"
+          }
+        }
+      },
+      "Folder": {
+        "type": "object",
+        "properties": {
+          "onchainFileId": {
+            "type": "integer"
+          },
+          "folderId": {
+            "type": "string"
+          },
+          "folderRef": {
+            "type": "string"
+          },
+          "folderName": {
+            "type": "string"
+          },
+          "portalAddress": {
+            "type": "string"
+          },
+          "metadataIPFSHash": {
+            "type": "string"
+          },
+          "contentIPFSHash": {
+            "type": "string"
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "lastTransactionHash": {
+            "type": "string"
+          },
+          "lastTransactionBlockNumber": {
+            "type": "integer"
+          },
+          "lastTransactionBlockTimestamp": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "onchainFileId",
+          "folderId",
+          "folderRef",
+          "folderName",
+          "portalAddress",
+          "metadataIPFSHash",
+          "isDeleted",
+          "lastTransactionBlockNumber",
+          "lastTransactionBlockTimestamp",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "FolderWithDDocs": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Folder"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ddocs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            },
+            "required": ["ddocs"]
+          }
+        ]
+      },
+      "FolderList": {
+        "type": "object",
+        "properties": {
+          "folders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Folder"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "required": ["folders", "total", "hasNext"]
+      },
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            },
+            "description": "Matching documents (note: 'nodes' not 'ddocs')"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "required": ["nodes", "total", "hasNext"]
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["create", "update", "delete"]
+          },
+          "timestamp": {
+            "type": "integer"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "portalAddress": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "processed", "failed"]
+          },
+          "retryCount": {
+            "type": "integer"
+          },
+          "lastError": {
+            "type": ["string", "null"]
+          },
+          "lockedAt": {
+            "type": ["integer", "null"]
+          },
+          "nextRetryAt": {
+            "type": ["integer", "null"]
+          },
+          "userOpHash": {
+            "type": ["string", "null"]
+          },
+          "pendingPayload": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": [
+          "_id",
+          "type",
+          "timestamp",
+          "fileId",
+          "portalAddress",
+          "status",
+          "retryCount"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        },
+        "required": ["error"]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request - validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - invalid or missing API key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -40,6 +40,12 @@ app.get("/llm.txt", (req, res) => {
   res.type("text/plain").send(content);
 });
 
+app.get("/openapi.json", (req, res) => {
+  const filePath = join(__dirname, "../public/openapi.json");
+  const content = readFileSync(filePath, "utf-8");
+  res.type("application/json").send(content);
+});
+
 app.use("/", router);
 
 app.use(expressErrorHandler as express.ErrorRequestHandler);
