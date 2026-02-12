@@ -34,6 +34,14 @@ const startServer = async (): Promise<void> => {
     logger.info("Inline worker started");
   }
 
+  // Rewrite MCP requests from root to /mcp for base URL compatibility
+  app.use((req, _res, next) => {
+    if (req.method === "POST" && req.path === "/" && req.body?.jsonrpc) {
+      req.url = "/mcp";
+    }
+    next();
+  });
+
   app.use("/mcp", createMcpRouter({ serverUrl: `http://localhost:${port}`, apiKey }));
   logger.info("MCP HTTP transport mounted at /mcp");
 

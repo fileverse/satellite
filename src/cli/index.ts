@@ -11,7 +11,7 @@ import { decryptSavedData, initializeWithData } from "../init/index.js";
 const program = new Command()
   .name("fileverse-api")
   .description("Run the Fileverse API server")
-  .version("0.0.3")
+  .version("0.0.8")
   .option("--apiKey <key>", "API key for authentication")
   .option("--rpcUrl <url>", "RPC URL for blockchain connection")
   .option("--port <port>", "Port to run the server on", "8001")
@@ -70,17 +70,13 @@ const program = new Command()
   API Server: http://127.0.0.1:${options.port}
   Worker:     Active
 
-  MCP:  Add this to your AI agent's MCP config (e.g. .claude/mcp.json):
+  MCP:  Connect Claude to your Fileverse API:
 
-        {
-          "mcpServers": {
-            "fileverse-api": {
-              "command": "fileverse-api-mcp"
-            }
-          }
-        }
+        Via stdio:
+        claude mcp add fileverse-api -- fileverse-api-mcp
 
-        Config is auto-read from ~/.fileverse/.env — no env vars needed.
+        Via HTTP:
+        claude mcp add --transport http fileverse-api http://127.0.0.1:${options.port}/mcp
 
 Press Ctrl+C to stop.
 `);
