@@ -48,13 +48,13 @@ CREATE TABLE IF NOT EXISTS api_keys (
 CREATE TABLE IF NOT EXISTS events (
   _id TEXT PRIMARY KEY,
   type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
-  timestamp INTEGER NOT NULL,
+  timestamp BIGINT NOT NULL,
   fileId TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'processed', 'failed')),
   retryCount INTEGER NOT NULL DEFAULT 0,
   lastError TEXT,
-  lockedAt INTEGER,
-  nextRetryAt INTEGER,
+  lockedAt BIGINT,
+  nextRetryAt BIGINT,
   userOpHash TEXT,
   pendingPayload TEXT,
   portalAddress TEXT
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS folders (
   contentIPFSHash TEXT NOT NULL,
   isDeleted INTEGER NOT NULL DEFAULT 0,
   lastTransactionHash TEXT,
-  lastTransactionBlockNumber INTEGER NOT NULL,
-  lastTransactionBlockTimestamp INTEGER NOT NULL,
+  lastTransactionBlockNumber BIGINT NOT NULL,
+  lastTransactionBlockTimestamp BIGINT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

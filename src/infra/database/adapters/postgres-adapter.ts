@@ -1,5 +1,6 @@
 import type { DatabaseAdapter, ExecuteResult } from "./adapter.js";
 import { sqliteToPostgres } from "./sql-compat.js";
+import { remapRows, remapRow } from "./pg-column-map.js";
 import { logger } from "../../index.js";
 
 // pg is lazy-imported so SQLite-only users don't need it installed
@@ -45,14 +46,14 @@ export class PostgresAdapter implements DatabaseAdapter {
     const pool = await this.getPool();
     const pgSql = sqliteToPostgres(sql);
     const result = await pool.query(pgSql, params);
-    return result.rows as T[];
+    return remapRows<T>(result.rows);
   }
 
   async selectOne<T>(sql: string, params: any[] = []): Promise<T | undefined> {
     const pool = await this.getPool();
     const pgSql = sqliteToPostgres(sql);
     const result = await pool.query(pgSql, params);
-    return (result.rows[0] as T) ?? undefined;
+    return result.rows[0] ? remapRow<T>(result.rows[0]) : undefined;
   }
 
   async execute(sql: string, params: any[] = []): Promise<ExecuteResult> {
