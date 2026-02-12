@@ -1,6 +1,6 @@
 {
   "name": "@fileverse/api",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",
@@ -10,7 +10,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./server": "./dist/index.js",
-    "./worker": "./dist/worker.js"
+    "./worker": "./dist/worker.js",
+    "./hono": "./dist/hono.js"
   },
   "bin": {
     "api": "dist/cli/index.js",
@@ -58,6 +59,7 @@
     "express-validation": "^4.1.1",
     "futoin-hkdf": "^1.5.3",
     "helmet": "^8.0.0",
+    "hono": "^4.11.9",
     "js-base64": "^3.7.8",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",

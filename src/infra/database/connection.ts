@@ -50,6 +50,18 @@ export async function getAdapter(): Promise<DatabaseAdapter> {
 }
 
 /**
+ * Initialize the database adapter with an explicit URL (for Workers/Hono).
+ * Skips env-var detection and uses the given connection string directly.
+ */
+export async function initializeWithUrl(url: string): Promise<DatabaseAdapter> {
+  if (adapter) return adapter;
+
+  const { PostgresAdapter } = await import("./adapters/postgres-adapter.js");
+  adapter = new PostgresAdapter(url);
+  return adapter;
+}
+
+/**
  * Graceful shutdown — close the active adapter.
  */
 export async function closeAdapter(): Promise<void> {

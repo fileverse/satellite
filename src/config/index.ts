@@ -114,4 +114,12 @@ const config: Record<string, string | undefined> = {
   },
 };
 
+export function setRuntimeConfig(overrides: Partial<Record<string, string | undefined>>): void {
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value !== undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
 export { config };
