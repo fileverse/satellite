@@ -72,7 +72,9 @@ export const updateCommand = new Command()
           throw new Error(`file content cannot be empty`);
         }
 
-        const title = path.basename(filePath);
+        const basename = path.basename(filePath);
+        const lastDotIndex = basename.lastIndexOf(".");
+        const title = lastDotIndex > 0 ? basename.substring(0, lastDotIndex) : basename;
         const payload: UpdateFileInput = {
           title,
           content,
