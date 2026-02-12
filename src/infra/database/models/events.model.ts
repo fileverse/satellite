@@ -1,4 +1,4 @@
-import { QueryBuilder } from "../index";
+import { QueryBuilder } from "../index.js";
 import { uuidv7 } from "uuidv7";
 import { notifyNewEvent } from "../../worker/workerSignal";
 import type { Event, EventType, EventStatus } from "../../../types";
@@ -25,18 +25,18 @@ interface EventRow {
 export class EventsModel {
   private static readonly TABLE = "events";
 
-  static create(input: { type: EventType; fileId: string; portalAddress: string }): Event {
+  static async create(input: { type: EventType; fileId: string; portalAddress: string }): Promise<Event> {
     const _id = uuidv7();
     const timestamp = Date.now();
     const status: EventStatus = "pending";
 
     const sql = `
-      INSERT INTO ${this.TABLE} 
-      (_id, type, timestamp, fileId, portalAddress, status, retryCount, lastError, lockedAt, nextRetryAt) 
+      INSERT INTO ${this.TABLE}
+      (_id, type, timestamp, fileId, portalAddress, status, retryCount, lastError, lockedAt, nextRetryAt)
       VALUES (?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL)
     `;
 
-    QueryBuilder.execute(sql, [_id, input.type, timestamp, input.fileId, input.portalAddress, status]);
+    await QueryBuilder.execute(sql, [_id, input.type, timestamp, input.fileId, input.portalAddress, status]);
 
     notifyNewEvent();
 
@@ -54,24 +54,24 @@ export class EventsModel {
     };
   }
 
-  static findById(_id: string): Event | undefined {
+  static async findById(_id: string): Promise<Event | undefined> {
     const sql = `SELECT * FROM ${this.TABLE} WHERE _id = ?`;
-    const row = QueryBuilder.selectOne<EventRow>(sql, [_id]);
+    const row = await QueryBuilder.selectOne<EventRow>(sql, [_id]);
     return row ? this.parseEvent(row) : undefined;
   }
 
-  static findNextPending(): Event | undefined {
+  static async findNextPending(): Promise<Event | undefined> {
     const sql = `
       SELECT * FROM ${this.TABLE}
       WHERE status = 'pending'
       ORDER BY timestamp ASC
       LIMIT 1
     `;
-    const row = QueryBuilder.selectOne<EventRow>(sql, []);
+    const row = await QueryBuilder.selectOne<EventRow>(sql, []);
     return row ? this.parseEvent(row) : undefined;
   }
 
-  static findNextEligible(lockedFileIds: string[]): Event | undefined {
+  static async findNextEligible(lockedFileIds: string[]): Promise<Event | undefined> {
     const now = Date.now();
 
     const exclusionClause =
@@ -93,32 +93,32 @@ export class EventsModel {
     `;
 
     const params = [now, ...lockedFileIds];
-    const row = QueryBuilder.selectOne<EventRow>(sql, params);
+    const row = await QueryBuilder.selectOne<EventRow>(sql, params);
     return row ? this.parseEvent(row) : undefined;
   }
 
-  static markProcessing(_id: string): void {
+  static async markProcessing(_id: string): Promise<void> {
     const sql = `
       UPDATE ${this.TABLE}
       SET status = 'processing',
           lockedAt = ?
       WHERE _id = ?
     `;
-    QueryBuilder.execute(sql, [Date.now(), _id]);
+    await QueryBuilder.execute(sql, [Date.now(), _id]);
   }
 
-  static markProcessed(_id: string): void {
+  static async markProcessed(_id: string): Promise<void> {
     const sql = `
       UPDATE ${this.TABLE}
       SET status = 'processed',
           lockedAt = NULL
       WHERE _id = ?
     `;
-    QueryBuilder.execute(sql, [_id]);
+    await QueryBuilder.execute(sql, [_id]);
   }
 
-  static scheduleRetry(_id: string, errorMsg: string): void {
-    const event = this.findById(_id);
+  static async scheduleRetry(_id: string, errorMsg: string): Promise<void> {
+    const event = await this.findById(_id);
     if (!event) return;
 
     const delay = RETRY_DELAYS_MS[Math.min(event.retryCount, RETRY_DELAYS_MS.length - 1)];
@@ -133,10 +133,10 @@ export class EventsModel {
           lockedAt = NULL
       WHERE _id = ?
     `;
-    QueryBuilder.execute(sql, [errorMsg, nextRetryAt, _id]);
+    await QueryBuilder.execute(sql, [errorMsg, nextRetryAt, _id]);
   }
 
-  static scheduleRetryAfter(_id: string, errorMsg: string, retryAfterMs: number): void {
+  static async scheduleRetryAfter(_id: string, errorMsg: string, retryAfterMs: number): Promise<void> {
     const nextRetryAt = Date.now() + retryAfterMs;
     const sql = `
       UPDATE ${this.TABLE}
@@ -146,10 +146,10 @@ export class EventsModel {
           lockedAt = NULL
       WHERE _id = ?
     `;
-    QueryBuilder.execute(sql, [errorMsg, nextRetryAt, _id]);
+    await QueryBuilder.execute(sql, [errorMsg, nextRetryAt, _id]);
   }
 
-  static markFailed(_id: string, errorMsg: string): void {
+  static async markFailed(_id: string, errorMsg: string): Promise<void> {
     const sql = `
       UPDATE ${this.TABLE}
       SET status = 'failed',
@@ -157,10 +157,10 @@ export class EventsModel {
           lockedAt = NULL
       WHERE _id = ?
     `;
-    QueryBuilder.execute(sql, [errorMsg, _id]);
+    await QueryBuilder.execute(sql, [errorMsg, _id]);
   }
 
-  static listFailed(portalAddress?: string): Event[] {
+  static async listFailed(portalAddress?: string): Promise<Event[]> {
     const portalClause = portalAddress != null ? "AND portalAddress = ?" : "";
     const sql = `
       SELECT * FROM ${this.TABLE}
@@ -169,11 +169,11 @@ export class EventsModel {
       ORDER BY timestamp ASC
     `;
     const params = portalAddress != null ? [portalAddress] : [];
-    const rows = QueryBuilder.select<EventRow>(sql, params);
+    const rows = await QueryBuilder.select<EventRow>(sql, params);
     return rows.map((row) => this.parseEvent(row));
   }
 
-  static resetFailedToPending(_id: string, portalAddress?: string): boolean {
+  static async resetFailedToPending(_id: string, portalAddress?: string): Promise<boolean> {
     const portalClause = portalAddress != null ? "AND portalAddress = ?" : "";
     const sql = `
       UPDATE ${this.TABLE}
@@ -187,14 +187,14 @@ export class EventsModel {
       ${portalClause}
     `;
     const params = portalAddress != null ? [_id, portalAddress] : [_id];
-    const result = QueryBuilder.execute(sql, params);
+    const result = await QueryBuilder.execute(sql, params);
     if (result.changes > 0) {
       notifyNewEvent();
     }
     return result.changes > 0;
   }
 
-  static resetAllFailedToPending(portalAddress?: string): number {
+  static async resetAllFailedToPending(portalAddress?: string): Promise<number> {
     const portalClause = portalAddress != null ? "AND portalAddress = ?" : "";
     const sql = `
       UPDATE ${this.TABLE}
@@ -207,14 +207,14 @@ export class EventsModel {
       ${portalClause}
     `;
     const params = portalAddress != null ? [portalAddress] : [];
-    const result = QueryBuilder.execute(sql, params);
+    const result = await QueryBuilder.execute(sql, params);
     if (result.changes > 0) {
       notifyNewEvent();
     }
     return result.changes;
   }
 
-  static resetStaleEvents(staleThreshold: number): number {
+  static async resetStaleEvents(staleThreshold: number): Promise<number> {
     const sql = `
       UPDATE ${this.TABLE}
       SET status = 'pending',
@@ -225,18 +225,18 @@ export class EventsModel {
       AND lockedAt IS NOT NULL
       AND lockedAt < ?
     `;
-    const result = QueryBuilder.execute(sql, [staleThreshold]);
+    const result = await QueryBuilder.execute(sql, [staleThreshold]);
     return result.changes;
   }
 
-  static setEventPendingOp(_id: string, userOpHash: string, payload: Record<string, unknown>): void {
+  static async setEventPendingOp(_id: string, userOpHash: string, payload: Record<string, unknown>): Promise<void> {
     const sql = `UPDATE ${this.TABLE} SET userOpHash = ?, pendingPayload = ? WHERE _id = ?`;
-    QueryBuilder.execute(sql, [userOpHash, JSON.stringify(payload), _id]);
+    await QueryBuilder.execute(sql, [userOpHash, JSON.stringify(payload), _id]);
   }
 
-  static clearEventPendingOp(_id: string): void {
+  static async clearEventPendingOp(_id: string): Promise<void> {
     const sql = `UPDATE ${this.TABLE} SET userOpHash = NULL, pendingPayload = NULL WHERE _id = ?`;
-    QueryBuilder.execute(sql, [_id]);
+    await QueryBuilder.execute(sql, [_id]);
   }
 
   private static parseEvent(row: EventRow): Event {

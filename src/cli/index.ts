@@ -11,7 +11,7 @@ import { decryptSavedData, initializeWithData } from "../init/index.js";
 const program = new Command()
   .name("fileverse-api")
   .description("Run the Fileverse API server")
-  .version("0.0.1")
+  .version("0.0.3")
   .option("--apiKey <key>", "API key for authentication")
   .option("--rpcUrl <url>", "RPC URL for blockchain connection")
   .option("--port <port>", "Port to run the server on", "8001")
@@ -45,10 +45,10 @@ const program = new Command()
       console.log(`✓ Configuration saved to ${envPath}\n`);
 
       const { runMigrations } = await import("../infra/database/migrations/index.js");
-      runMigrations();
+      await runMigrations();
       console.log("✓ Database migrations complete");
 
-      const result = initializeWithData({
+      const result = await initializeWithData({
         keyMaterial,
         appMaterial,
         id: data.id,

@@ -9,7 +9,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const folder = getFolder(folderRef, folderId);
+    const folder = await getFolder(folderRef, folderId);
 
     if (!folder) {
       return res.status(404).json({ error: "Folder not found" });

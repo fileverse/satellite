@@ -1,4 +1,4 @@
-import { QueryBuilder } from "../index";
+import { QueryBuilder } from "../index.js";
 import { uuidv7 } from "uuidv7";
 import type { File, FileListResponse, UpdateFilePayload } from "../../../types";
 
@@ -39,20 +39,20 @@ export class FilesModel {
     };
   }
 
-  static findAll(
+  static async findAll(
     portalAddress: string,
     limit?: number,
     skip?: number,
-  ): { files: File[]; total: number; hasNext: boolean } {
+  ): Promise<{ files: File[]; total: number; hasNext: boolean }> {
     const whereClause = "isDeleted = 0 AND portalAddress = ?";
     const params: any[] = [portalAddress];
 
     const countSql = `
-      SELECT COUNT(*) as count 
-      FROM ${this.TABLE} 
+      SELECT COUNT(*) as count
+      FROM ${this.TABLE}
       WHERE ${whereClause}
     `;
-    const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql, params);
+    const totalResult = await QueryBuilder.selectOne<{ count: number }>(countSql, params);
     const total = totalResult?.count || 0;
     const sql = `
       SELECT *
@@ -66,56 +66,56 @@ export class FilesModel {
       orderDirection: "DESC",
     });
 
-    const filesRaw = QueryBuilder.select<any>(completeSql, params);
+    const filesRaw = await QueryBuilder.select<any>(completeSql, params);
     const files = filesRaw.map(this.parseFile);
     const hasNext = skip !== undefined && limit !== undefined ? skip + limit < total : false;
     return { files, total, hasNext };
   }
 
-  static findById(_id: string, portalAddress: string): File | undefined {
+  static async findById(_id: string, portalAddress: string): Promise<File | undefined> {
     const sql = `
       SELECT *
-      FROM ${this.TABLE} 
+      FROM ${this.TABLE}
       WHERE _id = ? AND isDeleted = 0 AND portalAddress = ?
     `;
-    const result = QueryBuilder.selectOne<any>(sql, [_id, portalAddress]);
+    const result = await QueryBuilder.selectOne<any>(sql, [_id, portalAddress]);
     return result ? this.parseFile(result) : undefined;
   }
 
-  static findByIdIncludingDeleted(_id: string): File | undefined {
+  static async findByIdIncludingDeleted(_id: string): Promise<File | undefined> {
     const sql = `
       SELECT *
-      FROM ${this.TABLE} 
+      FROM ${this.TABLE}
       WHERE _id = ?
     `;
-    const result = QueryBuilder.selectOne<any>(sql, [_id]);
+    const result = await QueryBuilder.selectOne<any>(sql, [_id]);
     return result ? this.parseFile(result) : undefined;
   }
 
-  static findByIdExcludingDeleted(_id: string): File | undefined {
+  static async findByIdExcludingDeleted(_id: string): Promise<File | undefined> {
     const sql = `
       SELECT *
-      FROM ${this.TABLE} 
+      FROM ${this.TABLE}
       WHERE _id = ? AND isDeleted = 0
     `;
-    const result = QueryBuilder.selectOne<any>(sql, [_id]);
+    const result = await QueryBuilder.selectOne<any>(sql, [_id]);
     return result ? this.parseFile(result) : undefined;
   }
 
-  static findByDDocId(ddocId: string, portalAddress: string): File | undefined {
+  static async findByDDocId(ddocId: string, portalAddress: string): Promise<File | undefined> {
     const sql = `
       SELECT *
-      FROM ${this.TABLE} 
+      FROM ${this.TABLE}
       WHERE ddocId = ? AND isDeleted = 0 AND portalAddress = ?
     `;
-    const result = QueryBuilder.selectOne<any>(sql, [ddocId, portalAddress]);
+    const result = await QueryBuilder.selectOne<any>(sql, [ddocId, portalAddress]);
     return result ? this.parseFile(result) : undefined;
   }
 
-  static searchByTitle(searchTerm: string, portalAddress: string, limit?: number, skip?: number): File[] {
+  static async searchByTitle(searchTerm: string, portalAddress: string, limit?: number, skip?: number): Promise<File[]> {
     const sql = `
       SELECT *
-      FROM ${this.TABLE} 
+      FROM ${this.TABLE}
       WHERE LOWER(title) LIKE LOWER(?) AND isDeleted = 0 AND portalAddress = ?
     `;
     const completeSql = QueryBuilder.paginate(sql, {
@@ -124,29 +124,29 @@ export class FilesModel {
       orderBy: "createdAt",
       orderDirection: "DESC",
     });
-    const filesRaw = QueryBuilder.select<any>(completeSql, [`%${searchTerm}%`, portalAddress]);
+    const filesRaw = await QueryBuilder.select<any>(completeSql, [`%${searchTerm}%`, portalAddress]);
     return filesRaw.map(this.parseFile);
   }
 
-  static create(input: { title: string; content: string; ddocId: string; portalAddress: string }): File {
+  static async create(input: { title: string; content: string; ddocId: string; portalAddress: string }): Promise<File> {
     const _id = uuidv7();
     const sql = `
-      INSERT INTO ${this.TABLE} 
-      (_id, title, content, ddocId, portalAddress) 
+      INSERT INTO ${this.TABLE}
+      (_id, title, content, ddocId, portalAddress)
       VALUES (?, ?, ?, ?, ?)
     `;
 
-    QueryBuilder.execute(sql, [_id, input.title, input.content, input.ddocId, input.portalAddress]);
+    await QueryBuilder.execute(sql, [_id, input.title, input.content, input.ddocId, input.portalAddress]);
     // NOTE: default values while file creation: localVersion = 1, onchainVersion = 0, syncStatus = 'pending'
 
-    const created = this.findById(_id, input.portalAddress);
+    const created = await this.findById(_id, input.portalAddress);
     if (!created) {
       throw new Error("Failed to create file");
     }
     return created;
   }
 
-  static update(_id: string, payload: UpdateFilePayload, portalAddress: string): File {
+  static async update(_id: string, payload: UpdateFilePayload, portalAddress: string): Promise<File> {
     const now = new Date().toISOString();
 
     const keys: string[] = [];
@@ -171,27 +171,27 @@ export class FilesModel {
     const updateChain = keys.join(", ");
     const sql = `UPDATE ${this.TABLE} SET ${updateChain} WHERE _id = ? AND portalAddress = ?`;
 
-    QueryBuilder.execute(sql, values);
+    await QueryBuilder.execute(sql, values);
 
-    const updated = this.findById(_id, portalAddress);
+    const updated = await this.findById(_id, portalAddress);
     if (!updated) {
       throw new Error("Failed to update file");
     }
     return updated;
   }
 
-  static softDelete(_id: string): File {
+  static async softDelete(_id: string): Promise<File> {
     const now = new Date().toISOString();
     const sql = `
-      UPDATE ${this.TABLE} 
+      UPDATE ${this.TABLE}
       SET isDeleted = 1, syncStatus = 'pending', updatedAt = ?
       WHERE _id = ?
     `;
 
-    QueryBuilder.execute(sql, [now, _id]);
+    await QueryBuilder.execute(sql, [now, _id]);
 
     // Use findByIdIncludingDeleted since the file is now marked as deleted
-    const deleted = this.findByIdIncludingDeleted(_id);
+    const deleted = await this.findByIdIncludingDeleted(_id);
     if (!deleted) {
       throw new Error("Failed to delete file");
     }

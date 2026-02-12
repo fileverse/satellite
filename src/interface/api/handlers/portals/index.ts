@@ -13,7 +13,7 @@ const addPortalHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const portal = savePortal({ portalAddress, portalSeed, ownerAddress });
+    const portal = await savePortal({ portalAddress, portalSeed, ownerAddress });
     res.status(200).json({
       message: "Portal saved successfully",
       data: portal,
@@ -33,7 +33,7 @@ const addKeyHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const apiKey = addApiKey({
+    const apiKey = await addApiKey({
       apiKeySeed,
       name,
       collaboratorAddress,
@@ -58,7 +58,7 @@ const removeKeyHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const deletedApiKey = removeApiKey(collaboratorAddress);
+    const deletedApiKey = await removeApiKey(collaboratorAddress);
     res.status(200).json({
       message: "API key removed successfully",
       data: deletedApiKey,

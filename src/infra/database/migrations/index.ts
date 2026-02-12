@@ -1,5 +1,5 @@
-import getDb from "../index";
-import { logger } from "../../";
+import { getAdapter } from "../connection.js";
+import { logger } from "../../index.js";
 
 const STABLE_SCHEMA = `
 CREATE TABLE IF NOT EXISTS files (
@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS files (
   localVersion INTEGER NOT NULL DEFAULT 1,
   onchainVersion INTEGER NOT NULL DEFAULT 0,
   syncStatus TEXT NOT NULL DEFAULT 'pending',
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   isDeleted INTEGER NOT NULL DEFAULT 0,
   portalAddress TEXT NOT NULL,
   metadata TEXT DEFAULT '{}',
@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS portals (
   portalAddress TEXT NOT NULL UNIQUE,
   portalSeed TEXT NOT NULL UNIQUE,
   ownerAddress TEXT NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS api_keys (
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   name TEXT NOT NULL,
   collaboratorAddress TEXT NOT NULL UNIQUE,
   portalAddress TEXT NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   isDeleted INTEGER NOT NULL DEFAULT 0
 );
 
@@ -77,16 +77,16 @@ CREATE TABLE IF NOT EXISTS folders (
   lastTransactionHash TEXT,
   lastTransactionBlockNumber INTEGER NOT NULL,
   lastTransactionBlockTimestamp INTEGER NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_folders_folderRef_folderId ON folders(folderRef, folderId);
 CREATE INDEX IF NOT EXISTS idx_folders_folderRef ON folders(folderRef);
 CREATE INDEX IF NOT EXISTS idx_folders_created_at ON folders(created_at);
 `;
 
-export function runMigrations(): void {
-  const db = getDb();
-  db.exec(STABLE_SCHEMA);
+export async function runMigrations(): Promise<void> {
+  const adapter = await getAdapter();
+  await adapter.exec(STABLE_SCHEMA);
   logger.debug("Database schema ready");
 }

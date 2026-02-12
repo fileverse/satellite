@@ -12,7 +12,7 @@ eventsCommand
   .description("List all failed events")
   .action(async () => {
     try {
-      const events = EventsModel.listFailed();
+      const events = await EventsModel.listFailed();
       if (events.length === 0) {
         console.log("No failed events.");
         return;
@@ -27,7 +27,7 @@ eventsCommand
         table.push([
           e._id,
           e.fileId,
-          e.portalAddress || "—",
+          e.portalAddress || "\u2014",
           e.type,
           formatDate(new Date(e.timestamp)),
           err.length > MAX_ERROR_LEN ? err.slice(0, MAX_ERROR_LEN - 3) + "..." : err,
@@ -47,7 +47,7 @@ eventsCommand
   .description("Retry a single failed event by ID")
   .action(async (eventId: string) => {
     try {
-      const updated = EventsModel.resetFailedToPending(eventId);
+      const updated = await EventsModel.resetFailedToPending(eventId);
       if (updated) {
         console.log(`Event ${eventId} reset to pending. Worker will pick it up.`);
       } else {
@@ -66,7 +66,7 @@ eventsCommand
   .description("Retry all failed events")
   .action(async () => {
     try {
-      const count = EventsModel.resetAllFailedToPending();
+      const count = await EventsModel.resetAllFailedToPending();
       console.log(`Reset ${count} failed event(s) to pending. Worker will pick them up.`);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);

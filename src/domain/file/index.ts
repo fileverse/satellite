@@ -12,11 +12,11 @@ import type {
 } from "../../types";
 import { DEFAULT_LIST_LIMIT } from "./constants";
 
-function listFiles(params: ListFilesParams): ListFilesResult {
+async function listFiles(params: ListFilesParams): Promise<ListFilesResult> {
   const { limit, skip, portalAddress } = params;
   const effectiveLimit = limit || DEFAULT_LIST_LIMIT;
 
-  const result = FilesModel.findAll(portalAddress, effectiveLimit, skip);
+  const result = await FilesModel.findAll(portalAddress, effectiveLimit, skip);
 
   const processedFiles = result.files.map((file) => ({
     ddocId: file.ddocId,
@@ -40,12 +40,12 @@ function listFiles(params: ListFilesParams): ListFilesResult {
   };
 }
 
-function getFile(ddocId: string, portalAddress: string): GetFileResult | null {
+async function getFile(ddocId: string, portalAddress: string): Promise<GetFileResult | null> {
   if (!ddocId) {
     throw new Error("ddocId is required");
   }
 
-  const file = FilesModel.findByDDocId(ddocId, portalAddress);
+  const file = await FilesModel.findByDDocId(ddocId, portalAddress);
 
   if (!file) {
     return null;
@@ -73,14 +73,14 @@ const createFile = async (input: CreateFileInput): Promise<File> => {
   }
 
   const ddocId = generate();
-  const file = FilesModel.create({
+  const file = await FilesModel.create({
     title: input.title,
     content: input.content,
     ddocId: ddocId,
     portalAddress: input.portalAddress,
   });
 
-  EventsModel.create({ type: "create", fileId: file._id, portalAddress: file.portalAddress });
+  await EventsModel.create({ type: "create", fileId: file._id, portalAddress: file.portalAddress });
   return file;
 };
 
@@ -93,7 +93,7 @@ const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddres
     throw new Error("At least one field is required: Either provide title, content, or both");
   }
 
-  const existingFile = FilesModel.findByDDocId(ddocId, portalAddress);
+  const existingFile = await FilesModel.findByDDocId(ddocId, portalAddress);
   if (!existingFile) {
     throw new Error(`File with ddocId ${ddocId} not found`);
   }
@@ -103,9 +103,9 @@ const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddres
     localVersion: existingFile.localVersion + 1,
     syncStatus: "pending", // since the update is done in local db, it's not on the chain yet. hence pending
   };
-  const updatedFile = FilesModel.update(existingFile._id, updatePayload, portalAddress);
+  const updatedFile = await FilesModel.update(existingFile._id, updatePayload, portalAddress);
 
-  EventsModel.create({ type: "update", fileId: updatedFile._id, portalAddress: updatedFile.portalAddress });
+  await EventsModel.create({ type: "update", fileId: updatedFile._id, portalAddress: updatedFile.portalAddress });
   return {
     ddocId: updatedFile.ddocId,
     link: updatedFile.link,
@@ -127,14 +127,14 @@ const deleteFile = async (ddocId: string, portalAddress: string): Promise<File> 
     throw new Error("ddocId is required");
   }
 
-  const existingFile = FilesModel.findByDDocId(ddocId, portalAddress);
+  const existingFile = await FilesModel.findByDDocId(ddocId, portalAddress);
   if (!existingFile) {
     throw new Error(`File with ddocId ${ddocId} not found`);
   }
 
-  const deletedFile = FilesModel.softDelete(existingFile._id);
+  const deletedFile = await FilesModel.softDelete(existingFile._id);
 
-  EventsModel.create({ type: "delete", fileId: deletedFile._id, portalAddress: deletedFile.portalAddress });
+  await EventsModel.create({ type: "delete", fileId: deletedFile._id, portalAddress: deletedFile.portalAddress });
   return deletedFile;
 };
 

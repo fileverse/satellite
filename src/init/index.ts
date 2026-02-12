@@ -13,19 +13,19 @@ export type { InitResult };
 
 const SAVED_DATA_ENCRYPTION_KEY_INFO = "SAVED_DATA_ENCRYPTION_KEY";
 
-export function initializeWithData(data: ApiKeyMaterialResponse): InitResult {
+export async function initializeWithData(data: ApiKeyMaterialResponse): Promise<InitResult> {
   const { keyMaterial, appMaterial } = data;
 
-  savePortal({
+  await savePortal({
     portalAddress: appMaterial.portalAddress,
     portalSeed: appMaterial.portalSeed,
     ownerAddress: appMaterial.ownerAddress,
   });
 
-  const existingApiKey = ApiKeysModel.findByApiKey(keyMaterial.apiKeySeed);
+  const existingApiKey = await ApiKeysModel.findByApiKey(keyMaterial.apiKeySeed);
 
   if (!existingApiKey) {
-    addApiKey({
+    await addApiKey({
       apiKeySeed: keyMaterial.apiKeySeed,
       name: keyMaterial.name,
       collaboratorAddress: keyMaterial.collaboratorAddress,
@@ -65,7 +65,7 @@ export const initializeFromApiKey = async (apiKey: string): Promise<void> => {
 
   const keyMaterial = await decryptSavedData<KeyMaterial>(apiKey, data.encryptedKeyMaterial);
   const appMaterial = await decryptSavedData<AppKeyMaterial>(apiKey, data.encryptedAppMaterial);
-  const result = initializeWithData({ keyMaterial, appMaterial, id: data.id });
+  const result = await initializeWithData({ keyMaterial, appMaterial, id: data.id });
 
   logger.debug("Portal saved");
   if (result.apiKeySaved) {

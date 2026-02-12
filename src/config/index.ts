@@ -32,6 +32,9 @@ export function getRuntimeConfig() {
     get DB_PATH() {
       return process.env.DB_PATH;
     },
+    get DATABASE_URL() {
+      return process.env.DATABASE_URL;
+    },
     get PORT() {
       return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT;
     },
@@ -44,11 +47,18 @@ export function getRuntimeConfig() {
   };
 }
 
-export function validateDbPath(): void {
+export function validateDbConfig(): void {
+  const databaseUrl = process.env.DATABASE_URL;
   const dbPath = process.env.DB_PATH;
+
+  // If DATABASE_URL is set, skip file path validation (PostgreSQL mode)
+  if (databaseUrl) {
+    return;
+  }
+
   if (!dbPath) {
-    console.error("Error: DB_PATH environment variable is required");
-    console.error("Please set DB_PATH in your .env file (config/.env or ~/.fileverse/.env) or run the CLI first");
+    console.error("Error: DB_PATH or DATABASE_URL environment variable is required");
+    console.error("Please set DB_PATH or DATABASE_URL in your .env file (config/.env or ~/.fileverse/.env) or run the CLI first");
     process.exit(1);
   }
 
@@ -57,6 +67,9 @@ export function validateDbPath(): void {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 }
+
+// Keep backwards-compatible alias
+export const validateDbPath = validateDbConfig;
 
 const config: Record<string, string | undefined> = {
   ...STATIC_CONFIG,
@@ -83,6 +96,9 @@ const config: Record<string, string | undefined> = {
   },
   get DB_PATH() {
     return process.env.DB_PATH;
+  },
+  get DATABASE_URL() {
+    return process.env.DATABASE_URL;
   },
   get PORT() {
     return process.env.PORT || STATIC_CONFIG.DEFAULT_PORT;

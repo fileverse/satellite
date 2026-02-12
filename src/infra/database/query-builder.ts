@@ -1,39 +1,27 @@
-import { databaseConnectionManager } from "./connection";
+import { getAdapter } from "./connection.js";
 import type { QueryOptions } from "../../types";
+import type { ExecuteResult } from "./adapters/index.js";
 import { DEFAULT_LIST_LIMIT } from "../../domain/file/constants";
 
-function getDb() {
-  return databaseConnectionManager.getConnection();
-}
-
 export class QueryBuilder {
-  static select<T = any>(sql: string, params: any[] = []): T[] {
-    const stmt = getDb().prepare(sql);
-    return stmt.all(params) as T[];
+  static async select<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+    const adapter = await getAdapter();
+    return adapter.select<T>(sql, params);
   }
 
-  static selectOne<T = any>(sql: string, params: any[] = []): T | undefined {
-    const stmt = getDb().prepare(sql);
-    return stmt.get(params) as T | undefined;
+  static async selectOne<T = any>(sql: string, params: any[] = []): Promise<T | undefined> {
+    const adapter = await getAdapter();
+    return adapter.selectOne<T>(sql, params);
   }
 
-  static execute(
-    sql: string,
-    params: any[] = [],
-  ): {
-    changes: number;
-    lastInsertRowid: number | bigint;
-  } {
-    const stmt = getDb().prepare(sql);
-    const result = stmt.run(params);
-    return {
-      changes: result.changes,
-      lastInsertRowid: result.lastInsertRowid,
-    };
+  static async execute(sql: string, params: any[] = []): Promise<ExecuteResult> {
+    const adapter = await getAdapter();
+    return adapter.execute(sql, params);
   }
 
-  static transaction<T>(callback: () => T): T {
-    return getDb().transaction(callback)();
+  static async transaction<T>(callback: () => Promise<T>): Promise<T> {
+    const adapter = await getAdapter();
+    return adapter.transaction(callback);
   }
 
   static paginate(sql: string, options: QueryOptions = {}): string {

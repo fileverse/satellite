@@ -10,7 +10,8 @@ const searchHandler = async (req: Request, res: Response) => {
   const runtimConfig = getRuntimeConfig();
   const apiKey = runtimConfig.API_KEY;
   if (!apiKey) throw new Error("API key is required");
-  const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+  const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
+  const portalAddress = apiKeyInfo?.portalAddress as string;
   if (!portalAddress) throw new Error("Portal address is required");
 
   if (!query) {
@@ -21,7 +22,7 @@ const searchHandler = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Missing required header: x-portal-address is required" });
   }
 
-  const result = searchNodes({ query, limit, skip, portalAddress });
+  const result = await searchNodes({ query, limit, skip, portalAddress });
 
   res.json({
     nodes: result.nodes,

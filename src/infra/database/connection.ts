@@ -1,62 +1,60 @@
-import Database from "better-sqlite3";
-import { config } from "../../config";
-import { logger } from "../index";
+import type { DatabaseAdapter } from "./adapters/index.js";
+import { logger } from "../index.js";
 import path from "path";
 import fs from "fs";
 
+let adapter: DatabaseAdapter | null = null;
+
 /**
- * Database connection manager - Singleton pattern
- * Provides a shared SQLite database connection
+ * Auto-detect and initialize the database adapter:
+ * - DATABASE_URL env → PostgreSQL
+ * - DB_PATH env → SQLite
  */
-class DatabaseConnectionManager {
-  private static instance: DatabaseConnectionManager;
-  private db: Database.Database | null = null;
+export async function initializeAdapter(): Promise<DatabaseAdapter> {
+  if (adapter) return adapter;
 
-  private constructor() {}
+  const databaseUrl = process.env.DATABASE_URL;
+  const dbPath = process.env.DB_PATH;
 
-  static getInstance(): DatabaseConnectionManager {
-    if (!DatabaseConnectionManager.instance) {
-      DatabaseConnectionManager.instance = new DatabaseConnectionManager();
-    }
-    return DatabaseConnectionManager.instance;
-  }
-
-  getConnection(): Database.Database {
-    if (!this.db) {
-      // DB_PATH is required, validated, and normalized in config/index.ts
-      const dbPath = config.DB_PATH!;
-
-      // Create database instance
-      this.db = new Database(dbPath, {
-        verbose: config.NODE_ENV === "development" ? (msg: unknown) => logger.debug(String(msg)) : undefined,
-      });
-
-      // Enable WAL mode for better concurrency
-      this.db.pragma("journal_mode = WAL");
-
-      // Enable foreign keys
-      this.db.pragma("foreign_keys = ON");
-
-      // Connection health check
-      this.db.prepare("SELECT 1").get();
-
-      logger.info(`SQLite database connected: ${dbPath}`);
+  if (databaseUrl) {
+    const { PostgresAdapter } = await import("./adapters/postgres-adapter.js");
+    adapter = new PostgresAdapter(databaseUrl);
+    logger.info("Using PostgreSQL adapter");
+  } else if (dbPath) {
+    // Ensure DB directory exists
+    const dbDir = path.dirname(dbPath.trim());
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
     }
 
-    return this.db;
+    const { SqliteAdapter } = await import("./adapters/sqlite-adapter.js");
+    adapter = new SqliteAdapter(dbPath);
+    logger.info("Using SQLite adapter");
+  } else {
+    throw new Error(
+      "No database configured. Set DATABASE_URL (PostgreSQL) or DB_PATH (SQLite).",
+    );
   }
 
-  async close(): Promise<void> {
-    if (this.db) {
-      this.db.close();
-      this.db = null;
-      logger.info("Database connection closed");
-    }
-  }
-
-  isConnected(): boolean {
-    return this.db !== null && this.db.open;
-  }
+  return adapter;
 }
 
-export const databaseConnectionManager = DatabaseConnectionManager.getInstance();
+/**
+ * Returns the active adapter, lazy-initializing if needed.
+ */
+export async function getAdapter(): Promise<DatabaseAdapter> {
+  if (!adapter) {
+    return initializeAdapter();
+  }
+  return adapter;
+}
+
+/**
+ * Graceful shutdown — close the active adapter.
+ */
+export async function closeAdapter(): Promise<void> {
+  if (adapter) {
+    await adapter.close();
+    adapter = null;
+  }
+}

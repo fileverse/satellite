@@ -1,13 +1,8 @@
-import { databaseConnectionManager } from "./connection";
-import { QueryBuilder } from "./query-builder";
-
-function getDb() {
-  return databaseConnectionManager.getConnection();
-}
+import { getAdapter, closeAdapter, initializeAdapter } from "./connection.js";
+import { QueryBuilder } from "./query-builder.js";
 
 const closeDatabase = async (): Promise<void> => {
-  await databaseConnectionManager.close();
+  await closeAdapter();
 };
 
-export default getDb;
-export { getDb, closeDatabase, QueryBuilder };
+export { getAdapter, initializeAdapter, closeAdapter, closeDatabase, QueryBuilder };

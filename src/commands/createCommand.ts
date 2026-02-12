@@ -23,7 +23,8 @@ export const createCommand = new Command()
 
       validateApiKey(apiKey);
 
-      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+      const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
+      const portalAddress = apiKeyInfo?.portalAddress as string;
 
       if (!portalAddress) throw new Error("Portal address is required");
 

@@ -1,4 +1,4 @@
-import { config, validateDbPath } from "./config";
+import { config, validateDbConfig } from "./config";
 import { logger } from "./infra";
 import { runMigrations } from "./infra/database/migrations";
 import { closeWorker, startWorker } from "./appWorker";
@@ -13,8 +13,8 @@ const ip = config.IP || "0.0.0.0";
 let server: ReturnType<typeof app.listen>;
 
 const startServer = async (): Promise<void> => {
-  validateDbPath();
-  runMigrations();
+  validateDbConfig();
+  await runMigrations();
 
   const apiKey = config.API_KEY;
   if (!apiKey) {
@@ -30,7 +30,7 @@ const startServer = async (): Promise<void> => {
 
   if (process.env.INLINE_WORKER === "true") {
     const concurrency = parseInt(process.env.WORKER_CONCURRENCY || "5", 10);
-    startWorker(concurrency);
+    await startWorker(concurrency);
     logger.info("Inline worker started");
   }
 

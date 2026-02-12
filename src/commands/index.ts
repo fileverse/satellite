@@ -8,7 +8,7 @@ import { logger } from "../infra/logger";
 logger.level = "error";
 
 import { runMigrations } from "../infra/database/migrations";
-runMigrations();
+await runMigrations();
 
 import { listCommand } from "./listCommand";
 import { getCommand } from "./getCommand";
@@ -23,7 +23,7 @@ import { closeWorker, closeDatabase } from "../infra";
 export const program = new Command()
   .name("ddctl")
   .description("CLI tool to manage your ddocs")
-  .version("0.0.1")
+  .version("0.0.3")
   .addHelpText("beforeAll", "\n")
   .addHelpText("afterAll", "\n");
 

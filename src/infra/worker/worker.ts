@@ -23,14 +23,14 @@ export class FileEventsWorker {
     this.concurrency = concurrency;
   }
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.isRunning) {
       logger.warn("Worker is already running");
       return;
     }
     this.isRunning = true;
 
-    const staleCount = this.recoverStaleEvents();
+    const staleCount = await this.recoverStaleEvents();
     if (staleCount > 0) {
       logger.info(`Recovered ${staleCount} stale event(s)`);
     }
@@ -68,12 +68,12 @@ export class FileEventsWorker {
 
     while (this.activeProcessors.size < this.concurrency && this.isRunning) {
       const lockedFileIds = Array.from(this.activeProcessors.keys());
-      const event = EventsModel.findNextEligible(lockedFileIds);
+      const event = await EventsModel.findNextEligible(lockedFileIds);
 
       if (!event) break;
 
       foundAny = true;
-      EventsModel.markProcessing(event._id);
+      await EventsModel.markProcessing(event._id);
       const processor = this.processEventWrapper(event);
       this.activeProcessors.set(event.fileId, processor);
     }
@@ -86,35 +86,35 @@ export class FileEventsWorker {
     try {
       const result = await processEvent(event);
       if (result.success) {
-        EventsModel.markProcessed(event._id);
+        await EventsModel.markProcessed(event._id);
       } else {
-        this.handleFailure(event, result.error);
+        await this.handleFailure(event, result.error);
       }
     } catch (err) {
-      this.handleFailure(event, err);
+      await this.handleFailure(event, err);
     } finally {
       this.activeProcessors.delete(event.fileId);
     }
   }
 
-  private handleFailure(event: Event, error: unknown): void {
+  private async handleFailure(event: Event, error: unknown): Promise<void> {
     const errorMsg = error instanceof Error ? error.message : String(error);
     if (error instanceof RateLimitError) {
       const retryAfterMs = error.retryAfterSeconds * 1000;
-      EventsModel.scheduleRetryAfter(event._id, errorMsg, retryAfterMs);
+      await EventsModel.scheduleRetryAfter(event._id, errorMsg, retryAfterMs);
       logger.warn(`Event ${event._id} rate limited; retry after ${error.retryAfterSeconds}s`);
       return;
     }
     if (event.retryCount < MAX_RETRIES) {
-      EventsModel.scheduleRetry(event._id, errorMsg);
+      await EventsModel.scheduleRetry(event._id, errorMsg);
       logger.warn(`Event ${event._id} failed (retry ${event.retryCount + 1}/${MAX_RETRIES}): ${errorMsg}`);
     } else {
-      EventsModel.markFailed(event._id, errorMsg);
+      await EventsModel.markFailed(event._id, errorMsg);
       logger.error(`Event ${event._id} permanently failed after ${MAX_RETRIES} retries: ${errorMsg}`);
     }
   }
 
-  private recoverStaleEvents(): number {
+  private async recoverStaleEvents(): Promise<number> {
     const staleThreshold = Date.now() - STALE_THRESHOLD_MS;
     return EventsModel.resetStaleEvents(staleThreshold);
   }

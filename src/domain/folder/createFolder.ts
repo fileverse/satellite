@@ -1,7 +1,7 @@
 import { FoldersModel } from "../../infra/database/models";
 import type { CreateFolderInput, Folder } from "../../types";
 
-export default function createFolder(input: CreateFolderInput): Folder {
+export default async function createFolder(input: CreateFolderInput): Promise<Folder> {
   // Validate required fields
   if (!input.folderId) {
     throw new Error("folderId is required");
@@ -17,7 +17,7 @@ export default function createFolder(input: CreateFolderInput): Folder {
   }
 
   // Check if folderRef already exists
-  const existing = FoldersModel.findByFolderRefAndId(input.folderRef, input.folderId);
+  const existing = await FoldersModel.findByFolderRefAndId(input.folderRef, input.folderId);
   if (existing) {
     throw new Error("Folder with this folderRef and folderId already exists");
   }

@@ -16,7 +16,8 @@ export const listCommand = new Command()
       const runtimeConfig = getRuntimeConfig();
       const apiKey = runtimeConfig.API_KEY;
       validateApiKey(apiKey);
-      const portalAddress = ApiKeysModel.findByApiKey(apiKey)?.portalAddress as string;
+      const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
+      const portalAddress = apiKeyInfo?.portalAddress as string;
       if (!portalAddress) throw new Error("Portal address is required");
       const params = {
         limit: options.limit,
@@ -24,7 +25,7 @@ export const listCommand = new Command()
         portalAddress,
       };
 
-      const result = listFiles(params);
+      const result = await listFiles(params);
       if (result.ddocs.length === 0) {
         console.log("No ddocs found.");
         return;

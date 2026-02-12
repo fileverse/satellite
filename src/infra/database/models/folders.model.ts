@@ -1,4 +1,4 @@
-import { QueryBuilder } from "../index";
+import { QueryBuilder } from "../index.js";
 import type { File, Folder, FolderWithDDocs, FolderListResponse } from "../../../types";
 
 export type { Folder, FolderWithDDocs, FolderListResponse };
@@ -6,13 +6,10 @@ export type { Folder, FolderWithDDocs, FolderListResponse };
 export class FoldersModel {
   private static readonly TABLE = "folders";
 
-  /**
-   * List all folders with pagination
-   */
-  static findAll(limit?: number, skip?: number): { folders: Folder[]; total: number; hasNext: boolean } {
+  static async findAll(limit?: number, skip?: number): Promise<{ folders: Folder[]; total: number; hasNext: boolean }> {
     // Get total count
     const countSql = `SELECT COUNT(*) as count FROM ${this.TABLE} WHERE isDeleted = 0`;
-    const totalResult = QueryBuilder.selectOne<{ count: number }>(countSql);
+    const totalResult = await QueryBuilder.selectOne<{ count: number }>(countSql);
     const total = totalResult?.count || 0;
 
     // Get paginated results
@@ -23,7 +20,8 @@ export class FoldersModel {
       orderDirection: "DESC",
     });
 
-    const folders = QueryBuilder.select<any>(sql).map((folderRaw) => ({
+    const foldersRaw = await QueryBuilder.select<any>(sql);
+    const folders = foldersRaw.map((folderRaw) => ({
       ...folderRaw,
       isDeleted: Boolean(folderRaw.isDeleted),
     }));
@@ -33,13 +31,9 @@ export class FoldersModel {
     return { folders, total, hasNext };
   }
 
-  /**
-   * Get a single folder by folderRef and folderId
-   * Includes ddocs array (as per API spec)
-   */
-  static findByFolderRefAndId(folderRef: string, folderId: string): FolderWithDDocs | undefined {
+  static async findByFolderRefAndId(folderRef: string, folderId: string): Promise<FolderWithDDocs | undefined> {
     const sql = `SELECT * FROM ${this.TABLE} WHERE folderRef = ? AND folderId = ? AND isDeleted = 0`;
-    const folderRaw = QueryBuilder.selectOne<any>(sql, [folderRef, folderId]);
+    const folderRaw = await QueryBuilder.selectOne<any>(sql, [folderRef, folderId]);
 
     if (!folderRaw) {
       return undefined;
@@ -51,7 +45,6 @@ export class FoldersModel {
     };
 
     // Get ddocs in this folder
-    // Import at runtime to avoid circular dependency
     // Note: FolderRef functionality removed in simplified schema, returning empty array
     const ddocs: File[] = [];
 
@@ -61,12 +54,9 @@ export class FoldersModel {
     };
   }
 
-  /**
-   * Get folder by folderRef only
-   */
-  static findByFolderRef(folderRef: string): Folder | undefined {
+  static async findByFolderRef(folderRef: string): Promise<Folder | undefined> {
     const sql = `SELECT * FROM ${this.TABLE} WHERE folderRef = ? AND isDeleted = 0 LIMIT 1`;
-    const folderRaw = QueryBuilder.selectOne<any>(sql, [folderRef]);
+    const folderRaw = await QueryBuilder.selectOne<any>(sql, [folderRef]);
 
     if (!folderRaw) {
       return undefined;
@@ -78,12 +68,9 @@ export class FoldersModel {
     };
   }
 
-  /**
-   * Search folders by folderName (case-insensitive substring match)
-   */
-  static searchByName(searchTerm: string, limit?: number, skip?: number): Folder[] {
+  static async searchByName(searchTerm: string, limit?: number, skip?: number): Promise<Folder[]> {
     const sql = QueryBuilder.paginate(
-      `SELECT * FROM ${this.TABLE} 
+      `SELECT * FROM ${this.TABLE}
        WHERE isDeleted = 0 AND LOWER(folderName) LIKE LOWER(?)`,
       {
         limit,
@@ -93,17 +80,14 @@ export class FoldersModel {
       },
     );
 
-    const foldersRaw = QueryBuilder.select<any>(sql, [`%${searchTerm}%`]);
+    const foldersRaw = await QueryBuilder.select<any>(sql, [`%${searchTerm}%`]);
     return foldersRaw.map((folderRaw) => ({
       ...folderRaw,
       isDeleted: Boolean(folderRaw.isDeleted),
     }));
   }
 
-  /**
-   * Create a new folder
-   */
-  static create(input: {
+  static async create(input: {
     _id?: string;
     onchainFileId: number;
     folderId: string;
@@ -115,17 +99,17 @@ export class FoldersModel {
     lastTransactionHash?: string;
     lastTransactionBlockNumber: number;
     lastTransactionBlockTimestamp: number;
-  }): Folder {
+  }): Promise<Folder> {
     const _id = input._id || `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
 
     const sql = `INSERT INTO ${this.TABLE} (
       _id, onchainFileId, folderId, folderRef, folderName, portalAddress, metadataIPFSHash,
-      contentIPFSHash, isDeleted, lastTransactionHash, lastTransactionBlockNumber, 
+      contentIPFSHash, isDeleted, lastTransactionHash, lastTransactionBlockNumber,
       lastTransactionBlockTimestamp, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    QueryBuilder.execute(sql, [
+    await QueryBuilder.execute(sql, [
       _id,
       input.onchainFileId,
       input.folderId,
@@ -144,7 +128,7 @@ export class FoldersModel {
 
     // Fetch the created folder (without ddocs)
     const selectSql = `SELECT * FROM ${this.TABLE} WHERE folderRef = ? AND folderId = ? AND isDeleted = 0`;
-    const folderRaw = QueryBuilder.selectOne<any>(selectSql, [input.folderRef, input.folderId]);
+    const folderRaw = await QueryBuilder.selectOne<any>(selectSql, [input.folderRef, input.folderId]);
 
     if (!folderRaw) {
       throw new Error("Failed to create folder");

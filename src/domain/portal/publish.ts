@@ -12,20 +12,21 @@ import { FileManager } from "../../sdk/file-manager";
 import { getRuntimeConfig } from "../../config";
 
 import type { PublishResult } from "../../types";
+import type { File, Portal } from "../../types";
 
 interface PublishContext {
-  file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>;
-  portalDetails: NonNullable<ReturnType<typeof PortalsModel.findByPortalAddress>>;
+  file: File | undefined;
+  portalDetails: Portal;
   apiKey: string;
 }
 
-function getPortalData(fileId: string): PublishContext {
-  const file = FilesModel.findByIdIncludingDeleted(fileId);
+async function getPortalData(fileId: string): Promise<PublishContext> {
+  const file = await FilesModel.findByIdIncludingDeleted(fileId);
   if (!file) {
     throw new Error(`File with _id ${fileId} not found`);
   }
 
-  const portalDetails = PortalsModel.findByPortalAddress(file.portalAddress);
+  const portalDetails = await PortalsModel.findByPortalAddress(file.portalAddress);
   if (!portalDetails) {
     throw new Error(`Portal with address ${file.portalAddress} not found`);
   }
@@ -90,7 +91,7 @@ const executeOperation = async (
 
 export const handleExistingFileOp = async (fileId: string, operation: "update" | "delete"): Promise<PublishResult> => {
   try {
-    const { file, portalDetails, apiKey } = getPortalData(fileId);
+    const { file, portalDetails, apiKey } = await getPortalData(fileId);
 
     const apiKeySeed = toUint8Array(apiKey);
     const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
@@ -118,7 +119,7 @@ export const handleNewFileOp = async (
   commentKey: string;
   metadata: Record<string, unknown>;
 }> => {
-  const { file, portalDetails, apiKey } = getPortalData(fileId);
+  const { file, portalDetails, apiKey } = await getPortalData(fileId);
   const apiKeySeed = toUint8Array(apiKey);
   const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
   const fileManager = await createFileManager(
@@ -137,7 +138,7 @@ export const getProxyAuthParams = async (
   portalAddress: Hex;
   invokerAddress: Hex;
 }> => {
-  const { portalDetails, apiKey } = getPortalData(fileId);
+  const { portalDetails, apiKey } = await getPortalData(fileId);
   const apiKeySeed = toUint8Array(apiKey);
   const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
   const fileManager = await createFileManager(

@@ -25,7 +25,7 @@ const createHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const folder = createFolder(input);
+    const folder = await createFolder(input);
     res.status(201).json(folder);
   } catch (error: any) {
     if (error.message.includes("already exists")) {

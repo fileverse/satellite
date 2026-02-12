@@ -13,7 +13,7 @@ const listHandler = async (req: Request, res: Response) => {
   if (!apiKey) {
     throw new Error("API key is required");
   }
-  const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+  const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
   if (!apiKeyInfo) {
     throw new Error("Invalid API key");
   }
@@ -23,7 +23,7 @@ const listHandler = async (req: Request, res: Response) => {
     throw new Error("Portal address is required");
   }
 
-  const result = listFiles({ limit, skip, portalAddress });
+  const result = await listFiles({ limit, skip, portalAddress });
 
   res.json({
     ddocs: result.ddocs,
@@ -38,7 +38,7 @@ const getHandler = async (req: Request, res: Response) => {
   if (!apiKey) {
     throw new Error("API key is required");
   }
-  const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+  const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
   if (!apiKeyInfo) {
     throw new Error("Invalid API key");
   }
@@ -53,7 +53,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const file = getFile(ddocId, portalAddress);
+    const file = await getFile(ddocId, portalAddress);
 
     if (!file) {
       return res.status(404).json({ error: "DDoc not found" });
@@ -86,7 +86,7 @@ const createHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+    const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
     if (!apiKeyInfo) {
       return res.status(400).json({ error: "Invalid API key" });
     }
@@ -143,7 +143,7 @@ const updateHandler = async (req: Request, res: Response) => {
       content: clientPayload.content,
     };
 
-    const apiKeyInfo = ApiKeysModel.findByApiKey(apiKeySeed);
+    const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKeySeed);
     if (!apiKeyInfo) {
       return res.status(400).json({ error: "Invalid API key" });
     }
@@ -169,7 +169,7 @@ const deleteHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "API key is required" });
     }
 
-    const apiKeyInfo = ApiKeysModel.findByApiKey(apiKey);
+    const apiKeyInfo = await ApiKeysModel.findByApiKey(apiKey);
     if (!apiKeyInfo) {
       return res.status(400).json({ error: "Invalid API key" });
     }

@@ -37,12 +37,12 @@ export const processEvent = async (event: Event): Promise<ProcessResult> => {
   }
 };
 
-const onTransactionSuccess = (
+const onTransactionSuccess = async (
   fileId: string,
-  file: ReturnType<typeof FilesModel.findByIdIncludingDeleted>,
+  file: Awaited<ReturnType<typeof FilesModel.findByIdIncludingDeleted>>,
   onChainFileId: number,
   pending: { linkKey: string; linkKeyNonce: string; commentKey: string; metadata: Record<string, unknown> },
-): void => {
+): Promise<void> => {
   const frontendUrl = getRuntimeConfig().FRONTEND_URL;
   const payload: UpdateFilePayload = {
     onchainVersion: file!.localVersion,
@@ -53,16 +53,16 @@ const onTransactionSuccess = (
     metadata: pending.metadata,
     link: `${frontendUrl}/${file!.portalAddress}/${onChainFileId}#key=${pending.linkKey}`,
   };
-  const updatedFile = FilesModel.update(fileId, payload, file!.portalAddress);
+  const updatedFile = await FilesModel.update(fileId, payload, file!.portalAddress);
   if (updatedFile.localVersion === updatedFile.onchainVersion) {
-    FilesModel.update(fileId, { syncStatus: "synced" }, file!.portalAddress);
+    await FilesModel.update(fileId, { syncStatus: "synced" }, file!.portalAddress);
   }
 };
 
 const processCreateEvent = async (event: Event): Promise<void> => {
   const { fileId } = event;
 
-  const file = FilesModel.findByIdIncludingDeleted(fileId);
+  const file = await FilesModel.findByIdIncludingDeleted(fileId);
   if (!file) {
     throw new Error(`File ${fileId} not found`);
   }
@@ -84,7 +84,7 @@ const processCreateEvent = async (event: Event): Promise<void> => {
       timeout,
     );
     if (!receipt.success) {
-      EventsModel.clearEventPendingOp(event._id);
+      await EventsModel.clearEventPendingOp(event._id);
       throw new Error(`User operation failed: ${receipt.reason}`);
     }
     const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT);
@@ -94,14 +94,14 @@ const processCreateEvent = async (event: Event): Promise<void> => {
       commentKey: string;
       metadata: Record<string, unknown>;
     };
-    onTransactionSuccess(fileId, file, onChainFileId, pending);
-    EventsModel.clearEventPendingOp(event._id);
+    await onTransactionSuccess(fileId, file, onChainFileId, pending);
+    await EventsModel.clearEventPendingOp(event._id);
     logger.info(`File ${file.ddocId} created and published successfully (resumed from pending op)`);
     return;
   }
 
   const result = await handleNewFileOp(fileId);
-  EventsModel.setEventPendingOp(event._id, result.userOpHash, {
+  await EventsModel.setEventPendingOp(event._id, result.userOpHash, {
     linkKey: result.linkKey,
     linkKeyNonce: result.linkKeyNonce,
     commentKey: result.commentKey,
@@ -116,24 +116,24 @@ const processCreateEvent = async (event: Event): Promise<void> => {
     timeout,
   );
   if (!receipt.success) {
-    EventsModel.clearEventPendingOp(event._id);
+    await EventsModel.clearEventPendingOp(event._id);
     throw new Error(`User operation failed: ${receipt.reason}`);
   }
   const onChainFileId = parseFileEventLog(receipt.logs, "AddedFile", ADDED_FILE_EVENT);
-  onTransactionSuccess(fileId, file, onChainFileId, {
+  await onTransactionSuccess(fileId, file, onChainFileId, {
     linkKey: result.linkKey,
     linkKeyNonce: result.linkKeyNonce,
     commentKey: result.commentKey,
     metadata: result.metadata,
   });
-  EventsModel.clearEventPendingOp(event._id);
+  await EventsModel.clearEventPendingOp(event._id);
   logger.info(`File ${file.ddocId} created and published successfully`);
 };
 
 const processUpdateEvent = async (event: Event): Promise<void> => {
   const { fileId } = event;
 
-  const file = FilesModel.findByIdExcludingDeleted(fileId);
+  const file = await FilesModel.findByIdExcludingDeleted(fileId);
   if (!file) {
     return;
   }
@@ -151,10 +151,10 @@ const processUpdateEvent = async (event: Event): Promise<void> => {
     onchainVersion: file.localVersion,
     metadata: result.metadata,
   };
-  const updatedFile = FilesModel.update(fileId, payload, file.portalAddress);
+  const updatedFile = await FilesModel.update(fileId, payload, file.portalAddress);
 
   if (updatedFile.localVersion === updatedFile.onchainVersion) {
-    FilesModel.update(fileId, { syncStatus: "synced" }, file.portalAddress);
+    await FilesModel.update(fileId, { syncStatus: "synced" }, file.portalAddress);
   }
   logger.info(`File ${file.ddocId} updated and published successfully`);
 };
@@ -162,7 +162,7 @@ const processUpdateEvent = async (event: Event): Promise<void> => {
 const processDeleteEvent = async (event: Event): Promise<void> => {
   const { fileId } = event;
 
-  const file = FilesModel.findByIdIncludingDeleted(fileId);
+  const file = await FilesModel.findByIdIncludingDeleted(fileId);
   if (!file) {
     return;
   }
@@ -188,7 +188,7 @@ const processDeleteEvent = async (event: Event): Promise<void> => {
     payload.isDeleted = 1;
   }
 
-  FilesModel.update(fileId, payload, file.portalAddress);
+  await FilesModel.update(fileId, payload, file.portalAddress);
 
   logger.info(`File ${fileId} delete event processed (syncStatus set to synced)`);
 };

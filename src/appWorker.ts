@@ -4,12 +4,12 @@ const DEFAULT_CONCURRENCY = 5;
 
 let worker: FileEventsWorker | null = null;
 
-export function startWorker(concurrency: number = DEFAULT_CONCURRENCY): void {
+export async function startWorker(concurrency: number = DEFAULT_CONCURRENCY): Promise<void> {
   if (worker?.isActive()) {
     return;
   }
   worker = createWorker(concurrency);
-  worker.start();
+  await worker.start();
 }
 
 export async function closeWorker(): Promise<void> {
