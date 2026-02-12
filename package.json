@@ -27,7 +27,6 @@
     "build:local": "node scripts/generate-constants.cjs config/dev.network.config.json && tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "generate:constants": "node scripts/generate-constants.cjs",
     "prepublishOnly": "npm run typecheck && npm run clean && npm run build",
     "dev:api": "tsx src/cli/index.ts",
     "dev:satellite-cli": "node scripts/generate-constants.cjs config/dev.network.config.json && tsx src/cli/index.ts",
