@@ -131,7 +131,7 @@ End users configure the API via environment variables. The CLI scaffolds `~/.fil
 
 ## First-Time Setup
 
-1. Clone: `git clone <repo> && cd satellite && npm install`
+1. Clone: `git clone <repo> && cd api && npm install`
 2. Run `npm run dev` — generates `constants.generated.ts` and starts the server. If `dev.network.config.json` doesn't exist, it falls back to `network.config.json`.
 3. For dev-specific config: `cp config/dev.network.config.json.example config/dev.network.config.json` and customize.
 4. Or run `npm run build` — generates constants from prod config then builds. Use `npm run build:local` to build with dev config.
