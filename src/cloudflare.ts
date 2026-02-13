@@ -25,13 +25,22 @@ export { listFolders, getFolder, createFolder } from "./domain/folder/index.js";
 export { searchNodes } from "./domain/search/index.js";
 
 // Domain — portal
-export { handleNewFileOp, handleExistingFileOp, getProxyAuthParams, savePortal, addApiKey } from "./domain/portal/index.js";
+export {
+  handleNewFileOp,
+  handleExistingFileOp,
+  getProxyAuthParams,
+  submitUpdateFileOp,
+  submitDeleteFileOp,
+  resolveFileOp,
+  savePortal,
+  addApiKey,
+} from "./domain/portal/index.js";
 
 // Initialization
 export { initializeFromApiKey, initializeWithData, decryptSavedData } from "./init/index.js";
 
 // Worker event processor
-export { processEvent } from "./infra/worker/eventProcessor.js";
+export { processEvent, submitEvent, resolveEvent } from "./infra/worker/eventProcessor.js";
 
 // Config
 export { getRuntimeConfig } from "./config/index.js";

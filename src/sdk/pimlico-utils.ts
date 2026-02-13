@@ -75,6 +75,20 @@ export const getNonce = () =>
     }),
   );
 
+export const getUserOpReceipt = async (
+  hash: Hex,
+  authToken: string,
+  portalAddress: Hex,
+  invokerAddress: Hex,
+) => {
+  const pimlicoClient = getPimlicoClient(authToken, portalAddress, invokerAddress);
+  try {
+    return await pimlicoClient.getUserOperationReceipt({ hash });
+  } catch {
+    return null;
+  }
+};
+
 export const waitForUserOpReceipt = async (
   hash: Hex,
   authToken: string,

@@ -71,7 +71,7 @@ export interface ApiKey {
 }
 
 export type EventType = "create" | "update" | "delete";
-export type EventStatus = "pending" | "processing" | "processed" | "failed";
+export type EventStatus = "pending" | "processing" | "submitted" | "processed" | "failed";
 
 export interface Event {
   _id: string;

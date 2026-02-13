@@ -126,6 +126,64 @@ export class FileManager {
     };
   }
 
+  async submitUpdateFile(file: any) {
+    logger.debug(`Submitting update for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
+    const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
+      ddocId: file.ddocId,
+      linkKey: file.linkKey,
+      linkKeyNonce: file.linkKeyNonce,
+    });
+
+    const yjsContent = markdownToYjs(file.content);
+    const { encryptedFile, key } = await createEncryptedContentFile(yjsContent);
+    const commentKey = toUint8Array(file.commentKey);
+
+    const { appLock, ownerLock } = this.createLocks(key, encryptedSecretKey, commentKey);
+    const linkLock = buildLinklock(secretKey, toUint8Array(key), commentKey);
+
+    const encryptedTitle = await encryptTitleWithFileKey({
+      title: file.title || "Untitled",
+      key,
+    });
+    const metadata = buildFileMetadata({
+      encryptedTitle,
+      encryptedFileSize: encryptedFile.size,
+      appLock,
+      ownerLock,
+      ddocId: file.ddocId,
+      nonce: fromUint8Array(nonce),
+      owner: this.agentClient.getAgentAddress(),
+    });
+
+    const authParams = await this.getAuthParams();
+    const { metadataHash, contentHash, gateHash } = await uploadAllFilesToIPFS(
+      { metadata, encryptedFile, linkLock, ddocId: file.ddocId },
+      authParams,
+    );
+
+    const callData = prepareCallData({
+      metadataHash,
+      contentHash,
+      gateHash,
+      appFileId: file.ddocId,
+      fileId: file.onChainFileId,
+    });
+
+    const userOpHash = await this.sendFileOperation(callData);
+    logger.debug(`Submitted update user op for file ${file.ddocId}`);
+    return { userOpHash, metadata };
+  }
+
+  async submitDeleteFile(file: any) {
+    logger.debug(`Submitting delete for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
+    const callData = prepareDeleteFileCallData({
+      onChainFileId: file.onChainFileId,
+    });
+    const userOpHash = await this.sendFileOperation(callData);
+    logger.debug(`Submitted delete user op for file ${file.ddocId}`);
+    return { userOpHash };
+  }
+
   async updateFile(file: any) {
     logger.debug(`Updating file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
     const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({

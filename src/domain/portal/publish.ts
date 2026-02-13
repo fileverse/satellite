@@ -11,8 +11,12 @@ import { AgentClient } from "../../sdk/smart-agent";
 import { FileManager } from "../../sdk/file-manager";
 import { getRuntimeConfig } from "../../config";
 
+import { getUserOpReceipt } from "../../sdk/pimlico-utils";
+import { parseFileEventLog } from "../../sdk/file-utils";
+import { ADDED_FILE_EVENT, EDITED_FILE_EVENT, DELETED_FILE_EVENT } from "../../constants";
+
 import type { PublishResult } from "../../types";
-import type { File, Portal } from "../../types";
+import type { File, Portal, EventType } from "../../types";
 
 interface PublishContext {
   file: File | undefined;
@@ -148,4 +152,59 @@ export const getProxyAuthParams = async (
     privateAccountKey,
   );
   return fileManager.getProxyAuthParams();
+};
+
+export const submitUpdateFileOp = async (
+  fileId: string,
+): Promise<{ userOpHash: string; metadata: Record<string, unknown> }> => {
+  const { file, portalDetails, apiKey } = await getPortalData(fileId);
+  const apiKeySeed = toUint8Array(apiKey);
+  const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
+  const fileManager = await createFileManager(
+    portalDetails.portalSeed,
+    portalDetails.portalAddress as Hex,
+    ucanSecret,
+    privateAccountKey,
+  );
+  return fileManager.submitUpdateFile(file);
+};
+
+export const submitDeleteFileOp = async (
+  fileId: string,
+): Promise<{ userOpHash: string }> => {
+  const { file, portalDetails, apiKey } = await getPortalData(fileId);
+  const apiKeySeed = toUint8Array(apiKey);
+  const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
+  const fileManager = await createFileManager(
+    portalDetails.portalSeed,
+    portalDetails.portalAddress as Hex,
+    ucanSecret,
+    privateAccountKey,
+  );
+  return fileManager.submitDeleteFile(file);
+};
+
+export const resolveFileOp = async (
+  fileId: string,
+  userOpHash: string,
+  eventType: EventType,
+): Promise<{ receipt: any } | null> => {
+  const { portalDetails, apiKey } = await getPortalData(fileId);
+  const apiKeySeed = toUint8Array(apiKey);
+  const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
+  const fileManager = await createFileManager(
+    portalDetails.portalSeed,
+    portalDetails.portalAddress as Hex,
+    ucanSecret,
+    privateAccountKey,
+  );
+  const { authToken, portalAddress, invokerAddress } = await fileManager.getProxyAuthParams();
+  const receipt = await getUserOpReceipt(
+    userOpHash as `0x${string}`,
+    authToken,
+    portalAddress,
+    invokerAddress,
+  );
+  if (!receipt) return null;
+  return { receipt };
 };

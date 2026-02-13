@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS events (
   type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
   timestamp BIGINT NOT NULL,
   fileId TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'processed', 'failed')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'submitted', 'processed', 'failed')),
   retryCount INTEGER NOT NULL DEFAULT 0,
   lastError TEXT,
   lockedAt BIGINT,

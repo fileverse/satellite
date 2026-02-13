@@ -11,6 +11,7 @@ import type {
   GetFileResult,
 } from "../../types";
 import { DEFAULT_LIST_LIMIT } from "./constants";
+import { generateLinkKeyMaterial } from "../../sdk/file-utils";
 
 async function listFiles(params: ListFilesParams): Promise<ListFilesResult> {
   const { limit, skip, portalAddress } = params;
@@ -73,6 +74,13 @@ const createFile = async (input: CreateFileInput): Promise<File> => {
   }
 
   const ddocId = generate();
+
+  const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
+    ddocId: ddocId,
+    linkKey: undefined,
+    linkKeyNonce: undefined,
+  });
+
   const file = await FilesModel.create({
     title: input.title,
     content: input.content,

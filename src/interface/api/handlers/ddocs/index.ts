@@ -93,6 +93,8 @@ const createHandler = async (req: Request, res: Response) => {
 
     const portalAddress = apiKeyInfo.portalAddress;
 
+
+
     const payload: CreateFileInput = {
       title: title,
       content: fileContent,
