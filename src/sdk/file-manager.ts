@@ -3,7 +3,6 @@ import { KeyStore } from "./key-store";
 import {
   buildLinklock,
   encryptTitleWithFileKey,
-  generateLinkKeyMaterial,
   prepareCallData,
   createEncryptedContentFile,
   buildFileMetadata,
@@ -70,25 +69,28 @@ export class FileManager {
   }
 
   async submitAddFileTrx(file: any) {
+    console.log("Submitting add file trx");
     logger.debug(`Preparing to add file ${file.ddocId}`);
-    const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
-      ddocId: file.ddocId,
-      linkKey: file.linkKey,
-      linkKeyNonce: file.linkKeyNonce,
-    });
-
+    const encryptedSecretKey = file.linkKey;
+    const nonce = toUint8Array(file.linkKeyNonce);
+    const secretKey = toUint8Array(file.secretKey);
+    console.log("Got encrypted secret key, nonce, and secret key");
     const yJSContent = markdownToYjs(file.content);
+    console.log("Generated yjs content");
     const { encryptedFile, key } = await createEncryptedContentFile(yJSContent);
+    console.log("Generated encrypted content file");
     logger.debug(`Generated encrypted content file for file ${file.ddocId}`);
     const commentKey = await exportAESKey(await generateAESKey(128));
-
+    console.log("Generated comment key");
     const { appLock, ownerLock } = this.createLocks(key, encryptedSecretKey, commentKey);
+    console.log("Built app lock and owner lock");
     const linkLock = buildLinklock(secretKey, toUint8Array(key), commentKey);
-
+    console.log("Built link lock");
     const encryptedTitle = await encryptTitleWithFileKey({
       title: file.title || "Untitled",
       key,
     });
+    console.log("Built encrypted title");
     const metadata = buildFileMetadata({
       encryptedTitle,
       encryptedFileSize: encryptedFile.size,
@@ -98,13 +100,18 @@ export class FileManager {
       nonce: fromUint8Array(nonce),
       owner: this.agentClient.getAgentAddress(),
     });
+    console.log("Built metadata");
 
     const authParams = await this.getAuthParams();
+    console.log("Got auth params");
+    console.log("Uploading files to IPFS");
     const { metadataHash, contentHash, gateHash } = await uploadAllFilesToIPFS(
       { metadata, encryptedFile, linkLock, ddocId: file.ddocId },
       authParams,
     );
+    console.log("Uploaded files to IPFS");
     logger.debug(`Uploaded files to IPFS for file ${file.ddocId}`);
+
 
     const callData = prepareCallData({
       metadataHash,
@@ -113,9 +120,11 @@ export class FileManager {
       appFileId: file.ddocId,
       fileId: file.fileId,
     });
+    console.log("Prepared call data");
     logger.debug(`Prepared call data for file ${file.ddocId}`);
 
     const userOpHash = await this.sendFileOperation(callData);
+    console.log("Submitted user op");
     logger.debug(`Submitted user op for file ${file.ddocId}`);
     return {
       userOpHash,
@@ -128,11 +137,9 @@ export class FileManager {
 
   async submitUpdateFile(file: any) {
     logger.debug(`Submitting update for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
-    const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
-      ddocId: file.ddocId,
-      linkKey: file.linkKey,
-      linkKeyNonce: file.linkKeyNonce,
-    });
+    const encryptedSecretKey = file.linkKey;
+    const nonce = toUint8Array(file.linkKeyNonce);
+    const secretKey = toUint8Array(file.secretKey);
 
     const yjsContent = markdownToYjs(file.content);
     const { encryptedFile, key } = await createEncryptedContentFile(yjsContent);
@@ -186,11 +193,9 @@ export class FileManager {
 
   async updateFile(file: any) {
     logger.debug(`Updating file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
-    const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
-      ddocId: file.ddocId,
-      linkKey: file.linkKey,
-      linkKeyNonce: file.linkKeyNonce,
-    });
+    const encryptedSecretKey = file.linkKey;
+    const nonce = toUint8Array(file.linkKeyNonce);
+    const secretKey = toUint8Array(file.secretKey);
 
     logger.debug(`Generating encrypted content file for file ${file.ddocId} with onChainFileId ${file.onChainFileId}`);
 

@@ -1,4 +1,5 @@
 import { generate } from "short-uuid";
+import { fromUint8Array } from "js-base64";
 
 import { EventsModel, FilesModel } from "../../infra/database/models";
 import type {
@@ -75,7 +76,7 @@ const createFile = async (input: CreateFileInput): Promise<File> => {
 
   const ddocId = generate();
 
-  const { encryptedSecretKey, nonce, secretKey } = await generateLinkKeyMaterial({
+  const { encryptedSecretKey, nonce, secretKey, derivedKey } = await generateLinkKeyMaterial({
     ddocId: ddocId,
     linkKey: undefined,
     linkKeyNonce: undefined,
@@ -86,6 +87,10 @@ const createFile = async (input: CreateFileInput): Promise<File> => {
     content: input.content,
     ddocId: ddocId,
     portalAddress: input.portalAddress,
+    linkKey: encryptedSecretKey,
+    linkKeyNonce: fromUint8Array(nonce),
+    derivedKey: fromUint8Array(derivedKey),
+    secretKey: fromUint8Array(secretKey),
   });
 
   await EventsModel.create({ type: "create", fileId: file._id, portalAddress: file.portalAddress });

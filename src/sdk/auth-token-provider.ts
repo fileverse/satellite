@@ -1,4 +1,4 @@
-import * as ucans from "@ucans/ucans";
+import { EdKeypair, buildAndEncode } from "./ucan";
 import type { Hex } from "viem";
 
 export class AuthTokenProvider {
@@ -7,9 +7,9 @@ export class AuthTokenProvider {
     segment: "CREATE",
     scheme: "storage",
   };
-  private keyPair: ucans.EdKeypair;
+  private keyPair: EdKeypair;
   portalAddress: Hex;
-  constructor(keyPair: ucans.EdKeypair, portalAddress: Hex) {
+  constructor(keyPair: EdKeypair, portalAddress: Hex) {
     this.keyPair = keyPair;
     this.portalAddress = portalAddress;
   }
@@ -18,7 +18,7 @@ export class AuthTokenProvider {
     audienceDid: string,
     options: { namespace: string; segment: string; scheme: string } = this.DEFAULT_OPTIONS,
   ): Promise<string> {
-    const ucan = await ucans.build({
+    return buildAndEncode({
       audience: audienceDid,
       issuer: this.keyPair,
       lifetimeInSeconds: 7 * 86400,
@@ -32,7 +32,5 @@ export class AuthTokenProvider {
         },
       ],
     });
-
-    return ucans.encode(ucan);
   }
 }

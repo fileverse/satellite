@@ -1,6 +1,6 @@
 {
   "name": "@fileverse/api",
-  "version": "0.0.10",
+  "version": "0.0.15",
   "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",
@@ -45,10 +45,9 @@
   "license": "ISC",
   "dependencies": {
     "@fileverse/content-processor": "^0.0.2",
-    "@fileverse/crypto": "^0.0.21",
+    "@fileverse/crypto": "^0.0.22",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@stablelib/ed25519": "^2.0.2",
-    "@ucans/ucans": "^0.12.0",
     "axios": "^1.7.9",
     "better-sqlite3": "^12.5.0",
     "cli-table3": "^0.6.5",

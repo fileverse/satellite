@@ -36,6 +36,8 @@ export class FilesModel {
       linkKeyNonce: fileRaw.linkKeyNonce,
       commentKey: fileRaw.commentKey,
       link: fileRaw.link,
+      derivedKey: fileRaw.derivedKey,
+      secretKey: fileRaw.secretKey,
     };
   }
 
@@ -128,15 +130,34 @@ export class FilesModel {
     return filesRaw.map(this.parseFile);
   }
 
-  static async create(input: { title: string; content: string; ddocId: string; portalAddress: string }): Promise<File> {
+  static async create(input: {
+    title: string;
+    content: string;
+    ddocId: string;
+    portalAddress: string;
+    linkKey?: string;
+    linkKeyNonce?: string;
+    derivedKey?: string;
+    secretKey?: string;
+  }): Promise<File> {
     const _id = uuidv7();
     const sql = `
       INSERT INTO ${this.TABLE}
-      (_id, title, content, ddocId, portalAddress)
-      VALUES (?, ?, ?, ?, ?)
+      (_id, title, content, ddocId, portalAddress, linkKey, linkKeyNonce, derivedKey, secretKey)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    await QueryBuilder.execute(sql, [_id, input.title, input.content, input.ddocId, input.portalAddress]);
+    await QueryBuilder.execute(sql, [
+      _id,
+      input.title,
+      input.content,
+      input.ddocId,
+      input.portalAddress,
+      input.linkKey ?? null,
+      input.linkKeyNonce ?? null,
+      input.derivedKey ?? null,
+      input.secretKey ?? null,
+    ]);
     // NOTE: default values while file creation: localVersion = 1, onchainVersion = 0, syncStatus = 'pending'
 
     const created = await this.findById(_id, input.portalAddress);

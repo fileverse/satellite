@@ -6,7 +6,7 @@ export interface ListFilesParams {
   portalAddress: string;
 }
 
-export type GetFileResult = Omit<File, "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "_id">;
+export type GetFileResult = Omit<File, "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "derivedKey" | "secretKey" | "_id">;
 
 export interface ListFilesResult {
   ddocs: GetFileResult[];
@@ -39,6 +39,8 @@ export interface UpdateFilePayload {
   linkKeyNonce?: string;
   commentKey?: string;
   link?: string;
+  derivedKey?: string;
+  secretKey?: string;
 }
 
 export interface ClientUpdateFileInput {

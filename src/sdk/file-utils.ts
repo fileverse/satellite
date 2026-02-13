@@ -27,22 +27,22 @@ const deriveKeyFromAg2Hash = async (pass: string, salt: Uint8Array) => {
   });
 };
 
-const decryptSecretKey = async (docId: string, nonce: string, encryptedSecretKey: string) => {
-  const derivedKey = await deriveKeyFromAg2Hash(docId, toUint8Array(nonce));
-
-  return tweetnacl.secretbox.open(toUint8Array(encryptedSecretKey), toUint8Array(nonce), derivedKey);
-};
-
 const getExistingEncryptionMaterial = async (
   existingEncryptedSecretKey: string,
   existingNonce: string,
   docId: string,
 ) => {
-  const secretKey = await decryptSecretKey(docId, existingNonce, existingEncryptedSecretKey);
+  const derivedKey = await deriveKeyFromAg2Hash(docId, toUint8Array(existingNonce));
+  const secretKey = tweetnacl.secretbox.open(
+    toUint8Array(existingEncryptedSecretKey),
+    toUint8Array(existingNonce),
+    derivedKey,
+  );
   return {
     encryptedSecretKey: existingEncryptedSecretKey,
     nonce: toUint8Array(existingNonce),
     secretKey,
+    derivedKey: new Uint8Array(derivedKey),
   };
 };
 
@@ -54,21 +54,21 @@ const getNaclSecretKey = async (ddocId: string) => {
 
   const encryptedSecretKey = fromUint8Array(tweetnacl.secretbox(secretKey, nonce, derivedKey), true);
 
-  return { nonce, encryptedSecretKey, secretKey };
+  return { nonce, encryptedSecretKey, secretKey, derivedKey: new Uint8Array(derivedKey) };
 };
 
 export const generateLinkKeyMaterial = async (params: LinkKeyMaterialParams) => {
   if (params.linkKeyNonce && params.linkKey) {
-    const { encryptedSecretKey, nonce, secretKey } = await getExistingEncryptionMaterial(
+    const { encryptedSecretKey, nonce, secretKey, derivedKey } = await getExistingEncryptionMaterial(
       params.linkKey,
       params.linkKeyNonce,
       params.ddocId,
     );
-    if (secretKey) return { encryptedSecretKey, nonce, secretKey };
+    if (secretKey) return { encryptedSecretKey, nonce, secretKey, derivedKey };
   }
-  const { secretKey, nonce, encryptedSecretKey } = await getNaclSecretKey(params.ddocId);
+  const { secretKey, nonce, encryptedSecretKey, derivedKey } = await getNaclSecretKey(params.ddocId);
 
-  return { secretKey, nonce, encryptedSecretKey };
+  return { secretKey, nonce, encryptedSecretKey, derivedKey };
 };
 
 export const jsonToFile = (json: any, fileName: string) => {

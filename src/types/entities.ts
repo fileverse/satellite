@@ -16,6 +16,8 @@ export interface File {
   linkKeyNonce?: string | null;
   commentKey?: string | null;
   link?: string | null;
+  derivedKey?: string | null;
+  secretKey?: string | null;
 }
 
 export interface FileListResponse {

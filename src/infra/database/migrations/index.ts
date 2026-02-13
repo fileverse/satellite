@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS files (
   commentKey TEXT,
   linkKey TEXT,
   linkKeyNonce TEXT,
-  link TEXT
+  link TEXT,
+  derivedKey TEXT,
+  secretKey TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_files_createdAt ON files(createdAt);
 CREATE INDEX IF NOT EXISTS idx_files_syncStatus ON files(syncStatus);

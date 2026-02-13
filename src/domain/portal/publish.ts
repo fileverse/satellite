@@ -6,7 +6,7 @@ import { fromUint8Array, toUint8Array } from "js-base64";
 import { Hex, stringToBytes } from "viem";
 import { deriveHKDFKey } from "@fileverse/crypto/kdf";
 import { generateKeyPairFromSeed } from "@stablelib/ed25519";
-import * as ucans from "@ucans/ucans";
+import { EdKeypair } from "../../sdk/ucan";
 import { AgentClient } from "../../sdk/smart-agent";
 import { FileManager } from "../../sdk/file-manager";
 import { getRuntimeConfig } from "../../config";
@@ -61,15 +61,17 @@ const createFileManager = async (
   ucanSecret: Uint8Array,
   privateAccountKey: Uint8Array,
 ): Promise<FileManager> => {
-  const keyPair = ucans.EdKeypair.fromSecretKey(fromUint8Array(ucanSecret), {
-    exportable: true,
-  });
-
+  console.log("Creating file manager");
+  const keyPair = EdKeypair.fromSecretKey(fromUint8Array(ucanSecret));
+  console.log("Created key pair");
   const authTokenProvider = new AuthTokenProvider(keyPair, portalAddress);
+  console.log("Created auth token provider");
   const keyStore = new KeyStore(toUint8Array(portalSeed), portalAddress, authTokenProvider);
-
+  console.log("Created key store");
   const agentClient = new AgentClient(authTokenProvider);
+  console.log("Created agent client");
   await agentClient.initializeAgentClient(privateAccountKey);
+  console.log("Initialized agent client");
 
   return new FileManager(keyStore, agentClient);
 };
@@ -124,14 +126,17 @@ export const handleNewFileOp = async (
   metadata: Record<string, unknown>;
 }> => {
   const { file, portalDetails, apiKey } = await getPortalData(fileId);
+  console.log("Got portal data")
   const apiKeySeed = toUint8Array(apiKey);
   const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
+  console.log("Derived collaborator keys");
   const fileManager = await createFileManager(
     portalDetails.portalSeed,
     portalDetails.portalAddress as Hex,
     ucanSecret,
     privateAccountKey,
   );
+  console.log("Created file manager");
   return fileManager.submitAddFileTrx(file);
 };
 

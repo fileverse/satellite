@@ -53,18 +53,19 @@ export const submitEvent = async (event: Event): Promise<void> => {
 
   switch (type) {
     case "create": {
+      console.log("Starting create event submission");
       const file = await FilesModel.findByIdIncludingDeleted(fileId);
+      console.log("File found");
       if (!file) throw new Error(`File ${fileId} not found`);
       if (file.isDeleted === 1) {
         logger.info(`File ${fileId} is deleted, skipping create submit`);
         return;
       }
 
+      console.log("Submitting new file op");
       const result = await handleNewFileOp(fileId);
+      console.log("New file op submitted");
       await EventsModel.setEventPendingOp(event._id, result.userOpHash, {
-        linkKey: result.linkKey,
-        linkKeyNonce: result.linkKeyNonce,
-        commentKey: result.commentKey,
         metadata: result.metadata,
       });
       logger.info(`File ${file.ddocId} create op submitted (hash: ${result.userOpHash})`);
