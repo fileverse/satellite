@@ -1,6 +1,6 @@
 {
   "name": "@fileverse/api",
-  "version": "0.0.22",
+  "version": "1.0.0",
   "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",

@@ -23,7 +23,7 @@ import { closeWorker, closeDatabase } from "../infra";
 export const program = new Command()
   .name("ddctl")
   .description("CLI tool to manage your ddocs")
-  .version("0.0.8")
+  .version("1.0.0")
   .addHelpText("beforeAll", "\n")
   .addHelpText("afterAll", "\n");
 
