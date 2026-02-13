@@ -12,7 +12,7 @@ import type {
   GetFileResult,
 } from "../../types";
 import { DEFAULT_LIST_LIMIT } from "./constants";
-import { generateLinkKeyMaterial } from "../../sdk/file-utils";
+import { generateLinkKeyMaterial } from "../../sdk/link-key-utils";
 
 async function listFiles(params: ListFilesParams): Promise<ListFilesResult> {
   const { limit, skip, portalAddress } = params;
