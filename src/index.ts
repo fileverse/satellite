@@ -6,6 +6,7 @@ import { closeDatabase } from "./infra/database";
 import { initializeFromApiKey } from "./init";
 import app from "./app";
 import { createMcpRouter } from "./mcp/http.js";
+import { join } from "path";
 
 const port = parseInt(config.PORT || "8001", 10);
 const ip = config.IP || "0.0.0.0";
@@ -38,6 +39,10 @@ const startServer = async (): Promise<void> => {
   app.use((req, _res, next) => {
     if (req.method === "POST" && req.path === "/" && req.body?.jsonrpc) {
       req.url = "/mcp";
+    }
+   
+    if (req.method === "GET" && req.path === "/") {
+      return _res.sendFile(join(__dirname, "../public/guide.md"));
     }
     next();
   });

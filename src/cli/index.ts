@@ -70,13 +70,9 @@ const program = new Command()
   API Server: http://127.0.0.1:${options.port}
   Worker:     Active
 
-  MCP:  Connect Claude to your Fileverse API:
+Open this link for CLI and API guide: http://127.0.0.1:${options.port}
 
-        Via stdio:
-        claude mcp add fileverse-api -- fileverse-api-mcp
-
-        Via HTTP:
-        claude mcp add --transport http fileverse-api http://127.0.0.1:${options.port}/mcp
+Share this with your LLM: http://127.0.0.1:${options.port}/llm.txt
 
 Press Ctrl+C to stop.
 `);
