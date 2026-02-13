@@ -1,6 +1,6 @@
 {
   "name": "@fileverse/api",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",
@@ -10,7 +10,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./server": "./dist/index.js",
-    "./worker": "./dist/worker.js"
+    "./worker": "./dist/worker.js",
+    "./cloudflare": "./dist/cloudflare.js"
   },
   "bin": {
     "api": "dist/cli/index.js",
@@ -43,7 +44,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@fileverse/content-processor": "^0.0.1",
+    "@fileverse/content-processor": "^0.0.2",
     "@fileverse/crypto": "^0.0.21",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@stablelib/ed25519": "^2.0.2",

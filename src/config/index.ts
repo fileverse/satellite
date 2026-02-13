@@ -19,7 +19,9 @@ export function loadConfig(override = true): void {
   dotenv.config({ path: envPath, override });
 }
 
-loadConfig(false);
+if (typeof globalThis.process !== 'undefined' && typeof globalThis.process.cwd === 'function') {
+  try { loadConfig(false); } catch {}
+}
 
 export function getRuntimeConfig() {
   return {

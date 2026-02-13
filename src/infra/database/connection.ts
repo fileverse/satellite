@@ -50,6 +50,14 @@ export async function getAdapter(): Promise<DatabaseAdapter> {
 }
 
 /**
+ * Inject an externally-created adapter (e.g. D1 for Cloudflare Workers).
+ * Must be called before any domain logic runs.
+ */
+export function setAdapter(external: DatabaseAdapter): void {
+  adapter = external;
+}
+
+/**
  * Graceful shutdown — close the active adapter.
  */
 export async function closeAdapter(): Promise<void> {
