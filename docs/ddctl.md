@@ -19,6 +19,7 @@ date: 2026-02-10
   * [delete](#delete)
   * [download](#download)
   * [view](#view)
+  * [events](#events)
 * [How ddctl relates to the API](#how-ddctl-relates-to-the-api)
 
 * * *
@@ -215,6 +216,67 @@ ddctl view u154d6GbzaNYHzKZ2wDyrf -n 30
 ```
 
 If the content is longer than the requested preview, `ddctl` prints how many lines were omitted and how many total lines the document contains.
+
+* * *
+
+### events
+
+Manage worker events: list failed sync/worker events and retry them. Useful when sync is stuck or you want to recover from failed operations (e.g. after a network or chain issue).
+
+**Subcommands:**
+
+#### events list-failed
+
+List all failed events for your portal.
+
+**Usage:**
+
+```bash
+ddctl events list-failed
+```
+
+This prints a table with columns: **ID**, **File ID**, **Portal**, **Type**, **Timestamp**, and **Last Error**. If there are no failed events, it prints `No failed events.` Use the event **ID** with `ddctl events retry <eventId>` to retry a specific event.
+
+* * *
+
+#### events retry
+
+Retry a single failed event by its ID. The event is reset to pending and the worker will pick it up.
+
+**Usage:**
+
+```bash
+ddctl events retry <eventId>
+```
+
+**Example:**
+
+```bash
+ddctl events retry 507f1f77bcf86cd799439011
+```
+
+If the event is not found or not in a failed state, `ddctl` prints an error and exits with a non-zero code.
+
+* * *
+
+#### events retry-all
+
+Reset all failed events to pending so the worker processes them again.
+
+**Usage:**
+
+```bash
+ddctl events retry-all
+```
+
+On success, `ddctl` prints how many event(s) were reset. The worker will pick them up automatically.
+
+**Example:**
+
+```bash
+ddctl events retry-all
+# Output: Reset 3 failed event(s) to pending. Worker will pick them up.
+```
 
 * * *
 
