@@ -1,183 +1,134 @@
 # Fileverse API - AI Agent Guide
 
-> Fileverse API lets you create, manage, and publish documents to blockchain. This guide helps you (the AI agent) get connected and start working with documents.
+> Fileverse API is a document management system by Fileverse that stores and syncs documents (ddocs) between a local database and blockchain.
 
-## Step 1: Connect via MCP (Recommended)
+**Skill Name**: fileverse-api
 
-The fastest way to start is by adding the Fileverse MCP server to your client. Ask the user to add the following configuration to their AI tool:
+## How to use this document
 
-### Claude Code
+Fetch this via GET {SERVER_URL}/llm.txt. Use it to discover the server URL, decide API vs CLI mode, then follow the relevant section below.
 
-Run this command, replacing the placeholder values:
+## Integration checklist
 
-```bash
-claude mcp add fileverse-api -- npx -y @anthropic-ai/mcp-proxy@latest --endpoint "YOUR_SERVER_URL/mcp" --header "x-api-key: YOUR_API_KEY"
-```
+1. Get server URL (from the URL you used to fetch this doc, minus /llm.txt) and apiKey (see API Key Configuration).
+2. Try GET {SERVER_URL}/ping. If you get 200 and {"reply":"pong"}, use API mode; otherwise use CLI mode.
+3. In API mode: every request must include apiKey as a query parameter; the path is complete before any query string.
+4. For create/update: extract ddocId from response.data.ddocId (not from the top level of the response).
+5. After create or update, poll GET /api/ddocs/{ddocId}?apiKey=... until syncStatus is "synced" or "failed", then show the link if synced.
 
-Or add to `.claude/mcp.json`:
+## Server URL
+
+If you fetched this document from a URL (e.g., http://localhost:8001/llm.txt):
+- Your server URL is that URL without the /llm.txt suffix
+- Example: http://localhost:8001/llm.txt → Server URL is http://localhost:8001
+
+If this document was provided another way, ask the user for their server URL.
+
+## API Key Configuration
+
+Before starting, check for stored credentials:
+
+1. Look for config file at: ~/.fileverseapirc
+2. If found with valid apiKey, use it automatically
+3. If not found or missing apiKey:
+   - Ask user for their Fileverse API key
+   - Offer to save it: "Would you like me to save this API key for future sessions?"
+   - If yes, create/update ~/.fileverseapirc with JSON: {"apiKey": "...", "serverUrl": "..."}
+
+## Connection Strategy
+
+After getting the server URL:
+
+1. **Try API first**: Attempt GET {SERVER_URL}/ping
+2. **If successful** (response: {"reply":"pong"}) → Use API Mode
+3. **If connection fails** (timeout, refused, unreachable) → Switch to CLI Mode
+
+In API mode, every request must include apiKey as a query parameter; the path is complete before any query string.
+
+When switching to CLI mode, inform the user:
+"I can't reach your server directly (localhost isn't accessible from here). I'll help you using CLI commands instead - just run them and share the output with me."
+
+---
+
+# Quick reference
+
+## All API endpoints
+
+| Method | Path | Auth | Key params/body |
+|--------|------|------|-----------------|
+| GET | /ping | No | - |
+| GET | /api/ddocs | apiKey | limit, skip |
+| GET | /api/ddocs/{ddocId} | apiKey | - |
+| POST | /api/ddocs | apiKey | JSON: {title, content} or form-data: file |
+| PUT | /api/ddocs/{ddocId} | apiKey | JSON: {title?, content?} or form-data: file |
+| DELETE | /api/ddocs/{ddocId} | apiKey | - |
+| GET | /api/folders | apiKey | limit, skip |
+| POST | /api/folders | apiKey | body: see Create Folder |
+| GET | /api/folders/{folderRef}/{folderId} | apiKey | - |
+| GET | /api/search | apiKey | q (required), limit, skip |
+| GET | /api/events/failed | apiKey | - |
+| POST | /api/events/retry-failed | apiKey | - |
+| POST | /api/events/{id}/retry | apiKey | - |
+
+## All ddctl commands
+
+| Command | Purpose | Key options |
+|---------|---------|-------------|
+| ddctl list | List ddocs | -l/--limit, -s/--skip |
+| ddctl get <ddocId> | Get document metadata | - |
+| ddctl view <ddocId> | View content preview | -n/--lines (default 10) |
+| ddctl create <filepath> | Create from file | title = filename; file cannot be empty |
+| ddctl update <ddocId> | Update ddoc | -f/--file <path> or opens editor |
+| ddctl download <ddocId> | Download to file | -o/--output <filename> |
+| ddctl delete <ddocIds...> | Delete one or more | space-separated ids |
+| ddctl events list-failed | List failed worker events | - |
+| ddctl events retry <eventId> | Retry one failed event | - |
+| ddctl events retry-all | Retry all failed events | - |
+
+---
+
+# MCP Integration (Recommended for AI Agents)
+
+The Fileverse API MCP server is the easiest way for AI agents to interact with Fileverse API. It wraps all API calls into native MCP tools with built-in sync polling.
+
+## Setup
+
+Install Fileverse API globally, then configure your MCP client:
+
+### Claude Code / Cursor
+
+Add to your MCP config (e.g., `.claude/mcp.json` or Cursor MCP settings):
 
 ```json
 {
   "mcpServers": {
     "fileverse-api": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-proxy@latest", "--endpoint", "YOUR_SERVER_URL/mcp", "--header", "x-api-key: YOUR_API_KEY"]
+      "command": "fileverse-api-mcp",
+      "env": {
+        "FILEVERSE_API_KEY": "your-api-key",
+        "FILEVERSE_SERVER_URL": "http://localhost:8001"
+      }
     }
   }
 }
 ```
 
-### Cursor
+The MCP server can also read credentials from `~/.fileverseapirc` if env vars are not set.
 
-Add to Cursor MCP settings (`.cursor/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "fileverse-api": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-proxy@latest", "--endpoint", "YOUR_SERVER_URL/mcp", "--header", "x-api-key: YOUR_API_KEY"]
-    }
-  }
-}
-```
-
-### Windsurf
-
-Add to `~/.codeium/windsurf/mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "fileverse-api": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-proxy@latest", "--endpoint", "YOUR_SERVER_URL/mcp", "--header", "x-api-key: YOUR_API_KEY"]
-    }
-  }
-}
-```
-
-### ChatGPT (Desktop)
-
-Go to Settings > MCP Servers > Add Server, then enter:
-
-- **Name**: fileverse-api
-- **Command**: `npx -y @anthropic-ai/mcp-proxy@latest --endpoint "YOUR_SERVER_URL/mcp" --header "x-api-key: YOUR_API_KEY"`
-
-### Any MCP-compatible client
-
-The Fileverse API exposes an MCP endpoint at `{SERVER_URL}/mcp`. Connect using any MCP client that supports the Streamable HTTP transport. Pass the API key via the `x-api-key` header.
-
-### Replacing placeholders
-
-- **YOUR_SERVER_URL**: The base URL of the Fileverse API server (e.g., `http://localhost:8001`). If the user shared this document via a URL, strip `/llm.txt` to get the server URL.
-- **YOUR_API_KEY**: The user's Fileverse API key. Check `~/.fileverseapirc` for stored credentials, or ask the user to provide it.
-
-### After adding the MCP server
-
-Restart or reload the AI tool. You will then have access to these tools:
+## Available MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| `fileverse_list_documents` | List documents with pagination |
-| `fileverse_get_document` | Get a single document by ddocId |
-| `fileverse_create_document` | Create document and wait for blockchain sync (returns link) |
-| `fileverse_update_document` | Update document and wait for blockchain sync (returns link) |
-| `fileverse_delete_document` | Delete a document |
-| `fileverse_search_documents` | Search documents by text query |
-| `fileverse_get_sync_status` | Check sync status and blockchain link of a document |
-| `fileverse_retry_failed_events` | Retry all failed blockchain sync events |
+| fileverse_list_documents | List documents with pagination |
+| fileverse_get_document | Get a single document by ddocId |
+| fileverse_create_document | Create document and wait for sync (returns link) |
+| fileverse_update_document | Update document and wait for sync (returns link) |
+| fileverse_delete_document | Delete a document |
+| fileverse_search_documents | Search documents by text query |
+| fileverse_get_sync_status | Check sync status and link of a document |
+| fileverse_retry_failed_events | Retry all failed blockchain sync events |
 
-Create and update tools automatically poll until blockchain sync completes, so you do not need to implement polling logic. Once synced, the response includes a public `link` to the document.
-
----
-
-## Step 2 (Alternative): Use the REST API directly
-
-If MCP is not available in your environment, you can call the REST API directly.
-
-### Server URL
-
-If this document was fetched from a URL (e.g., `http://localhost:8001/llm.txt`), the server URL is that URL without `/llm.txt`.
-
-### Authentication
-
-Every API request requires an `apiKey` query parameter appended to the URL:
-
-```
-{SERVER_URL}{PATH}?apiKey={API_KEY}
-```
-
-Check `~/.fileverseapirc` for stored credentials (JSON with `apiKey` and `serverUrl` fields). If not found, ask the user.
-
-### Verify connectivity
-
-```
-GET {SERVER_URL}/ping
-```
-
-Expected response: `{"reply":"pong"}`
-
-### API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /ping | Health check (no auth) |
-| GET | /api/ddocs?apiKey=...&limit=10&skip=0 | List documents |
-| GET | /api/ddocs/{ddocId}?apiKey=... | Get one document |
-| POST | /api/ddocs?apiKey=... | Create document (JSON body: `{title, content}`) |
-| PUT | /api/ddocs/{ddocId}?apiKey=... | Update document (JSON body: `{title?, content?}`) |
-| DELETE | /api/ddocs/{ddocId}?apiKey=... | Delete document |
-| GET | /api/search?apiKey=...&q={query} | Search documents |
-| GET | /api/events/failed?apiKey=... | List failed sync events |
-| POST | /api/events/retry-failed?apiKey=... | Retry all failed events |
-| POST | /api/events/{id}/retry?apiKey=... | Retry one failed event |
-
-### Sync Status Polling (Required for REST API)
-
-When using the REST API (not MCP), you must poll after create/update:
-
-1. Send POST or PUT request
-2. Extract `ddocId` from `response.data.ddocId` (not from the top level)
-3. Poll `GET /api/ddocs/{ddocId}?apiKey=...` every 5 seconds
-4. When `syncStatus` is `"synced"`: show the `link` field to the user
-5. When `syncStatus` is `"failed"`: inform the user and suggest retrying
-
-### URL Construction (Common Mistake)
-
-The `apiKey` query parameter must come AFTER the complete path:
-
-```
-CORRECT: GET http://localhost:8001/api/ddocs/abc123?apiKey=xxx
-WRONG:   GET http://localhost:8001/api/ddocs?apiKey=xxx/abc123
-```
-
----
-
-## Step 3 (Fallback): CLI Mode
-
-If you cannot reach the server (e.g., localhost is not accessible), generate CLI commands for the user to run.
-
-### Installation
-
-```bash
-npm install -g @fileverse/api
-```
-
-### Commands
-
-| Command | Purpose |
-|---------|---------|
-| `ddctl list` | List documents (`-l`/`--limit`, `-s`/`--skip`) |
-| `ddctl get <ddocId>` | Get document metadata |
-| `ddctl view <ddocId>` | Preview content (`-n`/`--lines`, default 10) |
-| `ddctl create <filepath>` | Create from file (title = filename) |
-| `ddctl update <ddocId> -f <filepath>` | Update from file |
-| `ddctl download <ddocId>` | Download document (`-o`/`--output`) |
-| `ddctl delete <ddocId> [...]` | Delete one or more documents |
-| `ddctl events list-failed` | List failed sync events |
-| `ddctl events retry <eventId>` | Retry one failed event |
-| `ddctl events retry-all` | Retry all failed events |
+Create and update tools automatically poll until blockchain sync completes, so the agent does not need to implement polling logic.
 
 ---
 
@@ -185,163 +136,486 @@ npm install -g @fileverse/api
 
 ## Document
 
-```json
+Fields returned by GET /api/ddocs/{ddocId} and in list/search results:
+
+```
 {
-  "ddocId": "string",
-  "title": "string",
-  "content": "string",
-  "syncStatus": "pending | synced | failed",
-  "link": "string | null",
-  "localVersion": 0,
-  "onchainVersion": 0,
-  "isDeleted": 0,
-  "onChainFileId": null,
-  "portalAddress": "string",
-  "createdAt": "ISO timestamp",
-  "updatedAt": "ISO timestamp"
+  ddocId: string,            // Unique document identifier
+  title: string,             // Document title
+  content: string,           // Document content (text/markdown)
+  syncStatus: "pending" | "synced" | "failed",
+  link: string | null,       // Public URL (only when syncStatus is "synced")
+  localVersion: number,      // Increments on each local edit
+  onchainVersion: number,    // Version published to blockchain
+  isDeleted: number,         // 0 = active, 1 = deleted
+  onChainFileId: number | null,
+  portalAddress: string,
+  createdAt: string,         // ISO timestamp
+  updatedAt: string          // ISO timestamp
 }
 ```
 
-## List Response
+## Document List
 
-```json
-{ "ddocs": [...], "total": 100, "hasNext": true }
+Returned by GET /api/ddocs:
+
+```
+{
+  ddocs: Document[],
+  total: number,
+  hasNext: boolean
+}
 ```
 
-## Search Response
+## Search Result
 
-```json
-{ "nodes": [...], "total": 100, "hasNext": true }
+Returned by GET /api/search:
+
 ```
-
-Note: search returns `nodes`, not `ddocs`.
+{
+  nodes: Document[],         // Note: "nodes" not "ddocs"
+  total: number,
+  hasNext: boolean
+}
+```
 
 ## Create/Update Response
 
-```json
-{ "message": "...", "data": { "ddocId": "...", ... } }
+Returned by POST /api/ddocs and PUT /api/ddocs/{ddocId}:
+
+```
+{
+  message: string,
+  data: Document              // Extract ddocId from data.ddocId
+}
 ```
 
-Extract ddocId from `data.ddocId`.
+## Event
+
+Returned by GET /api/events/failed:
+
+```
+{
+  _id: string,
+  type: "create" | "update" | "delete",
+  timestamp: number,
+  fileId: string,
+  portalAddress: string,
+  status: "pending" | "processing" | "processed" | "failed",
+  retryCount: number,
+  lastError: string | null,
+  userOpHash: string | null
+}
+```
 
 ---
 
-# Key Concepts
+# CLI MODE (Fallback when server unreachable)
 
-- **DDoc**: A document with a unique `ddocId`
-- **syncStatus**: `pending` (saving to blockchain) -> `synced` (published, `link` available) or `failed`
-- **link**: Public URL to view the document on-chain (only present when synced)
-- **localVersion**: Increments on each local edit
-- **onchainVersion**: Version published to blockchain
+Use this when you cannot reach the user's server (localhost, firewall, etc.).
+You generate commands, user runs them and shares output with you.
 
-# Error Handling
+## Installation and invocation
 
-| Status | Meaning |
-|--------|---------|
-| 400 | Validation error (missing/invalid params) |
-| 401 | Invalid or missing API key |
-| 404 | Resource not found |
-| 429 | Rate limited (respect Retry-After header) |
-| 500 | Server error (retry or inform user) |
+To set up Fileverse API and run the server:
 
-# OpenAPI Specification
+```bash
+npm install -g @fileverse/api
+npx @fileverse/api --apiKey <key> --rpcUrl <url>
+```
 
-A machine-readable OpenAPI 3.1 spec is available at `GET {SERVER_URL}/openapi.json`.
+The package exposes the ddctl binary. After npm install -g @fileverse/api, run ddctl <command>. Without global install: npx -p @fileverse/api ddctl <command>.
+
+## CLI Commands Reference
+
+### List Documents
+```bash
+ddctl list
+ddctl list -l 10 -s 20
+ddctl list --limit 10 --skip 20
+```
+
+### Get Document Details
+```bash
+ddctl get <ddocId>
+```
+Shows metadata including the link (if synced to blockchain).
+
+### View Document Content
+```bash
+ddctl view <ddocId>
+ddctl view <ddocId> -n 20
+ddctl view <ddocId> --lines 20
+```
+Default preview is 10 lines.
+
+### Create Document
+```bash
+ddctl create <filepath>
+```
+Creates document from file. Title is derived from filename. File content cannot be empty.
+
+### Update Document
+```bash
+ddctl update <ddocId> -f <filepath>
+ddctl update <ddocId> --file <filepath>
+ddctl update <ddocId>
+```
+Without --file opens in editor (uses EDITOR env or vi).
+
+### Download Document
+```bash
+ddctl download <ddocId>
+ddctl download <ddocId> -o myfile.md
+ddctl download <ddocId> --output myfile.md
+```
+Output supports markdown.
+
+### Delete Document
+```bash
+ddctl delete <ddocId>
+ddctl delete <id1> <id2> <id3>
+```
+One or more space-separated ddoc IDs.
+
+### Worker events
+```bash
+ddctl events list-failed
+ddctl events retry <eventId>
+ddctl events retry-all
+```
+If sync is stuck, run ddctl events list-failed then ddctl events retry <id> or ddctl events retry-all.
+
+## CLI Workflow Examples
+
+### Create and Check Sync Status
+```bash
+ddctl create mydocument.md
+ddctl get <ddocId>
+```
+Repeat get until syncStatus is "synced"; then the link field shows the public URL.
+
+### Search and Update
+```bash
+ddctl list
+ddctl view <ddocId>
+ddctl update <ddocId> --file updated.md
+ddctl get <ddocId>
+```
 
 ---
 
-# Custom Slash Commands (Skills)
+# API MODE (Primary - when server is reachable)
 
-If the user asks you to set up Fileverse slash commands, create the following files. These work in Claude Code and other tools that support markdown-based command prompts.
+Use this when GET /ping succeeds. You make HTTP requests directly to the server.
 
-Create a `.claude/commands/` directory in the project, then add these files:
+## Authentication & URL Construction
 
-## `.claude/commands/fileverse-publish.md`
+CRITICAL: The apiKey is a query parameter that goes at the END of the URL, after the complete path.
+
+URL Structure: {SERVER_URL}{PATH}?apiKey={API_KEY}&{OTHER_PARAMS}
+
+Step-by-step URL construction:
+1. Start with the server URL: http://localhost:8001
+2. Add the complete path: /api/ddocs/abc123
+3. Add ? and the apiKey: ?apiKey=your-key
+4. Add any other params with &: &limit=10
+
+CORRECT examples:
+- GET http://localhost:8001/api/ddocs?apiKey=xxx
+- GET http://localhost:8001/api/ddocs/abc123?apiKey=xxx
+- PUT http://localhost:8001/api/ddocs/abc123?apiKey=xxx
+- GET http://localhost:8001/api/ddocs?apiKey=xxx&limit=10&skip=0
+
+WRONG (do NOT do this):
+- GET http://localhost:8001/api/ddocs?apiKey=xxx/abc123  ← WRONG: path after query param
+- GET http://localhost:8001/api?apiKey=xxx/ddocs/abc123  ← WRONG: path after query param
+
+The query string (?apiKey=...) must ALWAYS come after the full path is complete.
+
+## Common mistakes
+
+- Putting path segments after ?apiKey=... (wrong).
+- Forgetting that create/update return data.ddocId, not top-level ddocId; always use response.data.ddocId.
+- Not polling after create/update until syncStatus is "synced" or "failed".
+
+## Important: Sync Status Polling
+
+When you create or update a document, it syncs to blockchain asynchronously:
+
+- **pending**: Saved locally, blockchain sync in progress
+- **synced**: Published to blockchain (link field available)
+- **failed**: Sync failed
+
+After CREATE or UPDATE, poll until syncStatus is "synced" or "failed":
+
+1. POST /api/ddocs or PUT /api/ddocs/{id}
+2. Extract ddocId from response.data.ddocId (not from the top level)
+3. Poll: GET /api/ddocs/{ddocId}?apiKey={API_KEY}
+4. If "pending", wait 5 seconds and poll again
+5. If "synced": extract the "link" field and show as clickable: [View Document](link)
+6. If "failed", inform user of sync failure
+
+Typical sync time: 5-30 seconds.
+
+## API Reference
+
+Base: {SERVER_URL}
+
+### Health Check (No Auth)
+GET /ping
+Response: {"reply":"pong"}
+
+### List Documents
+GET /api/ddocs?apiKey={API_KEY}&limit=10&skip=0
+
+Response:
+{
+  "ddocs": [...],
+  "total": 100,
+  "hasNext": true
+}
+
+### Get Document
+GET /api/ddocs/{ddocId}?apiKey={API_KEY}
+
+Response:
+{
+  "ddocId": "...",
+  "title": "...",
+  "content": "...",
+  "syncStatus": "pending|synced|failed",
+  "link": "https://...",
+  ...
+}
+(link available when synced)
+
+### Create Document (JSON - recommended for AI agents)
+POST /api/ddocs?apiKey={API_KEY}
+Content-Type: application/json
+
+{ "title": "Document Title", "content": "Document content here..." }
+
+Response: 201 with { "message": "...", "data": { "ddocId": "...", "title": "...", "syncStatus": "...", ... } }
+Extract ddocId from response.data.ddocId. Then poll GET /api/ddocs/{ddocId} until syncStatus is "synced", then show the link.
+
+### Create Document (Multipart - for file uploads)
+POST /api/ddocs?apiKey={API_KEY}
+Content-Type: multipart/form-data
+
+Send a single form field "file" with the document file. Title is derived from the filename. Max file size 10MB.
+
+Response: same as JSON create above.
+
+### Update Document (JSON - recommended for AI agents)
+PUT /api/ddocs/{ddocId}?apiKey={API_KEY}
+Content-Type: application/json
+
+{ "title": "New Title", "content": "Updated content..." }
+
+Both fields are optional; send only what you want to change.
+
+Response: 200 with { "message": "...", "data": { ... } }
+Poll until synced, then show the link.
+
+### Update Document (Multipart - for file uploads)
+PUT /api/ddocs/{ddocId}?apiKey={API_KEY}
+Content-Type: multipart/form-data
+
+Send a single form field "file" with the updated document file. Title is derived from the filename. Max file size 10MB.
+
+Response: same as JSON update above.
+
+### Delete Document
+DELETE /api/ddocs/{ddocId}?apiKey={API_KEY}
+
+### List Folders
+GET /api/folders?apiKey={API_KEY}&limit=10&skip=0
+
+Response:
+{
+  "folders": [...],
+  "total": 100,
+  "hasNext": true
+}
+
+### Create Folder
+POST /api/folders?apiKey={API_KEY}
+Content-Type: application/json
+
+Required body fields: onchainFileId, folderId, folderRef, folderName, portalAddress, metadataIPFSHash, lastTransactionBlockNumber, lastTransactionBlockTimestamp.
+Typically used for sync/on-chain integration, not ad-hoc folder creation by agents.
+
+### Get Folder
+GET /api/folders/{folderRef}/{folderId}?apiKey={API_KEY}
+Both folderRef and folderId are required.
+
+### Search Documents
+GET /api/search?apiKey={API_KEY}&q={query}&limit=10&skip=0
+Query parameter "q" is required.
+
+Response:
+{
+  "nodes": [...],
+  "total": 100,
+  "hasNext": true
+}
+(Search returns "nodes", not "ddocs".)
+
+### List Failed Events
+GET /api/events/failed?apiKey={API_KEY}
+
+Response: array of events (e.g. _id, fileId, portalAddress, type, timestamp, lastError).
+
+### Retry All Failed Events
+POST /api/events/retry-failed?apiKey={API_KEY}
+
+Response: { "retried": number }
+
+### Retry One Failed Event
+POST /api/events/{id}/retry?apiKey={API_KEY}
+
+Response: { "ok": true } or 404 if event not found or not in failed state.
+
+## OpenAPI Specification
+
+A machine-readable OpenAPI 3.1 spec is available at GET {SERVER_URL}/openapi.json. Use it for auto-generating tool definitions or importing into Swagger UI / Postman.
+
+---
+
+# Agent Workflow Recipes
+
+## Recipe 1: Publish a local file to blockchain
+
+1. Read the file content from the local filesystem
+2. POST /api/ddocs?apiKey={API_KEY} with JSON body: {"title": "<filename>", "content": "<file content>"}
+3. Extract ddocId from response.data.ddocId
+4. Poll GET /api/ddocs/{ddocId}?apiKey={API_KEY} every 5 seconds
+5. When syncStatus is "synced", show: "Published! [View Document](link)"
+6. If syncStatus is "failed", show: "Saved locally but blockchain sync failed. Run retry."
+
+## Recipe 2: Find and update a document by title
+
+1. GET /api/search?apiKey={API_KEY}&q={title} to search for the document
+2. From the results (response.nodes), find the matching document and extract its ddocId
+3. PUT /api/ddocs/{ddocId}?apiKey={API_KEY} with JSON body: {"content": "<new content>"}
+4. Poll GET /api/ddocs/{ddocId}?apiKey={API_KEY} until synced
+5. Show the updated link
+
+## Recipe 3: Check health and diagnose sync issues
+
+1. GET /ping - verify server is running (expect {"reply":"pong"})
+2. GET /api/ddocs?apiKey={API_KEY}&limit=5 - verify API key works and list recent docs
+3. GET /api/events/failed?apiKey={API_KEY} - check for failed sync events
+4. If failed events exist, POST /api/events/retry-failed?apiKey={API_KEY} to retry them
+5. Report: server status, number of documents, number of failed events (and if retried)
+
+---
+
+# Claude Code Integration
+
+## Custom Slash Commands
+
+You can create custom slash commands for Claude Code that integrate with Fileverse API. Create a `.claude/commands/` directory in your project and add markdown prompt files.
+
+### fileverse-publish.md
+
+Create `.claude/commands/fileverse-publish.md`:
 
 ```markdown
-Publish a file to Fileverse blockchain storage.
+Publish a file to Fileverse API blockchain storage.
 
 Steps:
-1. Read the file at: $ARGUMENTS
-2. Use the fileverse_create_document MCP tool with the filename (without extension) as the title and the file contents as content.
-3. If MCP tools are not available, fall back to the REST API:
-   - Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
-   - POST to {serverUrl}/api/ddocs?apiKey={apiKey} with JSON body: {"title": "<filename>", "content": "<file contents>"}
-   - Extract ddocId from response.data.ddocId
-   - Poll GET {serverUrl}/api/ddocs/{ddocId}?apiKey={apiKey} every 5s until syncStatus is "synced" or "failed"
-4. If synced: show "Published! Link: {link}"
-5. If failed: show "Saved locally but blockchain sync failed"
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
+2. Read the file at: $ARGUMENTS
+3. POST to {serverUrl}/api/ddocs?apiKey={apiKey} with JSON body:
+   Content-Type: application/json
+   {"title": "<filename without extension>", "content": "<file contents>"}
+4. Extract ddocId from response.data.ddocId
+5. Poll GET {serverUrl}/api/ddocs/{ddocId}?apiKey={apiKey} every 5 seconds until syncStatus is "synced" or "failed"
+6. If synced: show "Published! Link: {link}"
+7. If failed: show "Saved locally but blockchain sync failed"
 ```
 
 Usage: `/fileverse-publish path/to/document.md`
 
-## `.claude/commands/fileverse-list.md`
+### fileverse-list.md
+
+Create `.claude/commands/fileverse-list.md`:
 
 ```markdown
-List all documents stored in Fileverse.
+List all documents in Fileverse API.
 
 Steps:
-1. Use the fileverse_list_documents MCP tool with limit 50.
-2. If MCP tools are not available, fall back to the REST API:
-   - Read credentials from ~/.fileverseapirc
-   - GET {serverUrl}/api/ddocs?apiKey={apiKey}&limit=50
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
+2. GET {serverUrl}/api/ddocs?apiKey={apiKey}&limit=50
 3. Display results as a table with columns: ddocId, title, syncStatus, link, updatedAt
 4. Show total count and whether more documents exist (hasNext)
 ```
 
 Usage: `/fileverse-list`
 
-## `.claude/commands/fileverse-search.md`
+### fileverse-search.md
+
+Create `.claude/commands/fileverse-search.md`:
 
 ```markdown
-Search for documents in Fileverse.
+Search for documents in Fileverse API.
 
 Steps:
-1. Use the fileverse_search_documents MCP tool with query: $ARGUMENTS
-2. If MCP tools are not available, fall back to the REST API:
-   - Read credentials from ~/.fileverseapirc
-   - GET {serverUrl}/api/search?apiKey={apiKey}&q=$ARGUMENTS
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
+2. GET {serverUrl}/api/search?apiKey={apiKey}&q=$ARGUMENTS
 3. Display matching documents with: ddocId, title, syncStatus, link
 4. Show total matches found
 ```
 
 Usage: `/fileverse-search meeting notes`
 
-## `.claude/commands/fileverse-status.md`
+### fileverse-status.md
+
+Create `.claude/commands/fileverse-status.md`:
 
 ```markdown
-Check the sync status of a Fileverse document.
+Check the sync status of a Fileverse API document.
 
 Steps:
-1. Use the fileverse_get_sync_status MCP tool with ddocId: $ARGUMENTS
-2. If MCP tools are not available, fall back to the REST API:
-   - Read credentials from ~/.fileverseapirc
-   - GET {serverUrl}/api/ddocs/$ARGUMENTS?apiKey={apiKey}
+1. Read credentials from ~/.fileverseapirc (JSON with apiKey and serverUrl fields)
+2. GET {serverUrl}/api/ddocs/$ARGUMENTS?apiKey={apiKey}
 3. Display:
    - Title
    - Sync Status (pending/synced/failed)
    - Link (if synced)
    - Local Version vs On-chain Version
    - Last Updated
-4. If status is "failed", offer to retry using fileverse_retry_failed_events or POST {serverUrl}/api/events/retry-failed?apiKey={apiKey}
+4. If status is "failed", suggest running: POST {serverUrl}/api/events/retry-failed?apiKey={apiKey}
 ```
 
 Usage: `/fileverse-status <ddocId>`
 
-## `.claude/commands/fileverse-delete.md`
+---
 
-```markdown
-Delete a document from Fileverse.
+# Key Concepts
 
-Steps:
-1. If $ARGUMENTS looks like a ddocId, use it directly. Otherwise, search for it:
-   - Use fileverse_search_documents MCP tool (or GET /api/search) with $ARGUMENTS as the query
-   - Show matching documents and ask the user to confirm which one to delete
-2. Use the fileverse_delete_document MCP tool with the ddocId.
-3. If MCP tools are not available:
-   - Read credentials from ~/.fileverseapirc
-   - DELETE {serverUrl}/api/ddocs/{ddocId}?apiKey={apiKey}
-4. Confirm deletion to the user.
-```
+- **DDoc**: A document with unique ddocId
+- **syncStatus**: pending → synced (success) or failed
+- **link**: Public URL to view document (only available when synced)
+- **localVersion**: Increments on each edit
+- **onchainVersion**: Version on blockchain
 
-Usage: `/fileverse-delete <ddocId or search term>`
+# Error Handling
+
+**400 Bad Request**: Validation errors (missing/invalid body or params). Response body: { "error": "..." } or { "message": "..." }.
+**401 Unauthorized**: Invalid or missing API key
+**404 Not Found**: Resource doesn't exist
+**429 Too Many Requests**: If returned (e.g. from upstream), respect Retry-After header if present.
+**500 Server Error**: Internal error, retry or inform user
+
+---
+
+# Future Improvements (Planned)
+
+- **SSE for Sync Status**: Real-time sync status push via GET /api/ddocs/:ddocId/stream to eliminate polling
+- **Batch Operations**: POST /api/ddocs/bulk for creating/updating/deleting multiple documents at once
+- **Partial Responses**: ?fields=ddocId,syncStatus,link for requesting only specific fields
+- **TypeScript SDK**: Typed client library with built-in sync polling at @fileverse/api/client
+- **Webhook Callbacks**: Register a URL to be notified when sync completes instead of polling
