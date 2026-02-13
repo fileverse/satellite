@@ -40,6 +40,24 @@ app.get("/llm.txt", (req, res) => {
   res.type("text/plain").send(content);
 });
 
+app.get("/skill.md", (req, res) => {
+  const filePath = join(__dirname, "../public/skill.md");
+  const content = readFileSync(filePath, "utf-8");
+  res.type("text/markdown").send(content);
+});
+
+app.get("/openclaw/SKILL.md", (req, res) => {
+  const filePath = join(__dirname, "../public/openclaw/SKILL.md");
+  const content = readFileSync(filePath, "utf-8");
+  res.type("text/markdown").send(content);
+});
+
+app.get("/openclaw/_meta.json", (req, res) => {
+  const filePath = join(__dirname, "../public/openclaw/_meta.json");
+  const content = readFileSync(filePath, "utf-8");
+  res.type("application/json").send(content);
+});
+
 app.get("/openapi.json", (req, res) => {
   const filePath = join(__dirname, "../public/openapi.json");
   const content = readFileSync(filePath, "utf-8");

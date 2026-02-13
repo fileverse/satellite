@@ -6,6 +6,7 @@ import { closeDatabase } from "./infra/database";
 import { initializeFromApiKey } from "./init";
 import app from "./app";
 import { createMcpRouter } from "./mcp/http.js";
+import { join } from "path";
 
 const port = parseInt(config.PORT || "8001", 10);
 const ip = config.IP || "0.0.0.0";
@@ -36,8 +37,13 @@ const startServer = async (): Promise<void> => {
 
   // Rewrite MCP requests from root to /mcp for base URL compatibility
   app.use((req, _res, next) => {
+    console.log("rewriting", req.method, req.path, req.body);
     if (req.method === "POST" && req.path === "/" && req.body?.jsonrpc) {
       req.url = "/mcp";
+    }
+
+    if (req.method === "GET" && req.path === "/") {
+      return _res.sendFile(join(__dirname, "../public/llm.txt"));
     }
     next();
   });
