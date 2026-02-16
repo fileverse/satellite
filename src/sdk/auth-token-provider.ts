@@ -2,10 +2,15 @@ import * as ucans from "@ucans/ucans";
 import type { Hex } from "viem";
 
 export class AuthTokenProvider {
-  private readonly DEFAULT_OPTIONS = {
+  static readonly FILE_CREATE_OPTIONS = {
     namespace: "file",
     segment: "CREATE",
     scheme: "storage",
+  };
+  static readonly PROXY_AUTH_OPTIONS = {
+    namespace: "proxy",
+    segment: "ACCESS",
+    scheme: "pimlico",
   };
   private keyPair: ucans.EdKeypair;
   portalAddress: Hex;
@@ -16,7 +21,7 @@ export class AuthTokenProvider {
 
   async getAuthToken(
     audienceDid: string,
-    options: { namespace: string; segment: string; scheme: string } = this.DEFAULT_OPTIONS,
+    options: { namespace: string; segment: string; scheme: string } = AuthTokenProvider.FILE_CREATE_OPTIONS,
   ): Promise<string> {
     const ucan = await ucans.build({
       audience: audienceDid,

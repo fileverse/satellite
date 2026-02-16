@@ -50,11 +50,7 @@ export class FileverseClient {
     });
   }
 
-  async updateDocument(
-    ddocId: string,
-    title?: string,
-    content?: string,
-  ): Promise<UpdateDocumentResponse> {
+  async updateDocument(ddocId: string, title?: string, content?: string): Promise<UpdateDocumentResponse> {
     const body: Record<string, string> = {};
     if (title !== undefined) body.title = title;
     if (content !== undefined) body.content = content;

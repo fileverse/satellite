@@ -239,6 +239,36 @@ export class EventsModel {
     await QueryBuilder.execute(sql, [_id]);
   }
 
+  static async markSubmitted(_id: string, userOpHash: string, payload: Record<string, unknown>): Promise<void> {
+    const sql = `
+      UPDATE ${this.TABLE}
+      SET status = 'submitted',
+          lockedAt = NULL,
+          userOpHash = ?,
+          pendingPayload = ?
+      WHERE _id = ?
+    `;
+    await QueryBuilder.execute(sql, [userOpHash, JSON.stringify(payload), _id]);
+  }
+
+  static async findNextSubmitted(lockedFileIds: string[]): Promise<Event | undefined> {
+    const exclusionClause =
+      lockedFileIds.length > 0 ? `AND fileId NOT IN (${lockedFileIds.map(() => "?").join(", ")})` : "";
+
+    const sql = `
+      SELECT * FROM ${this.TABLE}
+      WHERE status = 'submitted'
+      AND userOpHash IS NOT NULL
+      ${exclusionClause}
+      ORDER BY timestamp ASC
+      LIMIT 1
+    `;
+
+    const params = [...lockedFileIds];
+    const row = await QueryBuilder.selectOne<EventRow>(sql, params);
+    return row ? this.parseEvent(row) : undefined;
+  }
+
   private static parseEvent(row: EventRow): Event {
     return {
       _id: row._id,

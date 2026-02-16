@@ -31,9 +31,7 @@ export async function initializeAdapter(): Promise<DatabaseAdapter> {
     adapter = new SqliteAdapter(dbPath);
     logger.info("Using SQLite adapter");
   } else {
-    throw new Error(
-      "No database configured. Set DATABASE_URL (PostgreSQL) or DB_PATH (SQLite).",
-    );
+    throw new Error("No database configured. Set DATABASE_URL (PostgreSQL) or DB_PATH (SQLite).");
   }
 
   return adapter;
@@ -47,6 +45,14 @@ export async function getAdapter(): Promise<DatabaseAdapter> {
     return initializeAdapter();
   }
   return adapter;
+}
+
+/**
+ * Inject an externally-created adapter (e.g. D1 for Cloudflare Workers).
+ * Must be called before any domain logic runs.
+ */
+export function setAdapter(external: DatabaseAdapter): void {
+  adapter = external;
 }
 
 /**

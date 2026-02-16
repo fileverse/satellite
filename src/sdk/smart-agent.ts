@@ -11,11 +11,6 @@ export type { IExecuteUserOperationRequest };
 export class AgentClient {
   private smartAccountAgent: ReturnType<typeof createSmartAccountClient> | null = null;
   private readonly MAX_CALL_GAS_LIMIT = 500000;
-  private readonly authOptions: {
-    namespace: string;
-    segment: string;
-    scheme: string;
-  } = { namespace: "proxy", segment: "ACCESS", scheme: "pimlico" };
 
   constructor(private readonly authTokenProvider: AuthTokenProvider) {
     this.authTokenProvider = authTokenProvider;
@@ -23,7 +18,10 @@ export class AgentClient {
 
   async initializeAgentClient(keyMaterial: Uint8Array) {
     const agentAccount = privateKeyToAccount(toHex(keyMaterial));
-    const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
+    const authToken = await this.authTokenProvider.getAuthToken(
+      STATIC_CONFIG.PROXY_SERVER_DID,
+      AuthTokenProvider.PROXY_AUTH_OPTIONS,
+    );
     const smartAccountClient = await getSmartAccountClient(
       agentAccount,
       authToken,
@@ -109,7 +107,10 @@ export class AgentClient {
   }
 
   async getAuthParams(): Promise<{ authToken: string; portalAddress: Hex; invokerAddress: Hex }> {
-    const authToken = await this.authTokenProvider.getAuthToken(STATIC_CONFIG.PROXY_SERVER_DID, this.authOptions);
+    const authToken = await this.authTokenProvider.getAuthToken(
+      STATIC_CONFIG.PROXY_SERVER_DID,
+      AuthTokenProvider.PROXY_AUTH_OPTIONS,
+    );
     return {
       authToken,
       portalAddress: this.authTokenProvider.portalAddress,

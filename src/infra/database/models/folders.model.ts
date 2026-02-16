@@ -1,5 +1,5 @@
 import { QueryBuilder } from "../index.js";
-import type { File, Folder, FolderWithDDocs, FolderListResponse } from "../../../types";
+import type { Folder, FolderWithDDocs, FolderListResponse, FileEntity } from "../../../types";
 
 export type { Folder, FolderWithDDocs, FolderListResponse };
 
@@ -46,7 +46,7 @@ export class FoldersModel {
 
     // Get ddocs in this folder
     // Note: FolderRef functionality removed in simplified schema, returning empty array
-    const ddocs: File[] = [];
+    const ddocs: FileEntity[] = [];
 
     return {
       ...parsedFolder,

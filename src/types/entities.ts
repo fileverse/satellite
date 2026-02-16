@@ -1,4 +1,4 @@
-export interface File {
+export interface FileEntity {
   _id: string;
   title: string;
   content: string;
@@ -12,14 +12,16 @@ export interface File {
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
-  linkKey?: string | null;
-  linkKeyNonce?: string | null;
-  commentKey?: string | null;
+  linkKey: string;
+  linkKeyNonce: string;
+  commentKey: string;
   link?: string | null;
+  derivedKey: string;
+  secretKey: string;
 }
 
 export interface FileListResponse {
-  ddocs: File[];
+  ddocs: FileEntity[];
   total: number;
   hasNext: boolean;
 }
@@ -42,7 +44,7 @@ export interface Folder {
 }
 
 export interface FolderWithDDocs extends Folder {
-  ddocs: File[];
+  ddocs: FileEntity[];
 }
 
 export interface FolderListResponse {
@@ -71,7 +73,7 @@ export interface ApiKey {
 }
 
 export type EventType = "create" | "update" | "delete";
-export type EventStatus = "pending" | "processing" | "processed" | "failed";
+export type EventStatus = "pending" | "processing" | "processed" | "failed" | "submitted";
 
 export interface Event {
   _id: string;

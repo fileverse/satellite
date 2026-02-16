@@ -40,7 +40,7 @@ const startServer = async (): Promise<void> => {
     if (req.method === "POST" && req.path === "/" && req.body?.jsonrpc) {
       req.url = "/mcp";
     }
-   
+
     if (req.method === "GET" && req.path === "/") {
       return _res.sendFile(join(__dirname, "../public/guide.md"));
     }

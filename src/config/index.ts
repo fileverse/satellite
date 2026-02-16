@@ -19,7 +19,13 @@ export function loadConfig(override = true): void {
   dotenv.config({ path: envPath, override });
 }
 
-loadConfig(false);
+if (typeof globalThis.process !== "undefined" && typeof globalThis.process.cwd === "function") {
+  try {
+    loadConfig(false);
+  } catch (error) {
+    console.error("Error loading config:", error);
+  }
+}
 
 export function getRuntimeConfig() {
   return {
@@ -58,7 +64,9 @@ export function validateDbConfig(): void {
 
   if (!dbPath) {
     console.error("Error: DB_PATH or DATABASE_URL environment variable is required");
-    console.error("Please set DB_PATH or DATABASE_URL in your .env file (config/.env or ~/.fileverse/.env) or run the CLI first");
+    console.error(
+      "Please set DB_PATH or DATABASE_URL in your .env file (config/.env or ~/.fileverse/.env) or run the CLI first",
+    );
     process.exit(1);
   }
 

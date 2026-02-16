@@ -60,7 +60,7 @@ The system follows a clean architecture pattern:
 
 ```bash
 git clone <repo-url>
-cd satellite
+cd api
 npm install
 ```
 
@@ -190,7 +190,7 @@ npm run start:worker
 
 ```bash
 # Make sure you're in the project root directory
-cd /path/to/satellite
+cd /path/to/api
 
 # Set execute permissions
 chmod +x dist/commands/index.js

@@ -12,16 +12,13 @@ function loadConfig(): FileverseConfig {
   const fileverseEnv = tryReadFileverseEnv();
   const rc = tryReadRc();
 
-  const apiKey =
-    process.env.FILEVERSE_API_KEY || fileverseEnv?.apiKey || rc?.apiKey;
+  const apiKey = process.env.FILEVERSE_API_KEY || fileverseEnv?.apiKey || rc?.apiKey;
 
   const serverUrl =
     process.env.FILEVERSE_SERVER_URL || fileverseEnv?.serverUrl || rc?.serverUrl || "http://localhost:8001";
 
   if (!apiKey) {
-    console.error(
-      "No API key configured. Run 'npx @fileverse/api' first, or set FILEVERSE_API_KEY env var.",
-    );
+    console.error("No API key configured. Run 'npx @fileverse/api' first, or set FILEVERSE_API_KEY env var.");
     process.exit(1);
   }
 

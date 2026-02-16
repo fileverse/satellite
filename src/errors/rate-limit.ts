@@ -34,6 +34,6 @@ export const parseRetryAfterFromHeaders = (headers?: Headers): number =>
 export function normalizeRateLimitError(error: unknown): unknown {
   if (!(error instanceof HttpRequestError) || error.status !== 429) return error;
   const retryAfter = parseRetryAfterFromHeaders(error.headers);
-  const message = "Beta API rate limit reached. Try again in an hour please!"
+  const message = "Beta API rate limit reached. Try again in an hour please!";
   return new RateLimitError(retryAfter, message);
 }

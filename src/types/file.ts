@@ -1,4 +1,4 @@
-import type { File } from "./entities";
+import type { FileEntity } from "./entities";
 
 export interface ListFilesParams {
   limit?: number;
@@ -6,7 +6,10 @@ export interface ListFilesParams {
   portalAddress: string;
 }
 
-export type GetFileResult = Omit<File, "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "_id">;
+export type GetFileResult = Omit<
+  FileEntity,
+  "metadata" | "linkKey" | "linkKeyNonce" | "commentKey" | "_id" | "derivedKey" | "secretKey"
+>;
 
 export interface ListFilesResult {
   ddocs: GetFileResult[];
@@ -39,6 +42,8 @@ export interface UpdateFilePayload {
   linkKeyNonce?: string;
   commentKey?: string;
   link?: string;
+  derivedKey?: string;
+  secretKey?: string;
 }
 
 export interface ClientUpdateFileInput {

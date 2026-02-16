@@ -2,7 +2,7 @@ import { generate } from "short-uuid";
 
 import { EventsModel, FilesModel } from "../../infra/database/models";
 import type {
-  File,
+  FileEntity,
   ListFilesParams,
   ListFilesResult,
   CreateFileInput,
@@ -10,7 +10,10 @@ import type {
   UpdateFilePayload,
   GetFileResult,
 } from "../../types";
+import { generateLinkKeyMaterial } from "../../sdk/link-key-utils";
 import { DEFAULT_LIST_LIMIT } from "./constants";
+import { fromUint8Array } from "js-base64";
+import { exportAESKey, generateAESKey } from "@fileverse/crypto/webcrypto";
 
 async function listFiles(params: ListFilesParams): Promise<ListFilesResult> {
   const { limit, skip, portalAddress } = params;
@@ -67,24 +70,42 @@ async function getFile(ddocId: string, portalAddress: string): Promise<GetFileRe
   };
 }
 
-const createFile = async (input: CreateFileInput): Promise<File> => {
+const createFile = async (input: CreateFileInput): Promise<FileEntity> => {
   if (!input.title || !input.content || !input.portalAddress) {
     throw new Error("title, content, and portalAddress are required");
   }
 
   const ddocId = generate();
+
+  const { encryptedSecretKey, nonce, secretKey, derivedKey } = await generateLinkKeyMaterial({
+    ddocId: ddocId,
+    linkKey: undefined,
+    linkKeyNonce: undefined,
+  });
+
+  const commentKey = fromUint8Array(await exportAESKey(await generateAESKey(128)), true);
+
   const file = await FilesModel.create({
     title: input.title,
     content: input.content,
     ddocId: ddocId,
     portalAddress: input.portalAddress,
+    linkKey: encryptedSecretKey,
+    linkKeyNonce: fromUint8Array(nonce),
+    derivedKey: fromUint8Array(derivedKey),
+    secretKey: fromUint8Array(secretKey),
+    commentKey: commentKey,
   });
 
   await EventsModel.create({ type: "create", fileId: file._id, portalAddress: file.portalAddress });
   return file;
 };
 
-const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddress: string): Promise<Partial<File>> => {
+const updateFile = async (
+  ddocId: string,
+  payload: UpdateFileInput,
+  portalAddress: string,
+): Promise<Partial<FileEntity>> => {
   if (!ddocId) {
     throw new Error("ddocId is required");
   }
@@ -122,7 +143,7 @@ const updateFile = async (ddocId: string, payload: UpdateFileInput, portalAddres
   };
 };
 
-const deleteFile = async (ddocId: string, portalAddress: string): Promise<File> => {
+const deleteFile = async (ddocId: string, portalAddress: string): Promise<FileEntity> => {
   if (!ddocId) {
     throw new Error("ddocId is required");
   }

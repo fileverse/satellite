@@ -1,5 +1,5 @@
 export type {
-  File,
+  FileEntity,
   FileListResponse,
   Folder,
   FolderWithDDocs,

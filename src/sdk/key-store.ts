@@ -1,26 +1,19 @@
-import { Hex } from "viem";
 import { eciesDecrypt, eciesEncrypt, generateECKeyPair } from "@fileverse/crypto/ecies";
 import { AuthTokenProvider } from "./auth-token-provider";
 
 export class KeyStore {
   private portalKeySeed: Uint8Array | undefined;
-  private portalAddress: Hex | undefined;
 
   constructor(
     seed: Uint8Array,
-    address: Hex,
     private readonly authTokenProvider: AuthTokenProvider,
   ) {
     this.portalKeySeed = seed;
-    this.portalAddress = address;
     this.authTokenProvider = authTokenProvider;
   }
 
   getPortalAddress() {
-    if (!this.portalAddress) {
-      throw new Error("Portal address is not set");
-    }
-    return this.portalAddress;
+    return this.authTokenProvider.portalAddress;
   }
 
   private getAppEncryptionKey() {
@@ -50,6 +43,6 @@ export class KeyStore {
   }
 
   getAuthToken(audienceDid: string) {
-    return this.authTokenProvider.getAuthToken(audienceDid);
+    return this.authTokenProvider.getAuthToken(audienceDid, AuthTokenProvider.FILE_CREATE_OPTIONS);
   }
 }

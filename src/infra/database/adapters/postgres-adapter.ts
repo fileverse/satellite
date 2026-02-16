@@ -29,9 +29,12 @@ export class PostgresAdapter implements DatabaseAdapter {
       this.pool = new pg.default.Pool({
         connectionString: this.connectionUrl,
         max: 10,
-        ssl: this.connectionUrl.includes("sslmode=require") || this.connectionUrl.includes("amazonaws.com") || this.connectionUrl.includes("heroku")
-          ? { rejectUnauthorized: false }
-          : undefined,
+        ssl:
+          this.connectionUrl.includes("sslmode=require") ||
+          this.connectionUrl.includes("amazonaws.com") ||
+          this.connectionUrl.includes("heroku")
+            ? { rejectUnauthorized: false }
+            : undefined,
       });
       // Verify connectivity
       const client = await this.pool.connect();

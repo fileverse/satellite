@@ -1,13 +1,13 @@
 import { QueryBuilder } from "../index.js";
 import { uuidv7 } from "uuidv7";
-import type { File, FileListResponse, UpdateFilePayload } from "../../../types";
+import type { FileEntity, FileListResponse, UpdateFilePayload } from "../../../types";
 
-export type { File, FileListResponse };
+export type { FileEntity, FileListResponse };
 
 export class FilesModel {
   private static readonly TABLE = "files";
 
-  private static parseFile(fileRaw: any): File {
+  private static parseFile(fileRaw: any): FileEntity {
     let metadata: Record<string, unknown> = {};
     try {
       if (fileRaw.metadata) {
@@ -36,6 +36,8 @@ export class FilesModel {
       linkKeyNonce: fileRaw.linkKeyNonce,
       commentKey: fileRaw.commentKey,
       link: fileRaw.link,
+      derivedKey: fileRaw.derivedKey,
+      secretKey: fileRaw.secretKey,
     };
   }
 
@@ -43,7 +45,7 @@ export class FilesModel {
     portalAddress: string,
     limit?: number,
     skip?: number,
-  ): Promise<{ files: File[]; total: number; hasNext: boolean }> {
+  ): Promise<{ files: FileEntity[]; total: number; hasNext: boolean }> {
     const whereClause = "isDeleted = 0 AND portalAddress = ?";
     const params: any[] = [portalAddress];
 
@@ -72,7 +74,7 @@ export class FilesModel {
     return { files, total, hasNext };
   }
 
-  static async findById(_id: string, portalAddress: string): Promise<File | undefined> {
+  static async findById(_id: string, portalAddress: string): Promise<FileEntity | undefined> {
     const sql = `
       SELECT *
       FROM ${this.TABLE}
@@ -82,7 +84,7 @@ export class FilesModel {
     return result ? this.parseFile(result) : undefined;
   }
 
-  static async findByIdIncludingDeleted(_id: string): Promise<File | undefined> {
+  static async findByIdIncludingDeleted(_id: string): Promise<FileEntity | undefined> {
     const sql = `
       SELECT *
       FROM ${this.TABLE}
@@ -92,7 +94,7 @@ export class FilesModel {
     return result ? this.parseFile(result) : undefined;
   }
 
-  static async findByIdExcludingDeleted(_id: string): Promise<File | undefined> {
+  static async findByIdExcludingDeleted(_id: string): Promise<FileEntity | undefined> {
     const sql = `
       SELECT *
       FROM ${this.TABLE}
@@ -102,7 +104,7 @@ export class FilesModel {
     return result ? this.parseFile(result) : undefined;
   }
 
-  static async findByDDocId(ddocId: string, portalAddress: string): Promise<File | undefined> {
+  static async findByDDocId(ddocId: string, portalAddress: string): Promise<FileEntity | undefined> {
     const sql = `
       SELECT *
       FROM ${this.TABLE}
@@ -112,7 +114,12 @@ export class FilesModel {
     return result ? this.parseFile(result) : undefined;
   }
 
-  static async searchByTitle(searchTerm: string, portalAddress: string, limit?: number, skip?: number): Promise<File[]> {
+  static async searchByTitle(
+    searchTerm: string,
+    portalAddress: string,
+    limit?: number,
+    skip?: number,
+  ): Promise<FileEntity[]> {
     const sql = `
       SELECT *
       FROM ${this.TABLE}
@@ -128,15 +135,36 @@ export class FilesModel {
     return filesRaw.map(this.parseFile);
   }
 
-  static async create(input: { title: string; content: string; ddocId: string; portalAddress: string }): Promise<File> {
+  static async create(input: {
+    title: string;
+    content: string;
+    ddocId: string;
+    portalAddress: string;
+    linkKey: string;
+    linkKeyNonce: string;
+    derivedKey: string;
+    secretKey: string;
+    commentKey: string;
+  }): Promise<FileEntity> {
     const _id = uuidv7();
     const sql = `
       INSERT INTO ${this.TABLE}
-      (_id, title, content, ddocId, portalAddress)
-      VALUES (?, ?, ?, ?, ?)
+      (_id, title, content, ddocId, portalAddress, linkKey, linkKeyNonce, derivedKey, secretKey, commentKey)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    await QueryBuilder.execute(sql, [_id, input.title, input.content, input.ddocId, input.portalAddress]);
+    await QueryBuilder.execute(sql, [
+      _id,
+      input.title,
+      input.content,
+      input.ddocId,
+      input.portalAddress,
+      input.linkKey,
+      input.linkKeyNonce,
+      input.derivedKey,
+      input.secretKey,
+      input.commentKey,
+    ]);
     // NOTE: default values while file creation: localVersion = 1, onchainVersion = 0, syncStatus = 'pending'
 
     const created = await this.findById(_id, input.portalAddress);
@@ -146,7 +174,7 @@ export class FilesModel {
     return created;
   }
 
-  static async update(_id: string, payload: UpdateFilePayload, portalAddress: string): Promise<File> {
+  static async update(_id: string, payload: UpdateFilePayload, portalAddress: string): Promise<FileEntity> {
     const now = new Date().toISOString();
 
     const keys: string[] = [];
@@ -180,7 +208,7 @@ export class FilesModel {
     return updated;
   }
 
-  static async softDelete(_id: string): Promise<File> {
+  static async softDelete(_id: string): Promise<FileEntity> {
     const now = new Date().toISOString();
     const sql = `
       UPDATE ${this.TABLE}

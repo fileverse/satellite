@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS files (
   commentKey TEXT,
   linkKey TEXT,
   linkKeyNonce TEXT,
-  link TEXT
+  link TEXT,
+  derivedKey TEXT,
+  secretKey TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_files_createdAt ON files(createdAt);
 CREATE INDEX IF NOT EXISTS idx_files_syncStatus ON files(syncStatus);
@@ -50,7 +52,7 @@ CREATE TABLE IF NOT EXISTS events (
   type TEXT NOT NULL CHECK (type IN ('create', 'update', 'delete')),
   timestamp BIGINT NOT NULL,
   fileId TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'processed', 'failed')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'processed', 'failed', 'submitted')),
   retryCount INTEGER NOT NULL DEFAULT 0,
   lastError TEXT,
   lockedAt BIGINT,

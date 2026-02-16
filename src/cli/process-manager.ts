@@ -27,7 +27,12 @@ function prefixOutput(name: string, data: Buffer): void {
   }
 }
 
-function spawnProcess(name: string, executable: string, scriptPath: string, extraEnv?: Record<string, string>): ChildProcess {
+function spawnProcess(
+  name: string,
+  executable: string,
+  scriptPath: string,
+  extraEnv?: Record<string, string>,
+): ChildProcess {
   const child = spawn(executable, [scriptPath], {
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, NODE_ENV: executable === "tsx" ? "development" : "production", ...extraEnv },

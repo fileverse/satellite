@@ -865,15 +865,7 @@
             "type": ["string", "null"]
           }
         },
-        "required": [
-          "_id",
-          "type",
-          "timestamp",
-          "fileId",
-          "portalAddress",
-          "status",
-          "retryCount"
-        ]
+        "required": ["_id", "type", "timestamp", "fileId", "portalAddress", "status", "retryCount"]
       },
       "Error": {
         "type": "object",

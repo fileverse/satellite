@@ -1,16 +1,30 @@
 {
   "name": "@fileverse/api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./server": "./dist/index.js",
-    "./worker": "./dist/worker.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.js"
+    },
+    "./base": {
+      "types": "./dist/base.d.ts",
+      "import": "./dist/base.js"
+    }
   },
   "bin": {
     "api": "dist/cli/index.js",
@@ -43,7 +57,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@fileverse/content-processor": "^0.0.1",
+    "@fileverse/content-processor": "^0.1.0",
     "@fileverse/crypto": "^0.0.21",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@stablelib/ed25519": "^2.0.2",

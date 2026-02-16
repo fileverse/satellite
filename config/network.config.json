@@ -1,5 +1,5 @@
 {
-  "API_URL": "https://prod-apps-storage-5cdacc06ff79.herokuapp.com/",
+  "API_URL": "https://apps-storage.fileverse.io/",
   "SERVER_DID": "did:key:z6Mkroj9bxTin6Z5S9qwx2G2b87NPrCX7S85FhCpmBGPcDCz",
   "PROXY_SERVER_DID": "did:key:z6MkrZSmq8D6vQG87YbjUQatXeptaCCXWdTx8fYaWxWbRUHB",
   "NETWORK_NAME": "gnosis",
