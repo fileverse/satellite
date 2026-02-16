@@ -21,6 +21,21 @@ export function loadConfig(override = true): void {
 
 loadConfig(false);
 
+export const RPC_429_USER_MESSAGE =
+  "Your RPC endpoint is returning too many requests (HTTP 429). Please configure your own private RPC URL via RPC_URL and try again.";
+
+/**
+ * Returns true when Satellite is using the default (public) RPC URL,
+ * i.e. when the user has NOT provided a custom RPC_URL override.
+ */
+export function isUsingPublicRpc(): boolean {
+  return !process.env.RPC_URL || process.env.RPC_URL.trim().length === 0;
+}
+
+export function isRpc429Error(err: unknown): boolean {
+  return (err as any)?.response?.status === 429;
+}
+
 export function getRuntimeConfig() {
   return {
     get API_KEY() {

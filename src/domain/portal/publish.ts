@@ -9,7 +9,7 @@ import { generateKeyPairFromSeed } from "@stablelib/ed25519";
 import * as ucans from "@ucans/ucans";
 import { AgentClient } from "../../sdk/smart-agent";
 import { FileManager } from "../../sdk/file-manager";
-import { getRuntimeConfig } from "../../config";
+import { getRuntimeConfig, isUsingPublicRpc, isRpc429Error, RPC_429_USER_MESSAGE } from "../../config";
 
 import type { PublishResult } from "../../types";
 import type { File, Portal } from "../../types";
@@ -105,6 +105,12 @@ export const handleExistingFileOp = async (fileId: string, operation: "update" |
 
     return executeOperation(fileManager, file, operation);
   } catch (error: any) {
+    if (isUsingPublicRpc() && isRpc429Error(error)) {
+      // For public RPCs, map HTTP 429 into a clear user-facing message.
+      logger.error(`Failed to publish file ${fileId}: ${RPC_429_USER_MESSAGE}`);
+      throw new Error(RPC_429_USER_MESSAGE);
+    }
+
     logger.error(`Failed to publish file ${fileId}:`, error);
     throw error;
   }
