@@ -1,3 +1,4 @@
+import "./check-node-version.js";
 import { validateDbConfig } from "./config";
 import { logger } from "./infra";
 import { runMigrations } from "./infra/database/migrations";

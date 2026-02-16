@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "../check-node-version.js";
 import { Command } from "commander";
 import { fetchApiKeyData } from "./fetch-api-key.js";
 import type { AppKeyMaterial, KeyMaterial } from "../types";
