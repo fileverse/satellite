@@ -1,6 +1,6 @@
 {
   "name": "@fileverse/api",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Fileverse API",
   "type": "module",
   "main": "dist/index.js",
@@ -62,7 +62,6 @@
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@stablelib/ed25519": "^2.0.2",
     "@ucans/ucans": "^0.12.0",
-    "axios": "^1.7.9",
     "better-sqlite3": "^12.5.0",
     "cli-table3": "^0.6.5",
     "commander": "^14.0.2",

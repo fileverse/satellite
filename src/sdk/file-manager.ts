@@ -1,7 +1,6 @@
 import { fromUint8Array, toUint8Array } from "js-base64";
 import { KeyStore } from "./key-store";
 import {
-  buildLinklock,
   encryptTitleWithFileKey,
   prepareCallData,
   createEncryptedContentFile,
@@ -11,6 +10,7 @@ import {
   UploadFileAuthParams,
   prepareDeleteFileCallData,
 } from "./file-utils";
+import { buildLinklock } from "./link-key-utils";
 import { AgentClient } from "./smart-agent";
 import { STATIC_CONFIG } from "../cli/constants";
 import { DELETED_FILE_EVENT, EDITED_FILE_EVENT } from "../constants";

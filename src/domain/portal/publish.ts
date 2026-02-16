@@ -184,15 +184,16 @@ export const submitDeleteFileOp = async (fileEntity: FileEntity): Promise<{ user
   return fileManager.submitDeleteFile(fileEntity);
 };
 
-export const resolveFileOp = async (fileId: string, userOpHash: string): Promise<{ receipt: any } | null> => {
-  const { portalDetails, apiKey } = await getFileWithPortalData(fileId);
+export const resolveFileOp = async (portalAddress: Hex, userOpHash: string): Promise<{ receipt: any } | null> => {
+
+  const { portalDetails, apiKey } = await getFileWithPortalData(portalAddress);
   const apiKeySeed = toUint8Array(apiKey);
   const { privateAccountKey, ucanSecret } = deriveCollaboratorKeys(apiKeySeed);
 
   const authProvider = setupAuthTokenProvider(ucanSecret, portalDetails.portalAddress as Hex);
   const agentClient = await setupAgentClient(privateAccountKey, authProvider);
 
-  const { authToken, portalAddress, invokerAddress } = await agentClient.getAuthParams();
+  const { authToken, invokerAddress } = await agentClient.getAuthParams();
 
   const receipt = await getUserOpReceipt(userOpHash as `0x${string}`, authToken, portalAddress, invokerAddress);
   if (!receipt) return null;

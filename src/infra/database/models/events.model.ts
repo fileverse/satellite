@@ -239,6 +239,18 @@ export class EventsModel {
     await QueryBuilder.execute(sql, [_id]);
   }
 
+  static async markResolved(_id: string): Promise<void> {
+    const sql = `
+      UPDATE ${this.TABLE}
+      SET status = 'processed',
+          lockedAt = NULL,
+          userOpHash = NULL,
+          pendingPayload = NULL
+      WHERE _id = ?
+    `;
+    await QueryBuilder.execute(sql, [_id]);
+  }
+
   static async markSubmitted(_id: string, userOpHash: string, payload: Record<string, unknown>): Promise<void> {
     const sql = `
       UPDATE ${this.TABLE}
