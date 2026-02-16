@@ -1,0 +1,29 @@
+{
+  "name": "Basic Web Research to Ddoc",
+  "skills": ["ddocs-research-documentation"],
+  "query": "Research the current state of WebAssembly adoption in production applications and create a summary ddoc",
+  "expected_behavior": [
+    "Searches the web for 'WebAssembly adoption production 2025' or similar queries",
+    "Performs at least 2 web searches with varied terms",
+    "Gathers information from 3+ authoritative sources",
+    "Searches existing ddocs for 'WebAssembly' to avoid duplicates",
+    "Selects Research Summary format (general research request)",
+    "Structures content with Executive Summary, Key Findings, Detailed Analysis, Sources sections",
+    "Includes inline citations using [Title](URL) markdown links",
+    "Includes a Sources section listing all referenced URLs",
+    "Creates ddoc with fileverse_create_document",
+    "Uses descriptive title with topic and date",
+    "Waits for blockchain sync to complete",
+    "Returns the blockchain-synced link to the user",
+    "Content is 500-1000 words (Research Summary range)"
+  ],
+  "success_criteria": [
+    "At least 2 web searches performed",
+    "Research Summary format used with correct sections",
+    "At least 3 sources cited using [Title](URL) format",
+    "Ddoc created with fileverse_create_document",
+    "Title includes 'WebAssembly' and a date",
+    "Blockchain link returned to user",
+    "Content is well-structured with headings and bullet points"
+  ]
+}

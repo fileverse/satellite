@@ -2,6 +2,8 @@
 
 > This service allows you to sync your local .md files to https://ddocs.new, an alternate document editor that's end-to-end encrypted and fully private. Documents created on ddocs.new are commonly called **ddocs** or **fileverse docs**. Each document has a unique randomly generated `ddocId` that can be used to read, edit, or delete a document.
 
+Note: only .md files are supported.
+
 ---
 
 ## Agents - Setup (Device)

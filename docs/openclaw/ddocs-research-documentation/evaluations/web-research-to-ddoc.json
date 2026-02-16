@@ -1,0 +1,30 @@
+{
+  "name": "Web Research Comparison to Ddoc",
+  "skills": ["ddocs-research-documentation"],
+  "query": "Compare React, Vue, and Svelte for building modern web applications and publish as a ddoc",
+  "expected_behavior": [
+    "Searches the web for framework comparisons, benchmarks, and ecosystem analysis",
+    "Performs at least 3 web searches covering different comparison aspects",
+    "Gathers information on each framework from authoritative sources",
+    "Searches existing ddocs for 'React Vue Svelte' to avoid duplicates",
+    "Selects Comparison format (comparing multiple options)",
+    "Creates comparison matrix table with key criteria",
+    "Provides detailed pros/cons analysis for each framework",
+    "Includes a clear recommendation with rationale",
+    "Uses [Title](URL) markdown links for all citations",
+    "Includes a Sources section at the end",
+    "Creates ddoc with fileverse_create_document",
+    "Uses descriptive title indicating comparison topic and date",
+    "Waits for blockchain sync",
+    "Returns the blockchain-synced link to the user"
+  ],
+  "success_criteria": [
+    "Comparison format used with matrix table",
+    "All three frameworks analyzed (React, Vue, Svelte)",
+    "Comparison matrix includes at least 4 criteria",
+    "Each framework has pros and cons listed",
+    "Clear recommendation provided with rationale",
+    "At least 3 sources cited with [Title](URL) format",
+    "Ddoc created and blockchain link returned"
+  ]
+}
