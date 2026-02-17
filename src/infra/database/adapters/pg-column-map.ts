@@ -16,6 +16,8 @@ const COLUMN_MAP: Record<string, string> = {
   commentkey: "commentKey",
   linkkey: "linkKey",
   linkkeynonce: "linkKeyNonce",
+  derivedkey: "derivedKey",
+  secretkey: "secretKey",
   portalseed: "portalSeed",
   owneraddress: "ownerAddress",
   apikeyseed: "apiKeySeed",
@@ -35,6 +37,7 @@ const COLUMN_MAP: Record<string, string> = {
   lasttransactionhash: "lastTransactionHash",
   lasttransactionblocknumber: "lastTransactionBlockNumber",
   lasttransactionblocktimestamp: "lastTransactionBlockTimestamp",
+  
 };
 
 export function remapRow<T>(row: Record<string, unknown>): T {

@@ -1,7 +1,4 @@
-import { readFileSync } from "fs";
-
-const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8"));
-const minimum = parseInt(pkg.engines.node.match(/\d+/)[0], 10);
+const minimum = 22;
 const current = parseInt(process.versions.node, 10);
 
 if (current < minimum) {
