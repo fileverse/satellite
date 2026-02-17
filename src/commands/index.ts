@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "../check-node-version.js";
 import { Command } from "commander";
 
 // Import config early to validate DB_PATH

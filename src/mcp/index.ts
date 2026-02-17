@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import "../check-node-version.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
