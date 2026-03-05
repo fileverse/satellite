@@ -12,7 +12,7 @@ import { decryptSavedData, initializeWithData } from "../init/index.js";
 const program = new Command()
   .name("fileverse-api")
   .description("Run the Fileverse API server")
-  .version("1.0.8")
+  .version("1.0.10")
   .option("--apiKey <key>", "API key for authentication")
   .option("--rpcUrl <url>", "RPC URL for blockchain connection")
   .option("--port <port>", "Port to run the server on", "8001")

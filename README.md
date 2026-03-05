@@ -1,5 +1,11 @@
 # Fileverse API
 
+Programmatic access to dDocs: create, read, edit, and delete end-to-end encrypted documents via your LLMs, CLI, scripts, and tools. Plug it into your favourite LLM via MCP, or use it via the CLI and REST API. Everything is encrypted client-side before it leaves your device.
+
+## Prerequisites
+
+Log in to [ddocs.new](https://ddocs.new), open Settings, enable Developer Mode, and generate your API key.
+
 ## Quick Start
 
 The fastest way to get started is using the `@fileverse/api` CLI:
