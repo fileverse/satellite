@@ -147,10 +147,11 @@ export class FilesModel {
     commentKey: string;
   }): Promise<FileEntity> {
     const _id = uuidv7();
+    const now = new Date().toISOString();
     const sql = `
       INSERT INTO ${this.TABLE}
-      (_id, title, content, ddocId, portalAddress, linkKey, linkKeyNonce, derivedKey, secretKey, commentKey)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (_id, title, content, ddocId, portalAddress, linkKey, linkKeyNonce, derivedKey, secretKey, commentKey, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await QueryBuilder.execute(sql, [
@@ -164,6 +165,8 @@ export class FilesModel {
       input.derivedKey,
       input.secretKey,
       input.commentKey,
+      now,
+      now,
     ]);
     // NOTE: default values while file creation: localVersion = 1, onchainVersion = 0, syncStatus = 'pending'
 
